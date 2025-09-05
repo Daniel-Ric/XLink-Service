@@ -1,0 +1,768 @@
+{
+  "info": {
+    "name": "XLink-Service API (Xbox + Minecraft) – Postman Collection",
+    "_postman_id": "f6f0a9ad-8b9a-4a2f-8b9f-ult-000000000001",
+    "description": "A comprehensive Postman collection for the local REST API in your project. Includes ALL routes, extensive variables, examples, workflows, pre-request scripts, tests, dynamic helpers, and Postman Visualizer examples.\n\nAssumptions:\n- Server runs at http://localhost:3000\n- JWT secret is configured and you'll obtain a JWT via /auth/callback.\n- Xbox Live / PlayFab / Minecraft tokens are returned by /auth/callback.\n\nTips:\n- Use the folders in order (Health → Auth → Lookup → Profile → Titles → Captures → People → Presence → Achievements → Stats → Inventory → PlayFab → Minecraft → Debug → Workflows → Negative Tests → Utilities & Visualizers).\n- Collection-level auth uses Bearer {{jwt}}. Many routes also require header x-xbl-token ({{x_xbl_token}}) and some require x-mc-token ({{x_mc_token}}).\n- Tests save important values (jwt, x_xbl_token, x_mc_token, sessionTicket, playFabId, xuid) into collection variables automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": { "major": 2, "minor": 3, "patch": 0 }
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{jwt}}", "type": "string" }]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Collection-level Pre-Request Script",
+          "(function () {",
+          "  // Add dynamic default headers if variables are set",
+          "  const addHeader = (k, v) => { if (!v) return; if (!pm.request.headers.has(k)) pm.request.headers.add({ key: k, value: v }); };",
+          "  addHeader('Accept', 'application/json');",
+          "  addHeader('Accept-Language', pm.collectionVariables.get('accept_language'));",
+          "  // If a request path contains '/presence' or '/titles' and x-xbl-token is missing, add it automatically (best effort)",
+          "  const needsXbl = pm.request.url.toString().match(/\\/(presence|profile|titles|captures|people|achievements|stats|lookup)/);",
+          "  const xbl = pm.collectionVariables.get('x_xbl_token');",
+          "  if (needsXbl && xbl && !pm.request.headers.has('x-xbl-token')) { pm.request.headers.add({ key: 'x-xbl-token', value: xbl }); }",
+          "  // If route is minecraft inventory, auto add x-mc-token if present",
+          "  if (pm.request.url.toString().includes('/inventory/minecraft') && !pm.request.headers.has('x-mc-token')) {",
+          "    const mc = pm.collectionVariables.get('x_mc_token');",
+          "    if (mc) pm.request.headers.add({ key: 'x-mc-token', value: mc });",
+          "  }",
+          "  // Helper: nowISO variable",
+          "  pm.variables.set('nowISO', new Date().toISOString());",
+          "})();"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Collection-level Tests",
+          "pm.test('Status code is < 500', function () {",
+          "  pm.expect(pm.response.code).to.be.below(500);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "jwt", "value": "", "type": "string", "description": "Bearer JWT for protected endpoints" },
+    { "key": "x_xbl_token", "value": "", "type": "string", "description": "Format: XBL3.0 x={uhs};{xstsToken}" },
+    { "key": "x_mc_token", "value": "", "type": "string", "description": "Format: MCToken eyJ..." },
+    { "key": "sessionTicket", "value": "", "type": "string", "description": "PlayFab SessionTicket" },
+    { "key": "playFabId", "value": "", "type": "string" },
+    { "key": "accept_language", "value": "en-US,en;q=0.9", "type": "string" },
+    { "key": "sample_gamertag", "value": "Major Nelson", "type": "string" },
+    { "key": "sample_xuid", "value": "", "type": "string" },
+    { "key": "titleId", "value": "", "type": "string", "description": "Optional titleId filter" },
+    { "key": "device_code", "value": "", "type": "string" },
+    { "key": "user_code", "value": "", "type": "string" },
+    { "key": "verification_url", "value": "", "type": "string" },
+    { "key": "nowISO", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "0) Info & OpenAPI",
+      "item": [
+        {
+          "name": "GET /openapi.json",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/openapi.json", "host": ["{{baseUrl}}"], "path": ["openapi.json"] },
+            "description": "Returns the generated OpenAPI schema."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Has openapi 3.x', ()=> pm.expect(pm.response.json().openapi).to.match(/^3/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api-docs (Swagger UI)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api-docs", "host": ["{{baseUrl}}"], "path": ["api-docs"] },
+            "description": "Opens Swagger UI (HTML)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1) Health",
+      "item": [
+        {
+          "name": "GET /healthz",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/healthz" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type":"text/javascript", "exec":[
+                "const j = pm.response.json();",
+                "pm.test('ok === true', ()=> pm.expect(j.ok).to.eql(true));"
+              ]}
+            }
+          ]
+        },
+        {
+          "name": "GET /readyz",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/readyz" },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type":"text/javascript", "exec":[
+                "const j = pm.response.json();",
+                "pm.test('ready === true', ()=> pm.expect(j.ready).to.eql(true));"
+              ]}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2) Auth",
+      "item": [
+        {
+          "name": "GET /auth/device – Request Device Code",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/device"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type":"text/javascript",
+                "exec":[
+                  "const j = pm.response.json();",
+                  "pm.test('device_code exists', ()=> pm.expect(j.device_code).to.be.a('string'));",
+                  "pm.collectionVariables.set('device_code', j.device_code);",
+                  "pm.collectionVariables.set('user_code', j.user_code || '');",
+                  "pm.collectionVariables.set('verification_url', j.verification_url || '');",
+                  "pm.visualizer.set(`<div style='font-family:Inter,system-ui'>",
+                  "<h2>Device Flow</h2>",
+                  "<p><b>User Code:</b> {{user_code}}</p>",
+                  "<p><b>Verify at:</b> <a href='{{verification_url}}' target='_blank'>{{verification_url}}</a></p>",
+                  "</div>`, j);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/callback – Exchange device_code for tokens",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"device_code\": \"{{device_code}}\"\n}" },
+            "url": "{{baseUrl}}/auth/callback",
+            "description": "Finishes device flow and returns JWT + Xbox/PlayFab/Minecraft tokens."
+          },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "pm.test('has jwt', ()=> pm.expect(j.jwt).to.be.a('string'));",
+              "pm.collectionVariables.set('jwt', j.jwt);",
+              "pm.collectionVariables.set('x_xbl_token', j.xboxliveToken || '');",
+              "pm.collectionVariables.set('x_mc_token', j.mcToken || '');",
+              "pm.collectionVariables.set('sessionTicket', j.sessionTicket || '');",
+              "pm.collectionVariables.set('playFabId', j.playFabId || '');",
+              "pm.collectionVariables.set('sample_xuid', j.xuid || '');",
+              "pm.test('has gamertag', ()=> pm.expect(j.gamertag).to.be.a('string'));"
+            ]}}
+          ]
+        },
+        {
+          "name": "GET /auth/whoami – Decode current JWT",
+          "request": { "method":"GET", "url":"{{baseUrl}}/auth/whoami" }
+        },
+        {
+          "name": "POST /auth/jwt/refresh – Refresh JWT",
+          "request": { "method":"POST", "url":"{{baseUrl}}/auth/jwt/refresh" },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "pm.test('new jwt set', ()=> pm.expect(j.jwt).to.be.a('string'));",
+              "pm.collectionVariables.set('jwt', j.jwt);"
+            ]}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3) Lookup",
+      "item": [
+        {
+          "name": "GET /lookup/xuid?gamertag={{sample_gamertag}}",
+          "request": {
+            "method": "GET",
+            "header": [{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/lookup/xuid?gamertag={{sample_gamertag}}",
+              "host": ["{{baseUrl}}"], "path": ["lookup","xuid"],
+              "query": [{ "key":"gamertag", "value":"{{sample_gamertag}}" }]
+            },
+            "description": "Resolve XUID by Gamertag"
+          },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "if (j.xuid) pm.collectionVariables.set('sample_xuid', j.xuid);",
+              "pm.test('xuid returned or 404', ()=> pm.expect([200,404]).to.include(pm.response.code));"
+            ]}}
+          ]
+        },
+        {
+          "name": "GET /lookup/gamertag?xuid={{sample_xuid}}",
+          "request": {
+            "method": "GET",
+            "header": [{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/lookup/gamertag?xuid={{sample_xuid}}",
+              "host": ["{{baseUrl}}"], "path": ["lookup","gamertag"],
+              "query": [{ "key":"xuid", "value":"{{sample_xuid}}" }]
+            },
+            "description": "Resolve Gamertag by XUID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4) Profile",
+      "item": [
+        {
+          "name": "GET /profile/me",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url":{
+              "raw":"{{baseUrl}}/profile/me?settings=GameDisplayPicRaw,Gamerscore,Gamertag",
+              "host":["{{baseUrl}}"], "path":["profile","me"],
+              "query":[{ "key":"settings", "value":"GameDisplayPicRaw,Gamerscore,Gamertag" }]
+            },
+            "description":"Profile settings of the logged-in user."
+          }
+        },
+        {
+          "name": "GET /profile/titles",
+          "request": {
+            "method":"GET",
+            "header":[
+              { "key":"x-xbl-token", "value":"{{x_xbl_token}}" },
+              { "key":"Accept-Language", "value":"{{accept_language}}" }
+            ],
+            "url": "{{baseUrl}}/profile/titles",
+            "description":"User TitleHub overview"
+          }
+        },
+        {
+          "name": "POST /profile/overview (profile + stats + optional inventories)",
+          "request": {
+            "method":"POST",
+            "header":[
+              { "key":"Content-Type", "value":"application/json" },
+              { "key":"x-xbl-token", "value":"{{x_xbl_token}}" },
+              { "key":"x-mc-token", "value":"{{x_mc_token}}" }
+            ],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"includeReceipt\": false\n}" },
+            "url":"{{baseUrl}}/profile/overview",
+            "description":"Combined view with aggregated Xbox stats and, if provided, PlayFab + Minecraft entitlements."
+          },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "pm.test('has user.xuid', ()=> pm.expect(j.user && j.user.xuid).to.be.ok);",
+              "pm.test('has stats.aggregated', ()=> pm.expect(j.stats && j.stats.aggregated).to.be.ok);"
+            ]}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5) Titles",
+      "item": [
+        {
+          "name": "GET /titles/recent?limit=20",
+          "request": {
+            "method":"GET",
+            "header":[
+              { "key":"x-xbl-token", "value":"{{x_xbl_token}}" },
+              { "key":"Accept-Language", "value":"{{accept_language}}" }
+            ],
+            "url": { "raw":"{{baseUrl}}/titles/recent?limit=20", "host":["{{baseUrl}}"], "path":["titles","recent"], "query":[{ "key":"limit", "value":"20" }] },
+            "description": "Recently played titles (sorted)."
+          },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "pm.test('items array exists', ()=> pm.expect(j.items).to.be.an('array'));",
+              "// Visualizer: quick table",
+              "const template = `<table border='1' cellpadding='6' style='border-collapse:collapse;font-family:Inter,system-ui'>",
+              "<tr><th>TitleId</th><th>Name</th><th>Last Played</th></tr>",
+              "{{#each items}}<tr><td>{{this.titleId}}</td><td>{{this.name}}</td><td>{{this.titleHistory.lastTimePlayed}}</td></tr>{{/each}}",
+              "</table>`;",
+              "pm.visualizer.set(template, j);"
+            ]}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6) Captures",
+      "item": [
+        {
+          "name": "GET /captures/clips",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url":{
+              "raw":"{{baseUrl}}/captures/clips?max=24",
+              "host":["{{baseUrl}}"], "path":["captures","clips"],
+              "query":[
+                { "key":"titleId", "value":"{{titleId}}", "disabled": true },
+                { "key":"max", "value":"24" },
+                { "key":"since", "value":"{{nowISO}}", "disabled": true },
+                { "key":"continuationToken", "value":"", "disabled": true }
+              ]
+            },
+            "description":"Game clips. Optionally filter by titleId, since, continuationToken."
+          }
+        },
+        {
+          "name": "GET /captures/screenshots",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url":{
+              "raw":"{{baseUrl}}/captures/screenshots?max=24",
+              "host":["{{baseUrl}}"], "path":["captures","screenshots"],
+              "query":[
+                { "key":"titleId", "value":"{{titleId}}", "disabled": true },
+                { "key":"max", "value":"24" },
+                { "key":"since", "value":"{{nowISO}}", "disabled": true },
+                { "key":"continuationToken", "value":"", "disabled": true }
+              ]
+            },
+            "description":"Screenshots. Optional filters analogous to clips."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7) People",
+      "item": [
+        {
+          "name": "GET /people/friends (mutual)",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url":"{{baseUrl}}/people/friends?maxItems=200",
+            "description":"Mutual friends."
+          }
+        },
+        {
+          "name": "GET /people/followers",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url":"{{baseUrl}}/people/followers?maxItems=200",
+            "description":"Followers (they follow you)."
+          }
+        },
+        {
+          "name": "GET /people/friends/presence?limit=50",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url":"{{baseUrl}}/people/friends/presence?limit=50",
+            "description":"Presence for up to first N mutual friends."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8) Presence",
+      "item": [
+        {
+          "name": "GET /presence/me",
+          "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/presence/me" }
+        },
+        {
+          "name": "POST /presence/batch",
+          "request": {
+            "method":"POST",
+            "header":[
+              { "key":"Content-Type", "value":"application/json" },
+              { "key":"x-xbl-token", "value":"{{x_xbl_token}}" }
+            ],
+            "body": { "mode":"raw", "raw":"{\n  \"xuids\": [\"{{sample_xuid}}\"]\n}" },
+            "url":"{{baseUrl}}/presence/batch",
+            "description":"Batch presence by XUID array."
+          }
+        }
+      ]
+    },
+    {
+      "name": "9) Achievements",
+      "item": [
+        {
+          "name": "GET /achievements/me",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/achievements/me",
+              "host": ["{{baseUrl}}"], "path":["achievements","me"],
+              "query":[{ "key":"titleId", "value":"{{titleId}}", "disabled": true }]
+            },
+            "description":"Achievements for current user; optionally filter by titleId."
+          }
+        },
+        {
+          "name": "GET /achievements/summary?titleId={{titleId}}",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "url":"{{baseUrl}}/achievements/summary?titleId={{titleId}}",
+            "description":"Summary (earned/total) for a given title."
+          }
+        }
+      ]
+    },
+    {
+      "name": "10) Stats",
+      "item": [
+        {
+          "name": "GET /stats/xbox/me",
+          "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/stats/xbox/me" },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "pm.test('aggregated exists', ()=> pm.expect(j.aggregated).to.be.ok);",
+              "const tpl = `<div style='font-family:Inter,system-ui'>",
+              "<h3>Aggregated Xbox Stats</h3>",
+              "<ul>",
+              "<li>MinutesPlayed: {{aggregated.MinutesPlayed}}</li>",
+              "<li>BlockBrokenTotal: {{aggregated.BlockBrokenTotal}}</li>",
+              "<li>MobKilled.IsMonster.1: {{aggregated.[MobKilled.IsMonster.1]}}</li>",
+              "<li>DistanceTravelled: {{aggregated.DistanceTravelled}}</li>",
+              "</ul></div>`;",
+              "pm.visualizer.set(tpl, j);"
+            ]}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11) Inventory",
+      "item": [
+        {
+          "name": "POST /inventory/playfab (GetInventoryItems)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"collectionId\": \"default\",\n  \"count\": 50\n}" },
+            "url":"{{baseUrl}}/inventory/playfab",
+            "description":"PlayFab inventory via session ticket; optional master_player_account via playFabId."
+          }
+        },
+        {
+          "name": "GET /inventory/minecraft (Entitlements)",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-mc-token", "value":"{{x_mc_token}}" }],
+            "url":"{{baseUrl}}/inventory/minecraft?includeReceipt=false",
+            "description":"Minecraft entitlements; toggle includeReceipt=true to include receipts."
+          }
+        },
+        {
+          "name": "GET /inventory/minecraft/creators/top?limit=5",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-mc-token", "value":"{{x_mc_token}}" }],
+            "url":"{{baseUrl}}/inventory/minecraft/creators/top?limit=5",
+            "description":"Top creators by entitlement count."
+          }
+        },
+        {
+          "name": "GET /inventory/minecraft/search",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-mc-token", "value":"{{x_mc_token}}" }],
+            "url":{
+              "raw":"{{baseUrl}}/inventory/minecraft/search?limit=50",
+              "host":["{{baseUrl}}"], "path":["inventory","minecraft","search"],
+              "query":[
+                { "key":"productId", "value":"", "disabled": true },
+                { "key":"q", "value":"", "disabled": true },
+                { "key":"limit", "value":"50" }
+              ]
+            },
+            "description":"Search entitlements by productId or free-text q (case-insensitive)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "12) PlayFab (Client API via SessionTicket)",
+      "item": [
+        {
+          "name": "POST /playfab/account (GetAccountInfo)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}" },
+            "url":"{{baseUrl}}/playfab/account"
+          }
+        },
+        {
+          "name": "POST /playfab/profile (GetPlayerProfile)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\"\n}" },
+            "url":"{{baseUrl}}/playfab/profile"
+          }
+        },
+        {
+          "name": "POST /playfab/catalog (GetCatalogItems)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"catalogVersion\": \"\"\n}" },
+            "url":"{{baseUrl}}/playfab/catalog"
+          }
+        },
+        {
+          "name": "POST /playfab/titledata (GetTitleData)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"keys\": [\"SomeKey\"]\n}" },
+            "url":"{{baseUrl}}/playfab/titledata"
+          }
+        },
+        {
+          "name": "POST /playfab/userdata (GetUserData)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"keys\": []\n}" },
+            "url":"{{baseUrl}}/playfab/userdata"
+          }
+        },
+        {
+          "name": "POST /playfab/userdata/readonly (GetUserReadOnlyData)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"keys\": []\n}" },
+            "url":"{{baseUrl}}/playfab/userdata/readonly"
+          }
+        }
+      ]
+    },
+    {
+      "name": "13) Minecraft",
+      "item": [
+        {
+          "name": "POST /minecraft/token (MCToken from SessionTicket)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}" },
+            "url":"{{baseUrl}}/minecraft/token",
+            "description":"Produces a new Minecraft multiplayer token from PlayFab SessionTicket."
+          },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "if (j.mcToken) pm.collectionVariables.set('x_mc_token', j.mcToken);",
+              "pm.test('mcToken present', ()=> pm.expect(j.mcToken).to.be.a('string'));"
+            ]}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "14) Debug",
+      "item": [
+        {
+          "name": "POST /debug/decode-token (decode JWT/XSTS/MC without verify)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{jwt}}\",\n  \"type\": \"jwt\"\n}" },
+            "url":"{{baseUrl}}/debug/decode-token",
+            "description":"Decodes token; strips common prefixes like Bearer, XBL3.0, MCToken."
+          }
+        },
+        {
+          "name": "POST /debug/decode-token (XSTS example)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{x_xbl_token}}\",\n  \"type\": \"xsts\"\n}" },
+            "url":"{{baseUrl}}/debug/decode-token"
+          }
+        },
+        {
+          "name": "POST /debug/decode-token (Minecraft example)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{x_mc_token}}\",\n  \"type\": \"mc\"\n}" },
+            "url":"{{baseUrl}}/debug/decode-token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "15) Workflows",
+      "item": [
+        {
+          "name": "Workflow: Login → Tokens → WhoAmI",
+          "item": [
+            { "name": "1) GET /auth/device", "request": { "auth": { "type":"noauth" }, "method":"GET", "url":"{{baseUrl}}/auth/device" } },
+            { "name": "2) POST /auth/callback", "request": { "method":"POST", "header":[{ "key":"Content-Type", "value":"application/json"}], "body":{"mode":"raw","raw":"{\n  \"device_code\": \"{{device_code}}\"\n}"}, "url":"{{baseUrl}}/auth/callback" } },
+            { "name": "3) GET /auth/whoami", "request": { "method":"GET", "url":"{{baseUrl}}/auth/whoami" } }
+          ],
+          "description": "End-to-end device flow login."
+        },
+        {
+          "name": "Workflow: Profile + Titles + Stats quick view",
+          "item": [
+            { "name": "GET /profile/me", "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/profile/me?settings=GameDisplayPicRaw,Gamerscore,Gamertag" } },
+            { "name": "GET /titles/recent", "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" },{ "key":"Accept-Language", "value":"{{accept_language}}" }], "url":"{{baseUrl}}/titles/recent?limit=20" } },
+            { "name": "GET /stats/xbox/me", "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/stats/xbox/me" } }
+          ]
+        },
+        {
+          "name": "Workflow: PlayFab & Minecraft Inventory",
+          "item": [
+            { "name":"POST /inventory/playfab", "request": { "method":"POST", "header":[{ "key":"Content-Type", "value":"application/json"}], "body":{"mode":"raw","raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"collectionId\": \"default\",\n  \"count\": 50\n}"}, "url":"{{baseUrl}}/inventory/playfab" } },
+            { "name":"POST /minecraft/token (optional)", "request": { "method":"POST", "header":[{ "key":"Content-Type", "value":"application/json"}], "body":{"mode":"raw","raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}"}, "url":"{{baseUrl}}/minecraft/token" } },
+            { "name":"GET /inventory/minecraft", "request": { "method":"GET", "header":[{ "key":"x-mc-token", "value":"{{x_mc_token}}" }], "url":"{{baseUrl}}/inventory/minecraft?includeReceipt=false" } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "16) Negative Tests & Edge Cases",
+      "item": [
+        {
+          "name": "Missing Authorization header (expect 401/403) → GET /auth/whoami",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/whoami",
+            "description": "Expect 401 (missing bearer) or 403 depending on middleware."
+          }
+        },
+        {
+          "name": "Missing x-xbl-token (expect 400) → GET /presence/me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/presence/me",
+            "description": "Should return 400 (Missing x-xbl-token header)."
+          }
+        },
+        {
+          "name": "Invalid device_code (expect 400/500) → POST /auth/callback",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key":"Content-Type","value":"application/json"}],
+            "body": { "mode":"raw", "raw":"{\n  \"device_code\": \"totally-invalid\"\n}" },
+            "url": "{{baseUrl}}/auth/callback"
+          }
+        },
+        {
+          "name": "Titles recent with extreme limit (expect clamp) → GET /titles/recent?limit=999",
+          "request": {
+            "method": "GET",
+            "header": [{ "key":"x-xbl-token","value":"{{x_xbl_token}}" }],
+            "url": "{{baseUrl}}/titles/recent?limit=999"
+          }
+        }
+      ]
+    },
+    {
+      "name": "17) Utilities & Visualizers",
+      "item": [
+        {
+          "name": "Utility: Show stored variables",
+          "request": { "auth": { "type":"noauth" }, "method":"GET", "url":"{{baseUrl}}/healthz" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type":"text/javascript",
+                "exec": [
+                  "const data = {",
+                  "  baseUrl: pm.collectionVariables.get('baseUrl'),",
+                  "  jwt: (pm.collectionVariables.get('jwt')||'').slice(0,16)+'...',",
+                  "  x_xbl_token: (pm.collectionVariables.get('x_xbl_token')||'').slice(0,16)+'...',",
+                  "  x_mc_token: (pm.collectionVariables.get('x_mc_token')||'').slice(0,16)+'...',",
+                  "  sessionTicket: (pm.collectionVariables.get('sessionTicket')||'').slice(0,16)+'...',",
+                  "  playFabId: pm.collectionVariables.get('playFabId'),",
+                  "  sample_xuid: pm.collectionVariables.get('sample_xuid'),",
+                  "  sample_gamertag: pm.collectionVariables.get('sample_gamertag'),",
+                  "  titleId: pm.collectionVariables.get('titleId'),",
+                  "  accept_language: pm.collectionVariables.get('accept_language'),",
+                  "  nowISO: pm.variables.get('nowISO')",
+                  "};",
+                  "const tpl = `<div style='font-family:Inter,system-ui'>",
+                  "<h3>Collection Variables (preview)</h3>",
+                  "<pre>{{json}}</pre>",
+                  "</div>`;",
+                  "pm.visualizer.set(tpl, { json: JSON.stringify(data, null, 2) });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Visualizer: Recent Titles chart-like table",
+          "request": {
+            "method":"GET",
+            "header":[{ "key":"x-xbl-token","value":"{{x_xbl_token}}" }],
+            "url":"{{baseUrl}}/titles/recent?limit=20"
+          },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "const tpl = `<!doctype html><html><body style='font-family:Inter,system-ui'>",
+              "<h2>Recent Titles</h2>",
+              "<table border='1' cellpadding='6' style='border-collapse:collapse'>",
+              "<thead><tr><th>#</th><th>Title</th><th>TitleId</th><th>Last Played</th></tr></thead>",
+              "<tbody>",
+              "{{#each items}}<tr><td>{{@index}}</td><td>{{this.name}}</td><td>{{this.titleId}}</td><td>{{this.titleHistory.lastTimePlayed}}</td></tr>{{/each}}",
+              "</tbody></table>",
+              "</body></html>`;",
+              "pm.visualizer.set(tpl, j);"
+            ]}}
+          ]
+        }
+      ]
+    }
+  ],
+  "protocolProfileBehavior": {
+    "disableBodyPruning": true
+  }
+}
