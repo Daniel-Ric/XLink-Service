@@ -1,6 +1,8 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import { env } from "../config/env.js";
 
+const serverUrl = env.SWAGGER_SERVER_URL || `http://localhost:${env.PORT}`;
+
 const options = {
     definition: {
         openapi: "3.0.3",
@@ -9,7 +11,7 @@ const options = {
             version: "2.2.0",
             description: "Standalone service für Xbox Live + Minecraft Auth & Stats"
         },
-        servers: [{ url: `http://localhost:${env.PORT}`, description: "local" }],
+        servers: [{ url: serverUrl, description: env.NODE_ENV }],
         tags: [
             { name: "Health" },
             { name: "Auth" },
@@ -29,18 +31,8 @@ const options = {
         components: {
             securitySchemes: {
                 BearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
-                XBLToken: {
-                    type: "apiKey",
-                    in: "header",
-                    name: "x-xbl-token",
-                    description: "XBL3.0 x={uhs};{xstsToken}"
-                },
-                MCToken: {
-                    type: "apiKey",
-                    in: "header",
-                    name: "x-mc-token",
-                    description: "Minecraft Authorization Header (\"MCToken …\")"
-                }
+                XBLToken: { type: "apiKey", in: "header", name: "x-xbl-token", description: "XBL3.0 x={uhs};{xstsToken}" },
+                MCToken: { type: "apiKey", in: "header", name: "x-mc-token", description: "Minecraft Authorization Header (\"MCToken …\")" }
             },
             schemas: {
                 AuthDeviceResponse: {
@@ -71,8 +63,8 @@ const options = {
                 ProfileOverviewRequest: {
                     type: "object",
                     properties: {
-                        sessionTicket: { type: "string", description: "PlayFab SessionTicket (optional; für PlayFab/MC-Inventory)" },
-                        playFabId: { type: "string", description: "Optional: Wenn gesetzt, wird master_player_account für PlayFab genutzt" },
+                        sessionTicket: { type: "string" },
+                        playFabId: { type: "string" },
                         includeReceipt: { type: "boolean", default: false }
                     }
                 },
@@ -81,7 +73,7 @@ const options = {
                     required: ["sessionTicket"],
                     properties: {
                         sessionTicket: { type: "string" },
-                        playFabId: { type: "string", description: "Optional: master_player_account verwenden (wie im Bot-Flow)" },
+                        playFabId: { type: "string" },
                         collectionId: { type: "string", default: "default" },
                         count: { type: "integer", default: 50, minimum: 1, maximum: 200 }
                     }

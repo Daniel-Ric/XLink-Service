@@ -30,13 +30,14 @@
 ## ✨ Highlights
 
 * **Microsoft/Xbox Auth Flow**: Device Code → Tokens (XBL, XSTS for multiple relying parties) → PlayFab login → Minecraft multiplayer token.
-* **Comprehensive Xbox Endpoints**: Profile, Titles (TitleHub), Presence (including batch), People, Captures (clips/screenshots), Stats.
+* **Comprehensive Xbox Endpoints**: Profile, Titles (TitleHub), Presence (including batch), People, Captures (clips/screenshots), Stats, Achievements.
 * **PlayFab Client Read**: Account, PlayerProfile, Catalog, TitleData, UserData/ReadOnlyData via SessionTicket/EntityToken.
 * **Minecraft Services**: Generate MCToken from PlayFab SessionTicket and fetch entitlements/inventory (optional receipts).
 * **JWT-Secured**: First-party JWTs guard the API; includes a refresh endpoint.
 * **OpenAPI/Swagger**: Live docs at `/api-docs` and `GET /openapi.json`.
-* **Solid Express Base**: Helmet, CORS, compression, Joi validation, centralized error handling, request logging with morgan.
+* **Solid Express Base**: Helmet, CORS, compression, Joi validation, centralized error handling.
 * **Targeted Rate Limiting**: Auth endpoints protected out of the box.
+* **Fast & Clean Logs**: Colorized request logs with badges and request IDs; Swagger/health noise muted.
 
 ---
 
@@ -54,15 +55,16 @@
 
 3. **Run**
    ```bash
-   node src/server.js                  # or: NODE_ENV=production node src/server.js
-   # Dev (if you use nodemon):
+   node src/server.js
+   # Or: NODE_ENV=production PORT=3000 node src/server.js
+   # Dev hot reload (if you use nodemon):
    npx nodemon src/server.js
    ```
 
 4. **Explore**
-   * Swagger UI: `http://localhost:3000/api-docs`
-   * OpenAPI JSON: `http://localhost:3000/openapi.json`
-   * Health: `GET /healthz`, `GET /readyz`
+    * Swagger UI: `http://localhost:3000/api-docs`
+    * OpenAPI JSON: `http://localhost:3000/openapi.json`
+    * Health: `GET /healthz`, `GET /readyz`
 
 ---
 
@@ -73,16 +75,18 @@ Validated via Joi (`src/config/env.js`).
 | Key                | Default       | Description                                                              |
 |--------------------|---------------|--------------------------------------------------------------------------|
 | `PORT`             | `3000`        | Service port                                                             |
-| `NODE_ENV`         | `development` | `development` \| `production` \| `test`                                  |
-| `CORS_ORIGIN`      | `*`           | CORS origin (e.g., `http://localhost:5173`)                              |
+| `NODE_ENV`         | `development` | `development` \| `production` \| `test`                                |
+| `CORS_ORIGIN`      | `*`           | CORS origin(s), comma-separated (e.g., `http://localhost:5173`)          |
 | `JWT_SECRET`       | — **required**| At least 16 chars, used to sign API JWTs                                 |
 | `CLIENT_ID`        | — **required**| Microsoft App Client ID (Device Code flow)                               |
 | `HTTP_TIMEOUT_MS`  | `15000`       | Timeout for outgoing HTTP calls (ms)                                     |
-| `LOG_LEVEL`        | `info`        | Log level for internal logger (morgan is configured separately)          |
+| `LOG_LEVEL`        | `info`        | General log level                                                        |
 | `MC_GAME_VERSION`  | `1.21.62`     | Minecraft game version for token generation                              |
 | `MC_PLATFORM`      | `Windows10`   | Platform identifier for Minecraft                                        |
-| `PLAYFAB_TITLE_ID` | `20ca2`       | PlayFab Title ID                                                          |
+| `PLAYFAB_TITLE_ID` | `20ca2`       | PlayFab Title ID                                                         |
 | `ACCEPT_LANGUAGE`  | `en-US`       | Default `Accept-Language` for TitleHub                                   |
+
+> **CORS**: In production, set `CORS_ORIGIN` to explicit origins (no `*`).
 
 ---
 
@@ -91,10 +95,10 @@ Validated via Joi (`src/config/env.js`).
 ```
 XLink-Service/
 ├── src/
-│   ├── app.js                 # Express app, Swagger setup, route mounting
-│   ├── server.js              # Bootstrap (port, startup logs)
+│   ├── app.js                 # Express app, Swagger setup, route mounting, colorful request logger
+│   ├── server.js              # Bootstrap (port, startup logs, graceful shutdown)
 │   ├── config/
-│   │   └── env.js             # .env validation + export
+│   │   └── env.js             # .env validation + export (Joi)
 │   ├── middleware/
 │   │   ├── error.js           # 404 + centralized error handler
 │   │   └── rateLimit.js       # Auth-specific rate limiter
@@ -112,17 +116,19 @@ XLink-Service/
 │   │   ├── minecraft.routes.js
 │   │   ├── lookup.routes.js
 │   │   ├── health.routes.js
-│   │   └── debug.routes.js
+│   │   └── debug.routes.js    # only mounted in non-production
 │   ├── services/              # Integrations (Microsoft, Xbox, PlayFab, Minecraft)
 │   │   ├── microsoft.service.js
-│   │   ├── xbox.service.js
+│   │   ├── xbox.service.js    # LRU cache for hot endpoints
 │   │   ├── playfab.service.js
 │   │   └── minecraft.service.js
 │   ├── utils/
 │   │   ├── async.js           # asyncHandler
-│   │   ├── httpError.js       # HttpError + factory helpers
+│   │   ├── http.js            # Axios instance with keep-alive agents
+│   │   ├── cache.js           # LRU cache helper
+│   │   ├── httpError.js       # HttpError + helpers
 │   │   ├── jwt.js             # sign/verify + middleware
-│   │   ├── logger.js          # tiny console logger
+│   │   ├── logger.js          # tiny console logger (optional)
 │   │   └── swagger.js         # OpenAPI definition (3.0.3)
 │   └── ...
 └── (LICENSE, README.md, package.json, etc.)
@@ -179,7 +185,7 @@ curl -X POST http://localhost:3000/inventory/playfab   -H "Authorization: Bearer
 curl "http://localhost:3000/captures/screenshots?max=24"   -H "Authorization: Bearer <JWT)"   -H "x-xbl-token: XBL3.0 x=<uhs>;<xstsToken>"
 ```
 
-### 10) Debug: decode token → `/debug/decode-token`
+### 10) Debug: decode token → `/debug/decode-token` (non-production)
 ```bash
 curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Bearer <JWT>"   -H "Content-Type: application/json"   -d '{"token":"XBL3.0 x=<uhs>;<xstsToken>","type":"xsts"}'
 ```
@@ -242,16 +248,6 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 | GET    | `/inventory/minecraft/search`      | Search entitlements (`productId`, `q`, `limit`)       | `x-mc-token` |
 | POST   | `/minecraft/token`                 | Create Minecraft multiplayer token from SessionTicket | —            |
 
-### PlayFab
-| Method | Endpoint                    | Description                              |
-|-------:|-----------------------------|------------------------------------------|
-| POST   | `/playfab/account`          | GetAccountInfo                           |
-| POST   | `/playfab/profile`          | GetPlayerProfile (optional `playFabId`)  |
-| POST   | `/playfab/catalog`          | GetCatalogItems                          |
-| POST   | `/playfab/titledata`        | GetTitleData (optional `keys`)           |
-| POST   | `/playfab/userdata`         | GetUserData (optional `keys`/`playFabId`)|
-| POST   | `/playfab/userdata/readonly`| GetUserReadOnlyData                      |
-
 ### Debug & Health
 | Method | Endpoint              | Description                          |
 |-------:|-----------------------|--------------------------------------|
@@ -259,7 +255,7 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 | GET    | `/healthz`            | Liveness                             |
 | GET    | `/readyz`             | Readiness                            |
 
-> **Security & Headers**: Global `BearerAuth` (JWT) via Swagger; individual endpoints may override/require Xbox or MC headers as `apiKey` schemes.
+> **Security & Headers**: Global `BearerAuth` (JWT) via Swagger; individual endpoints may require Xbox or MC headers as `apiKey` schemes.
 
 ---
 
@@ -272,11 +268,11 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 
 ## 📊 Logging & Docs
 
-* **Requests**: `morgan` (`dev` or `combined` depending on `NODE_ENV`).
-* **Errors**: Consistent JSON format; stack traces in non-production.
-* **Swagger/OpenAPI**: Generated from JSDoc in `src/utils/swagger.js`.
-  * UI: `GET /api-docs`
-  * JSON: `GET /openapi.json`
+* **Request logging**: Custom colorful logger (badges: OK/WARN/ERR), request duration, status code, method, URL, request ID. Swagger assets and health probes are muted to avoid log spam.
+* **Errors**: Consistent JSON format; stack traces only in non-production.
+* **Swagger/OpenAPI**: Generated from route JSDoc in `src/utils/swagger.js`.
+    * UI: `GET /api-docs`
+    * JSON: `GET /openapi.json`
 
 ---
 
@@ -286,17 +282,17 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 2. `cors` (configurable via `CORS_ORIGIN`)
 3. `express.json({ limit: "1mb" })`
 4. `compression` (gzip)
-5. `morgan` (request logging)
+5. **Custom logger** (color badges, muted noise)
 6. **Route-specific**:
-   * `jwtMiddleware` (JWT validation)
-   * `authLimiter` (only for `/auth/*`)
+    * `jwtMiddleware` (JWT validation)
+    * `authLimiter` (only for `/auth/*`)
 7. `notFoundHandler` → `errorHandler` (uniform JSON errors)
 
 ---
 
 ## 🐳 Docker Support
 
-> The repo does not include a Dockerfile by default. Example Dockerfile to containerize quickly:
+> Example Dockerfile to containerize quickly:
 
 ```Dockerfile
 # Dockerfile (example)
@@ -304,7 +300,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
-COPY ../../Downloads .
+COPY . .
 ENV NODE_ENV=production
 EXPOSE 3000
 CMD ["node", "src/server.js"]
@@ -337,10 +333,10 @@ Add or adapt in your `package.json`:
 
 ## 🤝 Contributing
 
-1. Fork the repo 🔀  
-2. Create a branch: `git checkout -b feat/your-feature`  
-3. Commit: `git commit -m "feat: description"`  
-4. Push: `git push origin feat/your-feature`  
+1. Fork the repo 🔀
+2. Create a branch: `git checkout -b feat/your-feature`
+3. Commit: `git commit -m "feat: description"`
+4. Push: `git push origin feat/your-feature`
 5. Open a Pull Request 📝
 
 Please follow the code style and provide clear descriptions to ease reviews.
