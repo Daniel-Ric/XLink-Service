@@ -2,9 +2,9 @@
   "info": {
     "name": "XLink-Service API (Xbox + Minecraft) – Postman Collection",
     "_postman_id": "f6f0a9ad-8b9a-4a2f-8b9f-ult-000000000001",
-    "description": "A comprehensive Postman collection for the local REST API in your project. Includes ALL routes, extensive variables, examples, workflows, pre-request scripts, tests, dynamic helpers, and Postman Visualizer examples.\n\nAssumptions:\n- Server runs at http://localhost:3000\n- JWT secret is configured and you'll obtain a JWT via /auth/callback.\n- Xbox Live / PlayFab / Minecraft tokens are returned by /auth/callback.\n\nTips:\n- Use the folders in order (Health → Auth → Lookup → Profile → Titles → Captures → People → Presence → Achievements → Stats → Inventory → PlayFab → Minecraft → Debug → Workflows → Negative Tests → Utilities & Visualizers).\n- Collection-level auth uses Bearer {{jwt}}. Many routes also require header x-xbl-token ({{x_xbl_token}}) and some require x-mc-token ({{x_mc_token}}).\n- Tests save important values (jwt, x_xbl_token, x_mc_token, sessionTicket, playFabId, xuid) into collection variables automatically.",
+    "description": "A comprehensive Postman collection for the local REST API in your project. Includes ALL routes, extensive variables, examples, workflows, pre-request scripts, tests, dynamic helpers, and Postman Visualizer examples.\n\nAssumptions:\n- Server runs at http://localhost:3000\n- JWT secret is configured and you'll obtain a JWT via /auth/callback.\n- Xbox Live / PlayFab / Minecraft tokens are returned by /auth/callback.\n\nTips:\n- Use the folders in order (Health → Auth → Lookup → Profile → Titles → Captures → People → Presence → Achievements → Stats → Inventory → PlayFab → Minecraft → Debug → Workflows → Negative Tests → Utilities & Visualizers).\n- Collection-level auth uses Bearer {{jwt}}. Many routes also require header x-xbl-token ({{x_xbl_token}}) and some require x-mc-token ({{x_mc_token}}).\n- Tests save important values (jwt, x_xbl_token, x_mc_token, x_playfab_token, x_redeem_token, sessionTicket, playFabId, xuid) into collection variables automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": { "major": 2, "minor": 3, "patch": 0 }
+    "version": { "major": 2, "minor": 4, "patch": 0 }
   },
   "auth": {
     "type": "bearer",
@@ -22,11 +22,11 @@
           "  const addHeader = (k, v) => { if (!v) return; if (!pm.request.headers.has(k)) pm.request.headers.add({ key: k, value: v }); };",
           "  addHeader('Accept', 'application/json');",
           "  addHeader('Accept-Language', pm.collectionVariables.get('accept_language'));",
-          "  // If a request path contains '/presence' or '/titles' and x-xbl-token is missing, add it automatically (best effort)",
+          "  // Auto-add XBL token to XBL-backed routes (best effort)",
           "  const needsXbl = pm.request.url.toString().match(/\\/(presence|profile|titles|captures|people|achievements|stats|lookup)/);",
           "  const xbl = pm.collectionVariables.get('x_xbl_token');",
           "  if (needsXbl && xbl && !pm.request.headers.has('x-xbl-token')) { pm.request.headers.add({ key: 'x-xbl-token', value: xbl }); }",
-          "  // If route is minecraft inventory, auto add x-mc-token if present",
+          "  // Auto-add MC token for inventory endpoints",
           "  if (pm.request.url.toString().includes('/inventory/minecraft') && !pm.request.headers.has('x-mc-token')) {",
           "    const mc = pm.collectionVariables.get('x_mc_token');",
           "    if (mc) pm.request.headers.add({ key: 'x-mc-token', value: mc });",
@@ -55,6 +55,8 @@
     { "key": "jwt", "value": "", "type": "string", "description": "Bearer JWT for protected endpoints" },
     { "key": "x_xbl_token", "value": "", "type": "string", "description": "Format: XBL3.0 x={uhs};{xstsToken}" },
     { "key": "x_mc_token", "value": "", "type": "string", "description": "Format: MCToken eyJ..." },
+    { "key": "x_playfab_token", "value": "", "type": "string", "description": "Format: XBL3.0 x={uhs};{xstsToken} (PlayFab relying party)" },
+    { "key": "x_redeem_token", "value": "", "type": "string", "description": "Format: XBL3.0 x={uhs};{xstsToken} (Minecraft redeem relying party)" },
     { "key": "sessionTicket", "value": "", "type": "string", "description": "PlayFab SessionTicket" },
     { "key": "playFabId", "value": "", "type": "string" },
     { "key": "accept_language", "value": "en-US,en;q=0.9", "type": "string" },
@@ -178,6 +180,8 @@
               "pm.test('has jwt', ()=> pm.expect(j.jwt).to.be.a('string'));",
               "pm.collectionVariables.set('jwt', j.jwt);",
               "pm.collectionVariables.set('x_xbl_token', j.xboxliveToken || '');",
+              "pm.collectionVariables.set('x_playfab_token', j.playfabToken || '');",
+              "pm.collectionVariables.set('x_redeem_token', j.redeemToken || '');",
               "pm.collectionVariables.set('x_mc_token', j.mcToken || '');",
               "pm.collectionVariables.set('sessionTicket', j.sessionTicket || '');",
               "pm.collectionVariables.set('playFabId', j.playFabId || '');",
@@ -186,10 +190,7 @@
             ]}}
           ]
         },
-        {
-          "name": "GET /auth/whoami – Decode current JWT",
-          "request": { "method":"GET", "url":"{{baseUrl}}/auth/whoami" }
-        },
+        { "name": "GET /auth/whoami – Decode current JWT", "request": { "method":"GET", "url":"{{baseUrl}}/auth/whoami" } },
         {
           "name": "POST /auth/jwt/refresh – Refresh JWT",
           "request": { "method":"POST", "url":"{{baseUrl}}/auth/jwt/refresh" },
@@ -397,10 +398,7 @@
     {
       "name": "8) Presence",
       "item": [
-        {
-          "name": "GET /presence/me",
-          "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/presence/me" }
-        },
+        { "name": "GET /presence/me", "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/presence/me" } },
         {
           "name": "POST /presence/batch",
           "request": {
@@ -602,32 +600,136 @@
       "name": "14) Debug",
       "item": [
         {
-          "name": "POST /debug/decode-token (decode JWT/XSTS/MC without verify)",
+          "name": "POST /debug/decode-token – single (JWT/XSTS/MC/SessionTicket)",
           "request": {
             "method":"POST",
             "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{jwt}}\",\n  \"type\": \"jwt\"\n}" },
+            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{jwt}}\"\n}" },
             "url":"{{baseUrl}}/debug/decode-token",
-            "description":"Decodes token; strips common prefixes like Bearer, XBL3.0, MCToken."
-          }
+            "description":"Decodes a single token; strips common prefixes like Bearer, XBL3.0, MCToken."
+          },
+          "event":[
+            { "listen":"test", "script": { "type": "text/javascript", "exec": [
+              "const j = pm.response.json();",
+              "pm.test('ok or informative', ()=> pm.expect(j).to.have.property('ok'));",
+              "const fmt = v => (v === null || v === undefined) ? '—' : v;",
+              "pm.visualizer.set(`",
+              "<div style='font-family:Inter,system-ui'>",
+              "<h3>Decoded Token</h3>",
+              "<pre>{{json}}</pre>",
+              "</div>`, { json: JSON.stringify({",
+              "  ok: j.ok,",
+              "  header: j.header,",
+              "  payload: j.payload,",
+              "  meta: {",
+              "    prefix: fmt(j.meta && j.meta.prefix),",
+              "    uhs: fmt(j.meta && j.meta.uhs),",
+              "    hasExp: j.meta && j.meta.hasExp,",
+              "    secondsRemaining: fmt(j.meta && j.meta.secondsRemaining),",
+              "    rawLength: j.meta && j.meta.rawLength,",
+              "    kind: j.meta && j.meta.kind",
+              "  }",
+              "}, null, 2) });"
+            ]}}
+          ]
         },
         {
-          "name": "POST /debug/decode-token (XSTS example)",
+          "name": "POST /debug/decode-token – XSTS example",
           "request": {
             "method":"POST",
             "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{x_xbl_token}}\",\n  \"type\": \"xsts\"\n}" },
+            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{x_xbl_token}}\"\n}" },
             "url":"{{baseUrl}}/debug/decode-token"
           }
         },
         {
-          "name": "POST /debug/decode-token (Minecraft example)",
+          "name": "POST /debug/decode-token – Minecraft example",
           "request": {
             "method":"POST",
             "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{x_mc_token}}\",\n  \"type\": \"mc\"\n}" },
+            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{x_mc_token}}\"\n}" },
             "url":"{{baseUrl}}/debug/decode-token"
           }
+        },
+        {
+          "name": "POST /debug/decode-token – SessionTicket example (opaque)",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{sessionTicket}}\"\n}" },
+            "url":"{{baseUrl}}/debug/decode-token"
+          }
+        },
+        {
+          "name": "POST /debug/decode-token – batch",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": {
+              "mode":"raw",
+              "raw":"{\n  \"tokens\": {\n    \"jwt\": \"{{jwt}}\",\n    \"xbl\": \"{{x_xbl_token}}\",\n    \"playfab\": \"{{x_playfab_token}}\",\n    \"redeem\": \"{{x_redeem_token}}\",\n    \"mc\": \"{{x_mc_token}}\",\n    \"sessionTicket\": \"{{sessionTicket}}\"\n  }\n}"
+            },
+            "url":"{{baseUrl}}/debug/decode-token",
+            "description":"Decode multiple tokens in one request."
+          },
+          "event":[
+            { "listen":"test", "script": { "type": "text/javascript", "exec": [
+              "const j = pm.response.json();",
+              "pm.test('batch ok', ()=> pm.expect(j.ok).to.eql(true));",
+              "const cleaned = {};",
+              "const fmt = v => (v === null || v === undefined) ? '—' : v;",
+              "Object.entries(j.decoded || {}).forEach(([k,v]) => {",
+              "  cleaned[k] = {",
+              "    ok: v.ok,",
+              "    header: v.header,",
+              "    payload: v.payload,",
+              "    meta: {",
+              "      prefix: fmt(v.meta && v.meta.prefix),",
+              "      uhs: fmt(v.meta && v.meta.uhs),",
+              "      hasExp: v.meta && v.meta.hasExp,",
+              "      secondsRemaining: fmt(v.meta && v.meta.secondsRemaining),",
+              "      rawLength: v.meta && v.meta.rawLength,",
+              "      kind: v.meta && v.meta.kind",
+              "    }",
+              "  };",
+              "});",
+              "pm.visualizer.set(`",
+              "<div style='font-family:Inter,system-ui'><h3>Batch Decode</h3><pre>{{json}}</pre></div>` , { json: JSON.stringify(cleaned, null, 2) });"
+            ]}}
+          ]
+        },
+        {
+          "name": "POST /debug/decode-callback – full bundle",
+          "request": {
+            "method":"POST",
+            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "body": {
+              "mode":"raw",
+              "raw":"{\n  \"jwt\": \"{{jwt}}\",\n  \"xuid\": \"{{sample_xuid}}\",\n  \"gamertag\": \"{{sample_gamertag}}\",\n  \"xboxliveToken\": \"{{x_xbl_token}}\",\n  \"playfabToken\": \"{{x_playfab_token}}\",\n  \"redeemToken\": \"{{x_redeem_token}}\",\n  \"mcToken\": \"{{x_mc_token}}\",\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\"\n}"
+            },
+            "url":"{{baseUrl}}/debug/decode-callback",
+            "description":"Decode full auth callback bundle"
+          },
+          "event":[
+            { "listen":"test", "script": { "type":"text/javascript", "exec":[
+              "const j = pm.response.json();",
+              "pm.test('has user object', ()=> pm.expect(j.user).to.be.an('object'));",
+              "const fmt = v => (v === null || v === undefined) ? '—' : v;",
+              "pm.visualizer.set(`<!doctype html><html><body style='font-family:Inter,system-ui'>",
+              "<h3>User</h3>",
+              "<pre>{{user}}</pre>",
+              "<h3>Decoded</h3>",
+              "<pre>{{decoded}}</pre>",
+              "</body></html>` , {",
+              "  user: JSON.stringify({",
+              "    xuid: fmt(j.user && j.user.xuid),",
+              "    gamertag: fmt(j.user && j.user.gamertag),",
+              "    playFabId: fmt(j.user && j.user.playFabId)",
+              "  }, null, 2),",
+              "  decoded: JSON.stringify(j.decoded || {}, null, 2)",
+              "});"
+            ]}}
+          ]
         }
       ]
     },
@@ -718,6 +820,8 @@
                   "  baseUrl: pm.collectionVariables.get('baseUrl'),",
                   "  jwt: (pm.collectionVariables.get('jwt')||'').slice(0,16)+'...',",
                   "  x_xbl_token: (pm.collectionVariables.get('x_xbl_token')||'').slice(0,16)+'...',",
+                  "  x_playfab_token: (pm.collectionVariables.get('x_playfab_token')||'').slice(0,16)+'...',",
+                  "  x_redeem_token: (pm.collectionVariables.get('x_redeem_token')||'').slice(0,16)+'...',",
                   "  x_mc_token: (pm.collectionVariables.get('x_mc_token')||'').slice(0,16)+'...',",
                   "  sessionTicket: (pm.collectionVariables.get('sessionTicket')||'').slice(0,16)+'...',",
                   "  playFabId: pm.collectionVariables.get('playFabId'),",

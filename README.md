@@ -251,7 +251,7 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 ### Debug & Health
 | Method | Endpoint              | Description                          |
 |-------:|-----------------------|--------------------------------------|
-| POST   | `/debug/decode-token` | Decode JWT/XSTS/MC token (no verify) |
+| POST   | `/debug/decode-token` | Decode JWT, XSTS (XBL3.0), MCToken, and PlayFab sessionTicket token (no verify) |
 | GET    | `/healthz`            | Liveness                             |
 | GET    | `/readyz`             | Readiness                            |
 
