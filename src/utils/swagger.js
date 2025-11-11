@@ -48,6 +48,19 @@ const options = {
                         jwt: { type: "string" },
                         xuid: { type: "string" },
                         gamertag: { type: "string" },
+                        uhs: { type: "string" },
+                        msAccessToken: { type: "string" },
+                        msRefreshToken: { type: "string" },
+                        msExpiresIn: { type: "integer" },
+                        xblToken: { type: "string" },
+                        xsts: {
+                            type: "object",
+                            properties: {
+                                xbox: { type: "object" },
+                                redeem: { type: "object" },
+                                playfab: { type: "object" }
+                            }
+                        },
                         xboxliveToken: { type: "string" },
                         playfabToken: { type: "string" },
                         redeemToken: { type: "string" },
@@ -118,7 +131,13 @@ const options = {
                         redeemToken: { type: "string" },
                         mcToken: { type: "string" },
                         sessionTicket: { type: "string" },
-                        playFabId: { type: "string" }
+                        playFabId: { type: "string" },
+                        msAccessToken: { type: "string" },
+                        msRefreshToken: { type: "string" },
+                        xblToken: { type: "string" },
+                        xstsXbox: { type: "string" },
+                        xstsRedeem: { type: "string" },
+                        xstsPlayFab: { type: "string" }
                     }
                 },
                 TokenDecodeCallbackResponse: {

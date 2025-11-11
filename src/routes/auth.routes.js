@@ -68,7 +68,12 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
 
     const titleId = env.PLAYFAB_TITLE_ID || "20ca2";
     const tokenData = await getTokenFromDeviceCode(env.CLIENT_ID, value.device_code);
-    const xblToken = await getXBLToken(tokenData.access_token);
+
+    const msAccessToken = tokenData.access_token;
+    const msRefreshToken = tokenData.refresh_token;
+    const msExpiresIn = tokenData.expires_in;
+
+    const xblToken = await getXBLToken(msAccessToken);
 
     const xboxTokenInfo    = await getXSTSToken(xblToken, "http://xboxlive.com");
     const redeemTokenInfo  = await getXSTSToken(xblToken, "https://b980a380.minecraft.playfabapi.com/");
@@ -89,6 +94,16 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
         jwt: jwtToken,
         xuid: xid,
         gamertag: gtg,
+        uhs,
+        msAccessToken,
+        msRefreshToken,
+        msExpiresIn,
+        xblToken,
+        xsts: {
+            xbox: xboxTokenInfo,
+            redeem: redeemTokenInfo,
+            playfab: playfabTokenInfo
+        },
         xboxliveToken,
         playfabToken,
         redeemToken,

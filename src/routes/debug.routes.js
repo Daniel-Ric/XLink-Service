@@ -140,7 +140,13 @@ router.post("/decode-callback", jwtMiddleware, asyncHandler(async (req, res) => 
         redeemToken: Joi.string().optional(),
         mcToken: Joi.string().optional(),
         sessionTicket: Joi.string().optional(),
-        playFabId: Joi.string().optional()
+        playFabId: Joi.string().optional(),
+        msAccessToken: Joi.string().optional(),
+        msRefreshToken: Joi.string().optional(),
+        xblToken: Joi.string().optional(),
+        xstsXbox: Joi.string().optional(),
+        xstsRedeem: Joi.string().optional(),
+        xstsPlayFab: Joi.string().optional()
     }).min(1);
     const { value, error } = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
@@ -151,6 +157,11 @@ router.post("/decode-callback", jwtMiddleware, asyncHandler(async (req, res) => 
     if (value.redeemToken) decoded.redeemToken = decodeOne(value.redeemToken);
     if (value.mcToken) decoded.mcToken = decodeOne(value.mcToken);
     if (value.sessionTicket) decoded.sessionTicket = decodeOne(value.sessionTicket);
+    if (value.msAccessToken) decoded.msAccessToken = decodeOne(value.msAccessToken);
+    if (value.xblToken) decoded.xblToken = decodeOne(value.xblToken);
+    if (value.xstsXbox) decoded.xstsXbox = decodeOne(value.xstsXbox);
+    if (value.xstsRedeem) decoded.xstsRedeem = decodeOne(value.xstsRedeem);
+    if (value.xstsPlayFab) decoded.xstsPlayFab = decodeOne(value.xstsPlayFab);
     const user = {
         xuid: value.xuid || decoded.jwt?.payload?.xuid || null,
         gamertag: value.gamertag || decoded.jwt?.payload?.gamertag || null,
