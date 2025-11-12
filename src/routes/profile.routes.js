@@ -1,11 +1,11 @@
 import express from "express";
 import Joi from "joi";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { getProfileSettings, getTitleHub, getXboxStats } from "../services/xbox.service.js";
-import { getEntityToken, getPlayFabInventory } from "../services/playfab.service.js";
-import { getMCToken, getMCInventory } from "../services/minecraft.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {getProfileSettings, getTitleHub, getXboxStats} from "../services/xbox.service.js";
+import {getEntityToken, getPlayFabInventory} from "../services/playfab.service.js";
+import {getMCInventory, getMCToken} from "../services/minecraft.service.js";
+import {badRequest} from "../utils/httpError.js";
 import jwtLib from "jsonwebtoken";
 
 const router = express.Router();
@@ -35,7 +35,7 @@ const router = express.Router();
  *         description: Profil
  */
 router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
     const settings = req.query.settings || "GameDisplayPicRaw,Gamerscore,Gamertag";
@@ -66,11 +66,11 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  *         description: Titles
  */
 router.get("/titles", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
     const locale = req.headers["accept-language"]; // wird in den Service durchgereicht
-    const titles = await getTitleHub(xuid, xboxliveToken, { locale });
+    const titles = await getTitleHub(xuid, xboxliveToken, {locale});
     res.json(titles);
 }));
 
@@ -107,7 +107,7 @@ router.get("/titles", jwtMiddleware, asyncHandler(async (req, res) => {
  *         description: Übersicht
  */
 router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid, gamertag } = req.user;
+    const {xuid, gamertag} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
 
@@ -116,13 +116,13 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
         playFabId: Joi.string().optional(),
         includeReceipt: Joi.boolean().default(false)
     });
-    const { value, error } = bodySchema.validate(req.body || {});
+    const {value, error} = bodySchema.validate(req.body || {});
     if (error) throw badRequest(error.message);
 
     const profile = await getProfileSettings(xuid, xboxliveToken, "GameDisplayPicRaw,Gamerscore,Gamertag");
 
     const statsRaw = await getXboxStats(xuid, xboxliveToken);
-    const aggregated = { MinutesPlayed: 0, BlockBrokenTotal: 0, "MobKilled.IsMonster.1": 0, DistanceTravelled: 0 };
+    const aggregated = {MinutesPlayed: 0, BlockBrokenTotal: 0, "MobKilled.IsMonster.1": 0, DistanceTravelled: 0};
     const user = statsRaw?.users?.[0];
     if (user?.scids) {
         for (const scid of user.scids) {
@@ -141,20 +141,17 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
     if (value.sessionTicket) {
         let entityData;
         if (value.playFabId) {
-            entityData = await getEntityToken(value.sessionTicket, { Type: "master_player_account", Id: value.playFabId });
+            entityData = await getEntityToken(value.sessionTicket, {
+                Type: "master_player_account",
+                Id: value.playFabId
+            });
         } else {
             entityData = await getEntityToken(value.sessionTicket);
         }
 
-        const pfInv = await getPlayFabInventory(
-            entityData.EntityToken,
-            entityData.Entity.Id,
-            entityData.Entity.Type,
-            "default",
-            50
-        );
+        const pfInv = await getPlayFabInventory(entityData.EntityToken, entityData.Entity.Id, entityData.Entity.Type, "default", 50);
         const pfItems = pfInv.Items || [];
-        playfab = { entity: entityData.Entity, itemsCount: pfItems.length, items: pfItems };
+        playfab = {entity: entityData.Entity, itemsCount: pfItems.length, items: pfItems};
 
         const counts = {};
         for (const it of pfItems) {
@@ -171,26 +168,30 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
             }
         }
         topCreators = Object.entries(counts)
-            .map(([creatorId, count]) => ({ creatorId, count }))
+            .map(([creatorId, count]) => ({creatorId, count}))
             .sort((a, b) => b.count - a.count)
             .slice(0, 5);
 
         if (!mcToken) {
-            try { mcToken = await getMCToken(value.sessionTicket); } catch { /* ignore */ }
+            try {
+                mcToken = await getMCToken(value.sessionTicket);
+            } catch { /* ignore */
+            }
         }
         if (mcToken) {
             try {
                 mcInventory = await getMCInventory(mcToken, value.includeReceipt);
-            } catch { }
+            } catch {
+            }
         }
     }
 
     res.json({
-        user: { xuid, gamertag },
+        user: {xuid, gamertag},
         profile,
-        stats: { aggregated, raw: statsRaw },
+        stats: {aggregated, raw: statsRaw},
         playfab,
-        minecraft: { mcToken: !!mcToken, entitlementsCount: mcInventory?.length || 0, entitlements: mcInventory || [] },
+        minecraft: {mcToken: !!mcToken, entitlementsCount: mcInventory?.length || 0, entitlements: mcInventory || []},
         topCreators
     });
 }));

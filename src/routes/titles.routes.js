@@ -1,8 +1,8 @@
 import express from "express";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { getTitleHub } from "../services/xbox.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {getTitleHub} from "../services/xbox.service.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -39,7 +39,7 @@ const router = express.Router();
  *         description: Liste
  */
 router.get("/recent", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
 
@@ -47,9 +47,7 @@ router.get("/recent", jwtMiddleware, asyncHandler(async (req, res) => {
     const locale = req.headers["accept-language"];
 
     const titlesRaw = await getTitleHub(xuid, xboxliveToken, {
-        maxItems: limit,
-        fields: ["detail", "image", "scid", "achievement"],
-        locale
+        maxItems: limit, fields: ["detail", "image", "scid", "achievement"], locale
     });
     const titles = (titlesRaw?.titles || []).slice();
 
@@ -59,7 +57,7 @@ router.get("/recent", jwtMiddleware, asyncHandler(async (req, res) => {
         return tb - ta;
     });
 
-    res.json({ total: titles.length, items: titles.slice(0, limit) });
+    res.json({total: titles.length, items: titles.slice(0, limit)});
 }));
 
 export default router;

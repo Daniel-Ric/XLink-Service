@@ -1,9 +1,9 @@
 import express from "express";
 import Joi from "joi";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { getAchievements } from "../services/xbox.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {getAchievements} from "../services/xbox.service.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -32,15 +32,15 @@ const router = express.Router();
  *         description: Achievements
  */
 router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
 
-    const schema = Joi.object({ titleId: Joi.string().optional() });
-    const { value, error } = schema.validate(req.query);
+    const schema = Joi.object({titleId: Joi.string().optional()});
+    const {value, error} = schema.validate(req.query);
     if (error) throw badRequest(error.message);
 
-    const achievements = await getAchievements(xuid, xboxliveToken, { titleId: value.titleId });
+    const achievements = await getAchievements(xuid, xboxliveToken, {titleId: value.titleId});
     res.json(achievements);
 }));
 
@@ -67,15 +67,15 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  *         description: Summary
  */
 router.get("/summary", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
 
-    const schema = Joi.object({ titleId: Joi.string().required() });
-    const { value, error } = schema.validate(req.query);
+    const schema = Joi.object({titleId: Joi.string().required()});
+    const {value, error} = schema.validate(req.query);
     if (error) throw badRequest(error.message);
 
-    const data = await getAchievements(xuid, xboxliveToken, { titleId: value.titleId });
+    const data = await getAchievements(xuid, xboxliveToken, {titleId: value.titleId});
     const list = Array.isArray(data.achievements) ? data.achievements : (data.achievements || data.titles || []);
     let total = 0, earned = 0;
     for (const a of list) {
@@ -85,10 +85,7 @@ router.get("/summary", jwtMiddleware, asyncHandler(async (req, res) => {
         if (unlocked) earned++;
     }
     res.json({
-        titleId: value.titleId,
-        total,
-        earned,
-        percent: total ? Math.round((earned / total) * 100) : 0
+        titleId: value.titleId, total, earned, percent: total ? Math.round((earned / total) * 100) : 0
     });
 }));
 

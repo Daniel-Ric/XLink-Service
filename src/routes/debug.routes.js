@@ -1,9 +1,9 @@
 import express from "express";
 import Joi from "joi";
 import jwt from "jsonwebtoken";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -16,7 +16,11 @@ function b64urlToString(s) {
 }
 
 function tryParseJson(s) {
-    try { return JSON.parse(s); } catch { return null; }
+    try {
+        return JSON.parse(s);
+    } catch {
+        return null;
+    }
 }
 
 function normalizeToken(tok) {
@@ -41,7 +45,7 @@ function normalizeToken(tok) {
         prefix = "MCToken";
         t = t.replace(/^MCToken\s+/i, "").trim();
     }
-    return { raw: t, prefix, uhs };
+    return {raw: t, prefix, uhs};
 }
 
 function decodeCompact(raw) {
@@ -49,17 +53,17 @@ function decodeCompact(raw) {
     if (parts.length === 3) {
         const h = tryParseJson(b64urlToString(parts[0]));
         const p = tryParseJson(b64urlToString(parts[1]));
-        if (h && p) return { kind: "JWS", header: h, payload: p };
+        if (h && p) return {kind: "JWS", header: h, payload: p};
     }
     if (parts.length === 5) {
         const h = tryParseJson(b64urlToString(parts[0]));
-        if (h) return { kind: "JWE", header: h, payload: null };
+        if (h) return {kind: "JWE", header: h, payload: null};
     }
     return null;
 }
 
 function decodeOne(input) {
-    const { raw, prefix, uhs } = normalizeToken(input);
+    const {raw, prefix, uhs} = normalizeToken(input);
     const cp = decodeCompact(raw);
     let header = null;
     let payload = null;
@@ -76,7 +80,7 @@ function decodeOne(input) {
         ok = true;
         kind = "JWE";
     } else {
-        const dec = jwt.decode(raw, { complete: true });
+        const dec = jwt.decode(raw, {complete: true});
         if (dec) {
             header = dec.header || null;
             payload = dec.payload || null;
@@ -92,22 +96,14 @@ function decodeOne(input) {
         secondsRemaining = payload.exp - now;
     }
     if (!ok && /^[A-Za-z0-9+/=.-]+$/.test(raw) && raw.length > 40 && raw.includes("-")) {
-        header = { typ: "PlayFabSessionTicket" };
-        payload = { length: raw.length };
+        header = {typ: "PlayFabSessionTicket"};
+        payload = {length: raw.length};
         ok = true;
         kind = "OPAQUE";
     }
     return {
-        ok,
-        header,
-        payload,
-        meta: {
-            prefix,
-            uhs,
-            hasExp,
-            secondsRemaining,
-            rawLength: raw?.length || 0,
-            kind
+        ok, header, payload, meta: {
+            prefix, uhs, hasExp, secondsRemaining, rawLength: raw?.length || 0, kind
         }
     };
 }
@@ -118,12 +114,12 @@ router.post("/decode-token", jwtMiddleware, asyncHandler(async (req, res) => {
         type: Joi.string().valid("jwt", "xsts", "mc"),
         tokens: Joi.object().pattern(/.*/, Joi.string())
     });
-    const { value, error } = schema.validate(req.body || {});
+    const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
     if (value.tokens && typeof value.tokens === "object") {
         const out = {};
         for (const [k, v] of Object.entries(value.tokens)) out[k] = decodeOne(v);
-        return res.json({ ok: true, decoded: out });
+        return res.json({ok: true, decoded: out});
     }
     if (!value.token) throw badRequest("token or tokens is required");
     const result = decodeOne(value.token);
@@ -148,7 +144,7 @@ router.post("/decode-callback", jwtMiddleware, asyncHandler(async (req, res) => 
         xstsRedeem: Joi.string().optional(),
         xstsPlayFab: Joi.string().optional()
     }).min(1);
-    const { value, error } = schema.validate(req.body || {});
+    const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
     const decoded = {};
     if (value.jwt) decoded.jwt = decodeOne(value.jwt);
@@ -167,7 +163,7 @@ router.post("/decode-callback", jwtMiddleware, asyncHandler(async (req, res) => 
         gamertag: value.gamertag || decoded.jwt?.payload?.gamertag || null,
         playFabId: value.playFabId || null
     };
-    res.json({ user, decoded });
+    res.json({user, decoded});
 }));
 
 export default router;

@@ -1,14 +1,14 @@
 import express from "express";
 import Joi from "joi";
-import { asyncHandler } from "../utils/async.js";
-import { signJwt, jwtMiddleware } from "../utils/jwt.js";
-import { requestDeviceCode, getTokenFromDeviceCode } from "../services/microsoft.service.js";
-import { getXBLToken, getXSTSToken } from "../services/xbox.service.js";
-import { loginWithXbox } from "../services/playfab.service.js";
-import { getMCToken } from "../services/minecraft.service.js";
-import { env } from "../config/env.js";
-import { authLimiter } from "../middleware/rateLimit.js";
-import { badRequest } from "../utils/httpError.js";
+import {asyncHandler} from "../utils/async.js";
+import {jwtMiddleware, signJwt} from "../utils/jwt.js";
+import {getTokenFromDeviceCode, requestDeviceCode} from "../services/microsoft.service.js";
+import {getXBLToken, getXSTSToken} from "../services/xbox.service.js";
+import {loginWithXbox} from "../services/playfab.service.js";
+import {getMCToken} from "../services/minecraft.service.js";
+import {env} from "../config/env.js";
+import {authLimiter} from "../middleware/rateLimit.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -62,8 +62,8 @@ router.get("/device", authLimiter, asyncHandler(async (_req, res) => {
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
-    const schema = Joi.object({ device_code: Joi.string().required() });
-    const { value, error } = schema.validate(req.body);
+    const schema = Joi.object({device_code: Joi.string().required()});
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
 
     const titleId = env.PLAYFAB_TITLE_ID || "20ca2";
@@ -75,41 +75,25 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
 
     const xblToken = await getXBLToken(msAccessToken);
 
-    const xboxTokenInfo    = await getXSTSToken(xblToken, "http://xboxlive.com");
-    const redeemTokenInfo  = await getXSTSToken(xblToken, "https://b980a380.minecraft.playfabapi.com/");
+    const xboxTokenInfo = await getXSTSToken(xblToken, "http://xboxlive.com");
+    const redeemTokenInfo = await getXSTSToken(xblToken, "https://b980a380.minecraft.playfabapi.com/");
     const playfabTokenInfo = await getXSTSToken(xblToken, "rp://playfabapi.com/");
 
     const xboxUserInfo = xboxTokenInfo.DisplayClaims?.xui?.[0] || {};
-    const { xid, uhs, gtg } = xboxUserInfo;
+    const {xid, uhs, gtg} = xboxUserInfo;
 
     const xboxliveToken = `XBL3.0 x=${uhs};${xboxTokenInfo.Token}`;
-    const redeemToken   = `XBL3.0 x=${uhs};${redeemTokenInfo.Token}`;
-    const playfabToken  = `XBL3.0 x=${uhs};${playfabTokenInfo.Token}`;
+    const redeemToken = `XBL3.0 x=${uhs};${redeemTokenInfo.Token}`;
+    const playfabToken = `XBL3.0 x=${uhs};${playfabTokenInfo.Token}`;
 
-    const { SessionTicket, PlayFabId } = await loginWithXbox(playfabToken, titleId);
+    const {SessionTicket, PlayFabId} = await loginWithXbox(playfabToken, titleId);
     const mcToken = await getMCToken(SessionTicket);
-    const jwtToken = signJwt({ xuid: xid, gamertag: gtg });
+    const jwtToken = signJwt({xuid: xid, gamertag: gtg});
 
     res.json({
-        jwt: jwtToken,
-        xuid: xid,
-        gamertag: gtg,
-        uhs,
-        msAccessToken,
-        msRefreshToken,
-        msExpiresIn,
-        xblToken,
-        xsts: {
-            xbox: xboxTokenInfo,
-            redeem: redeemTokenInfo,
-            playfab: playfabTokenInfo
-        },
-        xboxliveToken,
-        playfabToken,
-        redeemToken,
-        mcToken,
-        sessionTicket: SessionTicket,
-        playFabId: PlayFabId
+        jwt: jwtToken, xuid: xid, gamertag: gtg, uhs, msAccessToken, msRefreshToken, msExpiresIn, xblToken, xsts: {
+            xbox: xboxTokenInfo, redeem: redeemTokenInfo, playfab: playfabTokenInfo
+        }, xboxliveToken, playfabToken, redeemToken, mcToken, sessionTicket: SessionTicket, playFabId: PlayFabId
     });
 }));
 
@@ -125,7 +109,7 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
  *         description: User
  */
 router.get("/whoami", jwtMiddleware, asyncHandler(async (req, res) => {
-    res.json({ user: req.user });
+    res.json({user: req.user});
 }));
 
 /**
@@ -140,9 +124,9 @@ router.get("/whoami", jwtMiddleware, asyncHandler(async (req, res) => {
  *         description: Neuer JWT
  */
 router.post("/jwt/refresh", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid, gamertag } = req.user;
-    const jwt = signJwt({ xuid, gamertag });
-    res.json({ jwt, expiresIn: "1h" });
+    const {xuid, gamertag} = req.user;
+    const jwt = signJwt({xuid, gamertag});
+    res.json({jwt, expiresIn: "1h"});
 }));
 
 export default router;

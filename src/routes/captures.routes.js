@@ -1,9 +1,9 @@
 import express from "express";
 import Joi from "joi";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { getGameClips, getScreenshots } from "../services/xbox.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {getGameClips, getScreenshots} from "../services/xbox.service.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -46,7 +46,7 @@ const router = express.Router();
  *         description: Clips
  */
 router.get("/clips", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
     const schema = Joi.object({
@@ -55,7 +55,7 @@ router.get("/clips", jwtMiddleware, asyncHandler(async (req, res) => {
         since: Joi.date().iso().optional(),
         continuationToken: Joi.string().optional()
     });
-    const { value, error } = schema.validate(req.query);
+    const {value, error} = schema.validate(req.query);
     if (error) throw badRequest(error.message);
     const data = await getGameClips(xuid, xboxliveToken, value);
     res.json(data);
@@ -92,7 +92,7 @@ router.get("/clips", jwtMiddleware, asyncHandler(async (req, res) => {
  *         description: Screenshots
  */
 router.get("/screenshots", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
     const schema = Joi.object({
@@ -101,7 +101,7 @@ router.get("/screenshots", jwtMiddleware, asyncHandler(async (req, res) => {
         since: Joi.date().iso().optional(),
         continuationToken: Joi.string().optional()
     });
-    const { value, error } = schema.validate(req.query);
+    const {value, error} = schema.validate(req.query);
     if (error) throw badRequest(error.message);
     const data = await getScreenshots(xuid, xboxliveToken, value);
     res.json(data);

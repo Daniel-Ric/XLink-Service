@@ -9,7 +9,11 @@ const schema = Joi.object({
     CLIENT_ID: Joi.string().required(),
     HTTP_TIMEOUT_MS: Joi.number().default(15000),
     LOG_LEVEL: Joi.string().default("info"),
-    LOG_PRETTY: Joi.when("NODE_ENV", { is: "production", then: Joi.boolean().truthy("true").falsy("false").default(false), otherwise: Joi.boolean().truthy("true").falsy("false").default(true) }),
+    LOG_PRETTY: Joi.when("NODE_ENV", {
+        is: "production",
+        then: Joi.boolean().truthy("true").falsy("false").default(false),
+        otherwise: Joi.boolean().truthy("true").falsy("false").default(true)
+    }),
     MC_GAME_VERSION: Joi.string().default("1.21.62"),
     MC_PLATFORM: Joi.string().default("Windows10"),
     PLAYFAB_TITLE_ID: Joi.string().default("20ca2"),
@@ -19,7 +23,7 @@ const schema = Joi.object({
     TRUST_PROXY: Joi.alternatives().try(Joi.boolean(), Joi.string()).default("loopback")
 }).unknown(true);
 
-const { value, error } = schema.validate(process.env, { abortEarly: false });
+const {value, error} = schema.validate(process.env, {abortEarly: false});
 if (error) {
     console.error("❌ Invalid environment configuration:", error.message);
     process.exit(1);

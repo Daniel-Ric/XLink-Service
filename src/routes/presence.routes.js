@@ -1,9 +1,9 @@
 import express from "express";
 import Joi from "joi";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { getPresence, getPresenceBatch } from "../services/xbox.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {getPresence, getPresenceBatch} from "../services/xbox.service.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -27,7 +27,7 @@ const router = express.Router();
  *         description: Presence
  */
 router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
     const presence = await getPresence(xuid, xboxliveToken);
@@ -66,8 +66,8 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  *         description: Presence batch
  */
 router.post("/batch", jwtMiddleware, asyncHandler(async (req, res) => {
-    const schema = Joi.object({ xuids: Joi.array().items(Joi.string()).min(1).required() });
-    const { value, error } = schema.validate(req.body);
+    const schema = Joi.object({xuids: Joi.array().items(Joi.string()).min(1).required()});
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
 
     const xboxliveToken = req.headers["x-xbl-token"];

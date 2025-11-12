@@ -1,10 +1,10 @@
 import express from "express";
 import Joi from "joi";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { getEntityToken, getPlayFabInventory } from "../services/playfab.service.js";
-import { getMCInventory } from "../services/minecraft.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {getEntityToken, getPlayFabInventory} from "../services/playfab.service.js";
+import {getMCInventory} from "../services/minecraft.service.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -39,23 +39,18 @@ router.post("/playfab", jwtMiddleware, asyncHandler(async (req, res) => {
         collectionId: Joi.string().default("default"),
         count: Joi.number().integer().min(1).max(200).default(50)
     });
-    const { value, error } = schema.validate(req.body);
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
 
     // EntityToken erzeugen – wenn PlayFabId vorhanden -> master_player_account, sonst Session-Entity.
-    const entityData = value.playFabId
-        ? await getEntityToken(value.sessionTicket, { Type: "master_player_account", Id: value.playFabId })
-        : await getEntityToken(value.sessionTicket);
+    const entityData = value.playFabId ? await getEntityToken(value.sessionTicket, {
+        Type: "master_player_account",
+        Id: value.playFabId
+    }) : await getEntityToken(value.sessionTicket);
 
-    const inv = await getPlayFabInventory(
-        entityData.EntityToken,
-        entityData.Entity.Id,
-        entityData.Entity.Type,
-        value.collectionId,
-        value.count
-    );
+    const inv = await getPlayFabInventory(entityData.EntityToken, entityData.Entity.Id, entityData.Entity.Type, value.collectionId, value.count);
 
-    res.json({ entity: entityData.Entity, items: inv.Items || [] });
+    res.json({entity: entityData.Entity, items: inv.Items || []});
 }));
 
 /**
@@ -83,7 +78,7 @@ router.get("/minecraft", jwtMiddleware, asyncHandler(async (req, res) => {
     if (!mcToken) throw badRequest("Missing x-mc-token header");
     const includeReceipt = String(req.query.includeReceipt || "false") === "true";
     const entitlements = await getMCInventory(mcToken, includeReceipt);
-    res.json({ count: entitlements.length, entitlements });
+    res.json({count: entitlements.length, entitlements});
 }));
 
 /**
@@ -114,24 +109,17 @@ router.get("/minecraft/creators/top", jwtMiddleware, asyncHandler(async (req, re
 
     const counts = {};
     for (const e of (ents || [])) {
-        const cid =
-            e?.creatorId ||
-            e?.creator?.id ||
-            e?.item?.creatorId ||
-            e?.content?.creatorId ||
-            e?.product?.creatorId ||
-            e?.metadata?.creatorId ||
-            null;
+        const cid = e?.creatorId || e?.creator?.id || e?.item?.creatorId || e?.content?.creatorId || e?.product?.creatorId || e?.metadata?.creatorId || null;
         if (!cid) continue;
         counts[cid] = (counts[cid] || 0) + 1;
     }
 
     const top = Object.entries(counts)
-        .map(([creatorId, count]) => ({ creatorId, count }))
+        .map(([creatorId, count]) => ({creatorId, count}))
         .sort((a, b) => b.count - a.count)
         .slice(0, limit);
 
-    res.json({ totalCreators: Object.keys(counts).length, top });
+    res.json({totalCreators: Object.keys(counts).length, top});
 }));
 
 /**
@@ -173,18 +161,13 @@ router.get("/minecraft/search", jwtMiddleware, asyncHandler(async (req, res) => 
     let filtered = ents;
 
     if (productId) {
-        filtered = filtered.filter(e =>
-            e?.productId === productId ||
-            e?.id === productId ||
-            e?.skuId === productId ||
-            e?.entitlementId === productId
-        );
+        filtered = filtered.filter(e => e?.productId === productId || e?.id === productId || e?.skuId === productId || e?.entitlementId === productId);
     }
     if (q) {
         filtered = filtered.filter(e => JSON.stringify(e).toLowerCase().includes(q));
     }
 
-    res.json({ total: filtered.length, items: filtered.slice(0, limit) });
+    res.json({total: filtered.length, items: filtered.slice(0, limit)});
 }));
 
 export default router;

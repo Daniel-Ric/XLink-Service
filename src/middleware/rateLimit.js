@@ -5,5 +5,5 @@ export const authLimiter = rateLimit({
     max: 30,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { error: "Too many auth requests, please slow down." }
+    message: {error: "Too many auth requests, please slow down."}
 });

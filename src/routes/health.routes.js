@@ -14,7 +14,7 @@ const router = express.Router();
  *       200:
  *         description: OK
  */
-router.get("/healthz", (_req, res) => res.json({ ok: true }));
+router.get("/healthz", (_req, res) => res.json({ok: true}));
 
 /**
  * @swagger
@@ -28,6 +28,6 @@ router.get("/healthz", (_req, res) => res.json({ ok: true }));
  *       200:
  *         description: Ready
  */
-router.get("/readyz", (_req, res) => res.json({ ready: true }));
+router.get("/readyz", (_req, res) => res.json({ready: true}));
 
 export default router;

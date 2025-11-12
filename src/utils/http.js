@@ -1,10 +1,9 @@
 import axios from "axios";
 import http from "node:http";
 import https from "node:https";
-import { env } from "../config/env.js";
 
-const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 100 });
-const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 100 });
+const httpAgent = new http.Agent({keepAlive: true, maxSockets: 100});
+const httpsAgent = new https.Agent({keepAlive: true, maxSockets: 100});
 
 export function createHttp(timeoutMs = 15000) {
     return axios.create({

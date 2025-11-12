@@ -1,9 +1,9 @@
 import express from "express";
 import Joi from "joi";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { getMCToken } from "../services/minecraft.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {getMCToken} from "../services/minecraft.service.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -30,11 +30,11 @@ const router = express.Router();
  *         description: OK
  */
 router.post("/token", jwtMiddleware, asyncHandler(async (req, res) => {
-    const schema = Joi.object({ sessionTicket: Joi.string().required() });
-    const { value, error } = schema.validate(req.body);
+    const schema = Joi.object({sessionTicket: Joi.string().required()});
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     const mcToken = await getMCToken(value.sessionTicket);
-    res.json({ mcToken });
+    res.json({mcToken});
 }));
 
 export default router;

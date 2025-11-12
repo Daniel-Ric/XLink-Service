@@ -1,16 +1,16 @@
 import express from "express";
 import Joi from "joi";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
 import {
     getPlayFabAccountInfo,
-    getPlayFabPlayerProfile,
     getPlayFabCatalog,
+    getPlayFabPlayerProfile,
     getPlayFabTitleData,
     getPlayFabUserData,
     getPlayFabUserReadOnlyData
 } from "../services/playfab.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -42,8 +42,8 @@ const router = express.Router();
  *         description: AccountInfo
  */
 router.post("/account", jwtMiddleware, asyncHandler(async (req, res) => {
-    const schema = Joi.object({ sessionTicket: Joi.string().required() });
-    const { value, error } = schema.validate(req.body);
+    const schema = Joi.object({sessionTicket: Joi.string().required()});
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     const data = await getPlayFabAccountInfo(value.sessionTicket);
     res.json(data);
@@ -72,10 +72,9 @@ router.post("/account", jwtMiddleware, asyncHandler(async (req, res) => {
  */
 router.post("/profile", jwtMiddleware, asyncHandler(async (req, res) => {
     const schema = Joi.object({
-        sessionTicket: Joi.string().required(),
-        playFabId: Joi.string().optional()
+        sessionTicket: Joi.string().required(), playFabId: Joi.string().optional()
     });
-    const { value, error } = schema.validate(req.body);
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     const data = await getPlayFabPlayerProfile(value.sessionTicket, value.playFabId);
     res.json(data);
@@ -104,10 +103,9 @@ router.post("/profile", jwtMiddleware, asyncHandler(async (req, res) => {
  */
 router.post("/catalog", jwtMiddleware, asyncHandler(async (req, res) => {
     const schema = Joi.object({
-        sessionTicket: Joi.string().required(),
-        catalogVersion: Joi.string().optional()
+        sessionTicket: Joi.string().required(), catalogVersion: Joi.string().optional()
     });
-    const { value, error } = schema.validate(req.body);
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     const data = await getPlayFabCatalog(value.sessionTicket, value.catalogVersion);
     res.json(data);
@@ -138,10 +136,9 @@ router.post("/catalog", jwtMiddleware, asyncHandler(async (req, res) => {
  */
 router.post("/titledata", jwtMiddleware, asyncHandler(async (req, res) => {
     const schema = Joi.object({
-        sessionTicket: Joi.string().required(),
-        keys: Joi.array().items(Joi.string()).optional()
+        sessionTicket: Joi.string().required(), keys: Joi.array().items(Joi.string()).optional()
     });
-    const { value, error } = schema.validate(req.body);
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     const data = await getPlayFabTitleData(value.sessionTicket, value.keys);
     res.json(data);
@@ -177,7 +174,7 @@ router.post("/userdata", jwtMiddleware, asyncHandler(async (req, res) => {
         playFabId: Joi.string().optional(),
         keys: Joi.array().items(Joi.string()).optional()
     });
-    const { value, error } = schema.validate(req.body);
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     const data = await getPlayFabUserData(value.sessionTicket, value.keys, value.playFabId);
     res.json(data);
@@ -213,7 +210,7 @@ router.post("/userdata/readonly", jwtMiddleware, asyncHandler(async (req, res) =
         playFabId: Joi.string().optional(),
         keys: Joi.array().items(Joi.string()).optional()
     });
-    const { value, error } = schema.validate(req.body);
+    const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     const data = await getPlayFabUserReadOnlyData(value.sessionTicket, value.keys, value.playFabId);
     res.json(data);

@@ -1,8 +1,8 @@
 import express from "express";
-import { jwtMiddleware } from "../utils/jwt.js";
-import { asyncHandler } from "../utils/async.js";
-import { getPeopleSocial, getPeopleFollowers, getPresenceBatch, getGamertagsBatch } from "../services/xbox.service.js";
-import { badRequest } from "../utils/httpError.js";
+import {jwtMiddleware} from "../utils/jwt.js";
+import {asyncHandler} from "../utils/async.js";
+import {getGamertagsBatch, getPeopleFollowers, getPeopleSocial, getPresenceBatch} from "../services/xbox.service.js";
+import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
 
@@ -35,7 +35,7 @@ const router = express.Router();
  *         description: Friends
  */
 router.get("/friends", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
     const maxItems = Math.max(1, Math.min(parseInt(req.query.maxItems || "200", 10), 2000));
@@ -43,11 +43,9 @@ router.get("/friends", jwtMiddleware, asyncHandler(async (req, res) => {
     const data = await getPeopleSocial(xuid, xboxliveToken, maxItems, locale);
 
     const list = (data?.people || data?.People || []);
-    const people = list.filter(p =>
-        (p?.isFollowingCaller === true) && (p?.isFollowedByCaller === true)
-    );
+    const people = list.filter(p => (p?.isFollowingCaller === true) && (p?.isFollowedByCaller === true));
 
-    res.json({ count: people.length, people });
+    res.json({count: people.length, people});
 }));
 
 /**
@@ -72,14 +70,14 @@ router.get("/friends", jwtMiddleware, asyncHandler(async (req, res) => {
  *         description: Followers
  */
 router.get("/followers", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
     const maxItems = Math.max(1, Math.min(parseInt(req.query.maxItems || "200", 10), 2000));
     const locale = req.headers["accept-language"];
     const data = await getPeopleFollowers(xuid, xboxliveToken, maxItems, locale);
     const people = (data?.people || data?.People || []);
-    res.json({ count: people.length, people });
+    res.json({count: people.length, people});
 }));
 
 /**
@@ -106,7 +104,7 @@ router.get("/followers", jwtMiddleware, asyncHandler(async (req, res) => {
 const SHELL_TITLE_IDS = new Set([704208617, 1022622766, 1794566092]);
 
 router.get("/friends/presence", jwtMiddleware, asyncHandler(async (req, res) => {
-    const { xuid } = req.user;
+    const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
 
@@ -121,37 +119,26 @@ router.get("/friends/presence", jwtMiddleware, asyncHandler(async (req, res) => 
 
     const xuids = friends.map(f => f.xuid).filter(Boolean);
 
-    const [presenceRaw, gtMap] = xuids.length
-        ? await Promise.all([
-            getPresenceBatch(xuids, xboxliveToken, { level: "all", locale }),
-            getGamertagsBatch(xuids, xboxliveToken, locale)
-        ])
-        : [{ people: [] }, {}];
+    const [presenceRaw, gtMap] = xuids.length ? await Promise.all([getPresenceBatch(xuids, xboxliveToken, {
+        level: "all",
+        locale
+    }), getGamertagsBatch(xuids, xboxliveToken, locale)]) : [{people: []}, {}];
 
-    const presenceArray = Array.isArray(presenceRaw) ? presenceRaw
-        : Array.isArray(presenceRaw.people) ? presenceRaw.people
-            : [];
+    const presenceArray = Array.isArray(presenceRaw) ? presenceRaw : Array.isArray(presenceRaw.people) ? presenceRaw.people : [];
 
     const presence = presenceArray.map(p => {
         const ls = p?.lastSeen || null;
         const titleIdNum = ls?.titleId != null ? Number(ls.titleId) : null;
         const titleName = (ls?.titleName || "").trim();
 
-        const isPseudoOnline =
-            !!ls && (
-                titleName.toLowerCase() === "online" ||
-                (titleIdNum != null && SHELL_TITLE_IDS.has(titleIdNum))
-            );
+        const isPseudoOnline = !!ls && (titleName.toLowerCase() === "online" || (titleIdNum != null && SHELL_TITLE_IDS.has(titleIdNum)));
 
         return {
-            ...p,
-            gamertag: gtMap[p.xuid] ?? null,
-            lastSeen: isPseudoOnline ? undefined : ls,
-            isPseudoOnline
+            ...p, gamertag: gtMap[p.xuid] ?? null, lastSeen: isPseudoOnline ? undefined : ls, isPseudoOnline
         };
     });
 
-    res.json({ friends: friends.length, xuids, presence });
+    res.json({friends: friends.length, xuids, presence});
 }));
 
 export default router;
