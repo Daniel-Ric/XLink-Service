@@ -11,7 +11,10 @@ const router = express.Router();
  * @swagger
  * /lookup/xuid:
  *   get:
- *     summary: XUID zu Gamertag nachschlagen
+ *     summary: Resolve XUID by Gamertag
+ *     description: >
+ *       Looks up a player's Xbox user ID (XUID) by Gamertag using the Xbox profile service.
+ *       Returns 404 if the Gamertag cannot be resolved.
  *     tags: [Lookup]
  *     security:
  *       - BearerAuth: []
@@ -25,9 +28,12 @@ const router = express.Router();
  *         name: gamertag
  *         required: true
  *         schema: { type: string }
+ *         description: Exact Gamertag to resolve (without the #suffix used on PC)
  *     responses:
- *       200: { description: OK }
- *       404: { description: Gamertag nicht gefunden }
+ *       200:
+ *         description: XUID successfully resolved
+ *       404:
+ *         description: Gamertag not found
  */
 router.get("/xuid", jwtMiddleware, asyncHandler(async (req, res) => {
     const xboxliveToken = req.headers["x-xbl-token"];
@@ -47,7 +53,10 @@ router.get("/xuid", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /lookup/gamertag:
  *   get:
- *     summary: Gamertag zu XUID nachschlagen
+ *     summary: Resolve Gamertag by XUID
+ *     description: >
+ *       Looks up a player's Gamertag for a given XUID. This uses profile settings under the hood
+ *       and returns 404 if the profile cannot be found.
  *     tags: [Lookup]
  *     security:
  *       - BearerAuth: []
@@ -61,9 +70,12 @@ router.get("/xuid", jwtMiddleware, asyncHandler(async (req, res) => {
  *         name: xuid
  *         required: true
  *         schema: { type: string }
+ *         description: Xbox user ID (numeric XUID)
  *     responses:
- *       200: { description: OK }
- *       404: { description: XUID nicht gefunden }
+ *       200:
+ *         description: Gamertag successfully resolved
+ *       404:
+ *         description: XUID not found
  */
 router.get("/gamertag", jwtMiddleware, asyncHandler(async (req, res) => {
     const xboxliveToken = req.headers["x-xbl-token"];

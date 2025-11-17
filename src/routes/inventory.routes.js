@@ -12,7 +12,11 @@ const router = express.Router();
  * @swagger
  * /inventory/playfab:
  *   post:
- *     summary: PlayFab-Inventar über SessionTicket abrufen
+ *     summary: Get PlayFab inventory using a SessionTicket
+ *     description: >
+ *       Calls PlayFab's Inventory/GetInventoryItems for the specified entity. If `playFabId`
+ *       is provided, the entity will be the `master_player_account`; otherwise the session's
+ *       default entity is used. Returns the entity descriptor and its inventory items.
  *     tags: [Inventory]
  *     security:
  *       - BearerAuth: []
@@ -24,13 +28,23 @@ const router = express.Router();
  *             type: object
  *             required: [sessionTicket]
  *             properties:
- *               sessionTicket: { type: string }
- *               playFabId:     { type: string, description: "Optional: Wenn gesetzt, wird master_player_account verwendet" }
- *               collectionId:  { type: string, default: "default" }
- *               count:         { type: integer, default: 50 }
+ *               sessionTicket:
+ *                 type: string
+ *                 description: PlayFab SessionTicket (X-Authorization)
+ *               playFabId:
+ *                 type: string
+ *                 description: Optional PlayFabId to target master_player_account instead of the default entity
+ *               collectionId:
+ *                 type: string
+ *                 default: "default"
+ *               count:
+ *                 type: integer
+ *                 default: 50
+ *                 minimum: 1
+ *                 maximum: 200
  *     responses:
  *       200:
- *         description: Items
+ *         description: PlayFab inventory items for the chosen entity
  */
 router.post("/playfab", jwtMiddleware, asyncHandler(async (req, res) => {
     const schema = Joi.object({
@@ -57,7 +71,10 @@ router.post("/playfab", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /inventory/minecraft:
  *   get:
- *     summary: Minecraft Marketplace-Entitlements (Inventory)
+ *     summary: List Minecraft Marketplace entitlements
+ *     description: >
+ *       Returns Minecraft Marketplace entitlements for the calling account using an MCToken.
+ *       You can optionally include the raw receipts for deeper analysis or PlayFab correlation.
  *     tags: [Inventory]
  *     security:
  *       - BearerAuth: []
@@ -66,12 +83,14 @@ router.post("/playfab", jwtMiddleware, asyncHandler(async (req, res) => {
  *         name: x-mc-token
  *         required: true
  *         schema: { type: string }
+ *         description: Minecraft Authorization header (MCToken …) as obtained from /minecraft/token or /auth/callback
  *       - in: query
  *         name: includeReceipt
  *         schema: { type: boolean, default: false }
+ *         description: Whether to include full receipts for each entitlement
  *     responses:
  *       200:
- *         description: Entitlements
+ *         description: List of Minecraft entitlements for the account
  */
 router.get("/minecraft", jwtMiddleware, asyncHandler(async (req, res) => {
     const mcToken = req.headers["x-mc-token"];
@@ -85,7 +104,11 @@ router.get("/minecraft", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /inventory/minecraft/creators/top:
  *   get:
- *     summary: Top-Creators aus MC-Entitlements (nach Anzahl Items)
+ *     summary: Compute top creators from Minecraft entitlements
+ *     description: >
+ *       Aggregates Minecraft Marketplace entitlements by creator and returns the creators
+ *       with the highest number of owned items. This is useful for quick “favorite creator”
+ *       statistics.
  *     tags: [Inventory]
  *     security:
  *       - BearerAuth: []
@@ -97,9 +120,10 @@ router.get("/minecraft", jwtMiddleware, asyncHandler(async (req, res) => {
  *       - in: query
  *         name: limit
  *         schema: { type: integer, default: 5, minimum: 1, maximum: 50 }
+ *         description: Maximum number of creators to return
  *     responses:
  *       200:
- *         description: Top-Creators
+ *         description: Top creators sorted by number of entitlements
  */
 router.get("/minecraft/creators/top", jwtMiddleware, asyncHandler(async (req, res) => {
     const mcToken = req.headers["x-mc-token"];
@@ -126,7 +150,11 @@ router.get("/minecraft/creators/top", jwtMiddleware, asyncHandler(async (req, re
  * @swagger
  * /inventory/minecraft/search:
  *   get:
- *     summary: Einfache Suche in MC-Entitlements
+ *     summary: Search Minecraft entitlements by productId or free-text
+ *     description: >
+ *       Performs a simple in-memory search across all Minecraft entitlements. You can
+ *       filter by a concrete `productId` and/or perform a case-insensitive substring search
+ *       (`q`) over the serialized entitlement object.
  *     tags: [Inventory]
  *     security:
  *       - BearerAuth: []
@@ -138,16 +166,18 @@ router.get("/minecraft/creators/top", jwtMiddleware, asyncHandler(async (req, re
  *       - in: query
  *         name: productId
  *         schema: { type: string }
+ *         description: Exact product or entitlement identifier to match
  *       - in: query
  *         name: q
- *         description: Textsuche (Case-Insensitive) innerhalb des Entitlement-Objekts
+ *         description: Case-insensitive free-text search across the JSON representation of each entitlement
  *         schema: { type: string }
  *       - in: query
  *         name: limit
  *         schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+ *         description: Maximum number of matching entitlements to return
  *     responses:
  *       200:
- *         description: Trefferliste
+ *         description: Filtered entitlement list matching the query
  */
 router.get("/minecraft/search", jwtMiddleware, asyncHandler(async (req, res) => {
     const mcToken = req.headers["x-mc-token"];

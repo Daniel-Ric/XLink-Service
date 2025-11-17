@@ -11,7 +11,10 @@ const router = express.Router();
  * @swagger
  * /achievements/me:
  *   get:
- *     summary: Achievements für aktuellen User
+ *     summary: List achievements for the authenticated user
+ *     description: >
+ *       Returns the raw Xbox Live achievements response for the currently authenticated user.
+ *       Optionally filter by a specific `titleId` to limit the result to a single game.
  *     tags: [Achievements]
  *     security:
  *       - BearerAuth: []
@@ -22,14 +25,16 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: string
+ *         description: Xbox Live XSTS token in the form `XBL3.0 x={uhs};{token}`
  *       - in: query
  *         name: titleId
  *         required: false
  *         schema:
  *           type: string
+ *         description: Optional Xbox title ID to filter achievements to a single game
  *     responses:
  *       200:
- *         description: Achievements
+ *         description: List of achievements for the user
  */
 router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
@@ -48,7 +53,11 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /achievements/summary:
  *   get:
- *     summary: Zusammenfassung (earned/total) der Achievements für einen Titel
+ *     summary: Get earned vs total achievements for a title
+ *     description: >
+ *       Computes a simple summary for a given Xbox title: total number of achievements,
+ *       number of unlocked achievements and the percentage completed. Internally this
+ *       endpoint normalizes several different progress state shapes.
  *     tags: [Achievements]
  *     security:
  *       - BearerAuth: []
@@ -57,14 +66,17 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  *       - in: header
  *         name: x-xbl-token
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *       - in: query
  *         name: titleId
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
+ *         description: Xbox title ID for which to compute the achievement summary
  *     responses:
  *       200:
- *         description: Summary
+ *         description: Aggregated achievement summary for the given title
  */
 router.get("/summary", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;

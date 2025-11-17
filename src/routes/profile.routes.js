@@ -14,7 +14,11 @@ const router = express.Router();
  * @swagger
  * /profile/me:
  *   get:
- *     summary: Xbox Profil-Settings des eingeloggten Users
+ *     summary: Get basic Xbox profile settings for the current user
+ *     description: >
+ *       Reads selected profile settings for the authenticated user from Xbox Live,
+ *       such as display picture URL, Gamerscore and Gamertag. The list of settings
+ *       can be customized via the `settings` query parameter.
  *     tags: [Profile]
  *     security:
  *       - BearerAuth: []
@@ -30,9 +34,10 @@ const router = express.Router();
  *         schema:
  *           type: string
  *           default: GameDisplayPicRaw,Gamerscore,Gamertag
+ *         description: Comma-separated list of profile setting IDs to request
  *     responses:
  *       200:
- *         description: Profil
+ *         description: Profile settings for the current user
  */
 router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
@@ -47,7 +52,10 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /profile/titles:
  *   get:
- *     summary: Titel des Users (TitleHub)
+ *     summary: Get TitleHub entries for the current user
+ *     description: >
+ *       Uses the TitleHub service to fetch titles associated with the current user.
+ *       This includes metadata such as title images, SCIDs and achievement info.
  *     tags: [Profile]
  *     security:
  *       - BearerAuth: []
@@ -61,9 +69,10 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  *         name: Accept-Language
  *         required: false
  *         schema: { type: string, example: "en-US,en;q=0.9" }
+ *         description: Preferred language for localized title metadata
  *     responses:
  *       200:
- *         description: Titles
+ *         description: TitleHub response for the user
  */
 router.get("/titles", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
@@ -78,7 +87,15 @@ router.get("/titles", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /profile/overview:
  *   post:
- *     summary: Kombinierte Übersicht (Profil + Xbox-Stats + optional PlayFab & Minecraft Inventar)
+ *     summary: Combined overview (profile, Xbox stats and optional PlayFab & Minecraft inventory)
+ *     description: >
+ *       High-level “dashboard” endpoint that combines multiple services:
+ *       - Xbox profile settings (Gamertag, Gamerscore, display picture)
+ *       - Aggregated Xbox stats for several Minecraft SCIDs (minutes played, blocks broken, etc.)
+ *       - Optional PlayFab inventory (if a SessionTicket is provided)
+ *       - Optional Minecraft entitlements (using either `x-mc-token` or a Minecraft token created from SessionTicket)
+ *
+ *       This is intended for building rich player overview screens with a single call.
  *     tags: [Profile]
  *     security:
  *       - BearerAuth: []
@@ -92,19 +109,16 @@ router.get("/titles", jwtMiddleware, asyncHandler(async (req, res) => {
  *         name: x-mc-token
  *         required: false
  *         schema: { type: string }
+ *         description: Optional Minecraft token; if omitted and a SessionTicket is given, the service will try to obtain one
  *     requestBody:
  *       required: false
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               sessionTicket: { type: string, description: "PlayFab SessionTicket (optional, für Inventar/MC-Token)" }
- *               playFabId:     { type: string, description: "PlayFabId (optional; wenn gesetzt wird master_player_account verwendet)" }
- *               includeReceipt: { type: boolean, default: false }
+ *             $ref: '#/components/schemas/ProfileOverviewRequest'
  *     responses:
  *       200:
- *         description: Übersicht
+ *         description: Aggregated overview for the current user
  */
 router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid, gamertag} = req.user;

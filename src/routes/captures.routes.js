@@ -11,14 +11,18 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Captures
- *     description: Gameclips & Screenshots
+ *     description: Xbox game captures – game clips and screenshots for the signed-in user.
  */
 
 /**
  * @swagger
  * /captures/clips:
  *   get:
- *     summary: Gameclips des Users
+ *     summary: List game clips for the authenticated user
+ *     description: >
+ *       Returns the user's game clips from the Xbox game-clips metadata service.
+ *       You can filter by title, date threshold (`since`) and page through results
+ *       using `continuationToken`.
  *     tags: [Captures]
  *     security:
  *       - BearerAuth: []
@@ -28,22 +32,26 @@ const router = express.Router();
  *         name: x-xbl-token
  *         required: true
  *         schema: { type: string }
+ *         description: Xbox Live XSTS token in XBL3.0 format
  *       - in: query
  *         name: titleId
  *         schema: { type: string }
+ *         description: Optional titleId to only return clips for a specific game
  *       - in: query
  *         name: max
  *         schema: { type: integer, default: 24 }
+ *         description: Maximum number of clips to return (1–100)
  *       - in: query
  *         name: since
- *         description: ISO Datum/Zeitschwelle
+ *         description: ISO 8601 timestamp used as lower time bound (only clips created after this moment)
  *         schema: { type: string }
  *       - in: query
  *         name: continuationToken
  *         schema: { type: string }
+ *         description: Continuation token from a previous response to page through results
  *     responses:
  *       200:
- *         description: Clips
+ *         description: Page of game clips for the user
  */
 router.get("/clips", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
@@ -65,7 +73,11 @@ router.get("/clips", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /captures/screenshots:
  *   get:
- *     summary: Screenshots des Users
+ *     summary: List screenshots for the authenticated user
+ *     description: >
+ *       Returns screenshots from the Xbox screenshots metadata service. Works analogously
+ *       to `/captures/clips` with support for filtering by title, date (`since`) and
+ *       continuation tokens.
  *     tags: [Captures]
  *     security:
  *       - BearerAuth: []
@@ -78,18 +90,22 @@ router.get("/clips", jwtMiddleware, asyncHandler(async (req, res) => {
  *       - in: query
  *         name: titleId
  *         schema: { type: string }
+ *         description: Optional titleId to restrict screenshots to a specific game
  *       - in: query
  *         name: max
  *         schema: { type: integer, default: 24 }
+ *         description: Maximum number of screenshots to return (1–100)
  *       - in: query
  *         name: since
  *         schema: { type: string }
+ *         description: Optional ISO 8601 lower bound for capture time
  *       - in: query
  *         name: continuationToken
  *         schema: { type: string }
+ *         description: Continuation token from a previous screenshots response
  *     responses:
  *       200:
- *         description: Screenshots
+ *         description: Page of screenshots for the user
  */
 router.get("/screenshots", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;

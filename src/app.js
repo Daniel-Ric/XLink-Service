@@ -109,7 +109,31 @@ app.use(rateLimit({windowMs: 60000, max: 600, standardHeaders: true, legacyHeade
 if (env.SWAGGER_ENABLED) {
     app.get("/openapi.json", (req, res) => res.json(swaggerSpec));
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-        explorer: true, swaggerOptions: {tagsSorter: "none", operationsSorter: "alpha"}
+        explorer: true,
+        swaggerOptions: {
+            tagsSorter: "none",
+            operationsSorter: (a, b) => {
+                const pathOrder = [
+                    "/auth/device",
+                    "/auth/callback",
+                    "/auth/whoami",
+                    "/auth/jwt/refresh"
+                ];
+
+                const aPath = a.get("path");
+                const bPath = b.get("path");
+
+                const aIndex = pathOrder.indexOf(aPath);
+                const bIndex = pathOrder.indexOf(bPath);
+
+                if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+
+                if (aIndex !== -1) return -1;
+                if (bIndex !== -1) return 1;
+
+                return aPath.localeCompare(bPath);
+            }
+        }
     }));
 }
 
