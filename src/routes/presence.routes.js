@@ -11,7 +11,10 @@ const router = express.Router();
  * @swagger
  * /presence/me:
  *   get:
- *     summary: Presence des Users
+ *     summary: Get presence for the authenticated user
+ *     description: >
+ *       Returns the raw Xbox presence document for the current user, including device sessions,
+ *       titles and last seen information. Requires an Xbox Live XSTS token.
  *     tags: [Presence]
  *     security:
  *       - BearerAuth: []
@@ -24,7 +27,7 @@ const router = express.Router();
  *           type: string
  *     responses:
  *       200:
- *         description: Presence
+ *         description: Presence document for the current user
  */
 router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
@@ -38,7 +41,11 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /presence/batch:
  *   post:
- *     summary: Presence für mehrere XUIDs
+ *     summary: Get presence for multiple XUIDs
+ *     description: >
+ *       Batch endpoint for fetching presence information for multiple users at once.
+ *       The Xbox Live service may limit the number of XUIDs per request; this API forwards
+ *       your list and returns the raw presence batch response.
  *     tags: [Presence]
  *     security:
  *       - BearerAuth: []
@@ -61,9 +68,10 @@ router.get("/me", jwtMiddleware, asyncHandler(async (req, res) => {
  *                 type: array
  *                 items:
  *                   type: string
+ *                 description: Array of XUIDs to query
  *     responses:
  *       200:
- *         description: Presence batch
+ *         description: Presence information for the requested users
  */
 router.post("/batch", jwtMiddleware, asyncHandler(async (req, res) => {
     const schema = Joi.object({xuids: Joi.array().items(Joi.string()).min(1).required()});

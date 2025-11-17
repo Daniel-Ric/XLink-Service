@@ -10,14 +10,18 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: People
- *     description: Friends / Followers (PeopleHub)
+ *     description: Xbox friends, followers and mutuals based on PeopleHub social APIs.
  */
 
 /**
  * @swagger
  * /people/friends:
  *   get:
- *     summary: Liste gemeinsamer Freunde (mutual)
+ *     summary: List mutual friends (you follow them and they follow you)
+ *     description: >
+ *       Retrieves the caller's social graph and filters it down to mutual relationships:
+ *       users that you follow **and** that follow you back. Internally uses PeopleHub
+ *       social APIs and respects `maxItems`.
  *     tags: [People]
  *     security:
  *       - BearerAuth: []
@@ -30,9 +34,10 @@ const router = express.Router();
  *       - in: query
  *         name: maxItems
  *         schema: { type: integer, default: 200 }
+ *         description: Maximum number of people to scan before filtering to mutual friends (1–2000)
  *     responses:
  *       200:
- *         description: Friends
+ *         description: List of mutual friends
  */
 router.get("/friends", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
@@ -52,7 +57,10 @@ router.get("/friends", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /people/followers:
  *   get:
- *     summary: Follower (sie folgen dir)
+ *     summary: List followers (they follow you)
+ *     description: >
+ *       Returns all users that follow the caller, regardless of whether you follow them back.
+ *       This is a straight wrapper around the PeopleHub followers endpoint.
  *     tags: [People]
  *     security:
  *       - BearerAuth: []
@@ -65,9 +73,10 @@ router.get("/friends", jwtMiddleware, asyncHandler(async (req, res) => {
  *       - in: query
  *         name: maxItems
  *         schema: { type: integer, default: 200 }
+ *         description: Maximum number of followers to fetch (1–2000)
  *     responses:
  *       200:
- *         description: Followers
+ *         description: List of followers for the caller
  */
 router.get("/followers", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
@@ -84,7 +93,11 @@ router.get("/followers", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /people/friends/presence:
  *   get:
- *     summary: Presence-Infos für (bis zu) die ersten N Freunde
+ *     summary: Presence for the first N mutual friends
+ *     description: >
+ *       Combines PeopleHub and presence APIs to return presence information for up to N mutual
+ *       friends. Shell titles and generic "Online" entries are normalized into `isPseudoOnline`
+ *       to make it easier to distinguish real game sessions from dashboard-only presence.
  *     tags: [People]
  *     security:
  *       - BearerAuth: []
@@ -97,9 +110,10 @@ router.get("/followers", jwtMiddleware, asyncHandler(async (req, res) => {
  *       - in: query
  *         name: limit
  *         schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+ *         description: Maximum number of mutual friends to include in the presence batch
  *     responses:
  *       200:
- *         description: Presence-Daten
+ *         description: Presence information for mutual friends
  */
 const SHELL_TITLE_IDS = new Set([704208617, 1022622766, 1794566092]);
 

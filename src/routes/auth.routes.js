@@ -16,11 +16,15 @@ const router = express.Router();
  * @swagger
  * /auth/device:
  *   get:
- *     summary: Device Code für Microsoft Login anfordern
+ *     summary: Start Microsoft device-code sign-in
+ *     description: >
+ *       Starts the Microsoft device-code OAuth flow by requesting a `device_code` and `user_code`.
+ *       Use the `verification_url` and `user_code` to sign in on another device, then poll
+ *       `/auth/callback` with the `device_code` to obtain Xbox / PlayFab / Minecraft tokens.
  *     tags: [Auth]
  *     responses:
  *       200:
- *         description: Device Code
+ *         description: Device code issued successfully
  *         content:
  *           application/json:
  *             schema:
@@ -35,7 +39,14 @@ router.get("/device", authLimiter, asyncHandler(async (_req, res) => {
  * @swagger
  * /auth/callback:
  *   post:
- *     summary: Auth mit device_code abschließen und Tokens liefern
+ *     summary: Exchange device_code for Xbox / PlayFab / Minecraft tokens
+ *     description: >
+ *       Completes the device-code flow. Exchanges the previously issued `device_code` for:
+ *       - a signed JWT used to access this API
+ *       - Xbox Live XSTS tokens
+ *       - a PlayFab SessionTicket
+ *       - a Minecraft multiplayer token (MCToken)
+ *       and convenience headers like `xboxliveToken`, `playfabToken`, `redeemToken`.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -47,15 +58,16 @@ router.get("/device", authLimiter, asyncHandler(async (_req, res) => {
  *             properties:
  *               device_code:
  *                 type: string
+ *                 description: Device code returned by /auth/device
  *     responses:
  *       200:
- *         description: Erfolgreich
+ *         description: Tokens successfully issued
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/AuthCallbackResponse'
  *       400:
- *         description: Authorization pending / Bad Request
+ *         description: Authorization pending or invalid device_code
  *         content:
  *           application/json:
  *             schema:
@@ -101,12 +113,16 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
  * @swagger
  * /auth/whoami:
  *   get:
- *     summary: Dekodierte JWT-User-Info
+ *     summary: Get decoded JWT user payload
+ *     description: >
+ *       Returns the decoded payload of the current Bearer JWT, typically including the
+ *       Xbox user ID (`xuid`) and gamertag. Useful to verify which account the backend
+ *       considers as authenticated.
  *     tags: [Auth]
  *     security: [{BearerAuth: []}]
  *     responses:
  *       200:
- *         description: User
+ *         description: Decoded JWT payload for the current user
  */
 router.get("/whoami", jwtMiddleware, asyncHandler(async (req, res) => {
     res.json({user: req.user});
@@ -116,12 +132,15 @@ router.get("/whoami", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /auth/jwt/refresh:
  *   post:
- *     summary: JWT Refresh (sofern aktueller JWT noch gültig)
+ *     summary: Refresh API JWT while the current token is still valid
+ *     description: >
+ *       Issues a new short-lived API JWT for the same Xbox user as the current token.
+ *       This endpoint can only be called while the existing JWT is still valid.
  *     tags: [Auth]
  *     security: [{BearerAuth: []}]
  *     responses:
  *       200:
- *         description: Neuer JWT
+ *         description: New JWT issued successfully
  */
 router.post("/jwt/refresh", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid, gamertag} = req.user;

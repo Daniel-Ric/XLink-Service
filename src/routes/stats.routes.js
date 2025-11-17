@@ -10,7 +10,11 @@ const router = express.Router();
  * @swagger
  * /stats/xbox/me:
  *   get:
- *     summary: Xbox-Stats (Minecraft SCIDs) inkl. Aggregates
+ *     summary: Get Minecraft-related Xbox stats for the current user
+ *     description: >
+ *       Reads Xbox user statistics for multiple Minecraft SCIDs and aggregates a few key metrics
+ *       across them (e.g. MinutesPlayed, BlockBrokenTotal, MobKilled.IsMonster.1, DistanceTravelled).
+ *       The raw userstats response is also included for advanced scenarios.
  *     tags: [Stats]
  *     security:
  *       - BearerAuth: []
@@ -22,7 +26,7 @@ const router = express.Router();
  *         schema: { type: string }
  *     responses:
  *       200:
- *         description: Stats + Aggregates
+ *         description: Aggregated and raw Xbox stats
  */
 router.get("/xbox/me", jwtMiddleware, asyncHandler(async (req, res) => {
     const xboxliveToken = req.headers["x-xbl-token"];

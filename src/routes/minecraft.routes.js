@@ -11,7 +11,11 @@ const router = express.Router();
  * @swagger
  * /minecraft/token:
  *   post:
- *     summary: Neuen Minecraft Multiplayer Token aus PlayFab SessionTicket erzeugen
+ *     summary: Create a new Minecraft multiplayer token from a PlayFab SessionTicket
+ *     description: >
+ *       Exchanges a PlayFab SessionTicket for a Minecraft multiplayer authorization header
+ *       (MCToken …). This token can be used against Minecraft services and for Marketplace
+ *       inventory calls in other endpoints.
  *     tags: [Minecraft]
  *     security:
  *       - BearerAuth: []
@@ -25,9 +29,10 @@ const router = express.Router();
  *             properties:
  *               sessionTicket:
  *                 type: string
+ *                 description: PlayFab SessionTicket obtained from the login flow
  *     responses:
  *       200:
- *         description: OK
+ *         description: Minecraft multiplayer token successfully issued
  */
 router.post("/token", jwtMiddleware, asyncHandler(async (req, res) => {
     const schema = Joi.object({sessionTicket: Joi.string().required()});

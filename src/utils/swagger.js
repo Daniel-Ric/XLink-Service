@@ -9,10 +9,25 @@ const options = {
         info: {
             title: "Xbox + Minecraft REST API",
             version: "2.3.0",
-            description: "Standalone service für Xbox Live + Minecraft Auth & Stats"
+            description: "Standalone service that exposes Xbox Live and Minecraft authentication, profile, stats and inventory APIs over a simple REST interface."
         },
         servers: [{url: serverUrl, description: env.NODE_ENV}],
-        tags: [{name: "Health"}, {name: "Auth"}, {name: "Lookup"}, {name: "Profile"}, {name: "Titles"}, {name: "Captures"}, {name: "People"}, {name: "Presence"}, {name: "Achievements"}, {name: "Stats"}, {name: "Inventory"}, {name: "PlayFab"}, {name: "Minecraft"}, {name: "Debug"}],
+        tags: [
+            { name: "Health",       description: "Liveness and readiness probes used by load balancers and orchestration platforms." },
+            { name: "Auth",         description: "Microsoft device-flow login, token exchange and JWT convenience endpoints." },
+            { name: "Lookup",       description: "Utilities to resolve between Gamertag and XUID using Xbox Live profile APIs." },
+            { name: "Profile",      description: "Xbox profile settings, TitleHub integration and combined high-level player overview." },
+            { name: "Titles",       description: "Recently played titles and title history information returned by TitleHub." },
+            { name: "Captures",     description: "Access to game clips and screenshots captured on Xbox." },
+            { name: "People",       description: "Friends, followers and social graph information from PeopleHub." },
+            { name: "Presence",     description: "Online status and last-seen presence information for the signed-in user and friends." },
+            { name: "Achievements", description: "Xbox achievement lists and progress summaries for titles." },
+            { name: "Stats",        description: "Aggregated Xbox user statistics, with a focus on Minecraft-related SCIDs." },
+            { name: "Inventory",    description: "PlayFab inventory items and Minecraft Marketplace entitlements." },
+            { name: "PlayFab",      description: "Thin wrapper around PlayFab Client APIs using a SessionTicket." },
+            { name: "Minecraft",    description: "Minecraft multiplayer token helper and Marketplace-related features." },
+            { name: "Debug",        description: "Token inspection helpers for JWT, XSTS, Minecraft tokens and PlayFab tickets." }
+        ],
         components: {
             securitySchemes: {
                 BearerAuth: {type: "http", scheme: "bearer", bearerFormat: "JWT"},

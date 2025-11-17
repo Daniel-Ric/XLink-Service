@@ -10,14 +10,18 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Titles
- *     description: Titel-Übersichten
+ *     description: Recently played titles and TitleHub-based title listings.
  */
 
 /**
  * @swagger
  * /titles/recent:
  *   get:
- *     summary: Kürzlich gespielte Titel (sortiert)
+ *     summary: List recently played titles for the current user
+ *     description: >
+ *       Returns the most recently played titles for the authenticated user, sorted by
+ *       `lastTimePlayed` descending. Uses TitleHub with additional decorations such as
+ *       images, SCIDs and achievement metadata.
  *     tags: [Titles]
  *     security:
  *       - BearerAuth: []
@@ -34,9 +38,10 @@ const router = express.Router();
  *       - in: query
  *         name: limit
  *         schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+ *         description: Maximum number of titles to return (1–100)
  *     responses:
  *       200:
- *         description: Liste
+ *         description: Sorted list of recently played titles
  */
 router.get("/recent", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
