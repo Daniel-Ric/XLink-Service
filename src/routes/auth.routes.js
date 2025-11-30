@@ -145,7 +145,7 @@ router.get("/whoami", jwtMiddleware, asyncHandler(async (req, res) => {
 router.post("/jwt/refresh", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid, gamertag} = req.user;
     const jwt = signJwt({xuid, gamertag});
-    res.json({jwt, expiresIn: "1h"});
+    res.json({jwt, expiresIn: env.JWT_EXPIRES_IN || "1h"});
 }));
 
 export default router;

@@ -6,6 +6,7 @@ const schema = Joi.object({
     NODE_ENV: Joi.string().valid("development", "production", "test").default("development"),
     CORS_ORIGIN: Joi.string().default("*"),
     JWT_SECRET: Joi.string().min(16).required(),
+    JWT_EXPIRES_IN: Joi.string().default("1h"),
     CLIENT_ID: Joi.string().required(),
     HTTP_TIMEOUT_MS: Joi.number().default(15000),
     LOG_LEVEL: Joi.string().default("info"),

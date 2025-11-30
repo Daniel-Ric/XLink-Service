@@ -2,8 +2,9 @@ import jwt from "jsonwebtoken";
 import {env} from "../config/env.js";
 import {forbidden, unauthorized} from "./httpError.js";
 
-export function signJwt(payload, expiresIn = "1h") {
-    return jwt.sign(payload, env.JWT_SECRET, {expiresIn});
+export function signJwt(payload, expiresIn) {
+    const finalExpiresIn = expiresIn || env.JWT_EXPIRES_IN || "1h";
+    return jwt.sign(payload, env.JWT_SECRET, {expiresIn: finalExpiresIn});
 }
 
 export function verifyJwt(token) {
