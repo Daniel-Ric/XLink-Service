@@ -56,10 +56,8 @@ router.post("/playfab", jwtMiddleware, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
 
-    // EntityToken erzeugen – wenn PlayFabId vorhanden -> master_player_account, sonst Session-Entity.
     const entityData = value.playFabId ? await getEntityToken(value.sessionTicket, {
-        Type: "master_player_account",
-        Id: value.playFabId
+        Type: "master_player_account", Id: value.playFabId
     }) : await getEntityToken(value.sessionTicket);
 
     const inv = await getPlayFabInventory(entityData.EntityToken, entityData.Entity.Id, entityData.Entity.Type, value.collectionId, value.count);
@@ -95,7 +93,8 @@ router.post("/playfab", jwtMiddleware, asyncHandler(async (req, res) => {
 router.get("/minecraft", jwtMiddleware, asyncHandler(async (req, res) => {
     const mcToken = req.headers["x-mc-token"];
     if (!mcToken) throw badRequest("Missing x-mc-token header");
-    const includeReceipt = String(req.query.includeReceipt || "false") === "true";
+    const rawInclude = req.query.includeReceipt ?? req.query.IncludeReceipt ?? (req.body && (req.body.includeReceipt ?? req.body.IncludeReceipt));
+    const includeReceipt = String(rawInclude ?? "false").toLowerCase() === "true";
     const entitlements = await getMCInventory(mcToken, includeReceipt);
     res.json({count: entitlements.length, entitlements});
 }));
