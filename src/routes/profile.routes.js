@@ -130,7 +130,14 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
         playFabId: Joi.string().optional(),
         includeReceipt: Joi.boolean().default(false)
     });
-    const {value, error} = bodySchema.validate(req.body || {});
+
+    const rawBody = req.body || {};
+    const normalizedBody = {
+        ...rawBody,
+        includeReceipt: typeof rawBody.includeReceipt !== "undefined" ? rawBody.includeReceipt : rawBody.IncludeReceipt
+    };
+
+    const {value, error} = bodySchema.validate(normalizedBody);
     if (error) throw badRequest(error.message);
 
     const profile = await getProfileSettings(xuid, xboxliveToken, "GameDisplayPicRaw,Gamerscore,Gamertag");
@@ -156,19 +163,22 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
         let entityData;
         if (value.playFabId) {
             entityData = await getEntityToken(value.sessionTicket, {
-                Type: "master_player_account",
-                Id: value.playFabId
+                Type: "master_player_account", Id: value.playFabId
             });
         } else {
             entityData = await getEntityToken(value.sessionTicket);
         }
 
         const pfInv = await getPlayFabInventory(entityData.EntityToken, entityData.Entity.Id, entityData.Entity.Type, "default", 50);
-        const pfItems = pfInv.Items || [];
-        playfab = {entity: entityData.Entity, itemsCount: pfItems.length, items: pfItems};
+        const pfItemsRaw = pfInv.Items || [];
+        const pfItems = value.includeReceipt ? pfItemsRaw : pfItemsRaw.map(it => {
+            const {Receipt, receipt, ...rest} = it;
+            return rest;
+        });
+        playfab = {entity: entityData.Entity, itemsCount: pfItemsRaw.length, items: pfItems};
 
         const counts = {};
-        for (const it of pfItems) {
+        for (const it of pfItemsRaw) {
             const rec = it.Receipt;
             if (typeof rec !== "string") continue;
             const decoded = jwtLib.decode(rec);
@@ -189,12 +199,18 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
         if (!mcToken) {
             try {
                 mcToken = await getMCToken(value.sessionTicket);
-            } catch { /* ignore */
+            } catch {
             }
         }
         if (mcToken) {
             try {
                 mcInventory = await getMCInventory(mcToken, value.includeReceipt);
+                if (!value.includeReceipt && Array.isArray(mcInventory)) {
+                    mcInventory = mcInventory.map(e => {
+                        const {Receipt, receipt, ...rest} = e;
+                        return rest;
+                    });
+                }
             } catch {
             }
         }
