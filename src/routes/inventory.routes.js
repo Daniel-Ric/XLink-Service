@@ -1,5 +1,6 @@
 import express from "express";
 import Joi from "joi";
+import jwtLib from "jsonwebtoken";
 import {jwtMiddleware} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
 import {getEntityToken, getPlayFabInventory} from "../services/playfab.service.js";
@@ -128,13 +129,28 @@ router.get("/minecraft/creators/top", jwtMiddleware, asyncHandler(async (req, re
     const mcToken = req.headers["x-mc-token"];
     if (!mcToken) throw badRequest("Missing x-mc-token header");
     const limit = Math.min(Math.max(parseInt(req.query.limit || "5", 10), 1), 50);
-    const ents = await getMCInventory(mcToken, false);
+    const ents = await getMCInventory(mcToken, true);
 
     const counts = {};
     for (const e of (ents || [])) {
-        const cid = e?.creatorId || e?.creator?.id || e?.item?.creatorId || e?.content?.creatorId || e?.product?.creatorId || e?.metadata?.creatorId || null;
-        if (!cid) continue;
-        counts[cid] = (counts[cid] || 0) + 1;
+        const rawReceipt = e?.Receipt ?? e?.receipt ?? null;
+        if (typeof rawReceipt !== "string" || !rawReceipt) continue;
+
+        let decoded;
+        try {
+            decoded = jwtLib.decode(rawReceipt);
+        } catch {
+            continue;
+        }
+
+        const recEnts = decoded?.Receipt?.Entitlements;
+        if (!Array.isArray(recEnts)) continue;
+
+        for (const re of recEnts) {
+            const cid = re?.CreatorId ?? re?.creatorId ?? null;
+            if (!cid) continue;
+            counts[cid] = (counts[cid] || 0) + 1;
+        }
     }
 
     const top = Object.entries(counts)
