@@ -1,6 +1,6 @@
 import {randomUUID} from "crypto";
 import {env} from "../config/env.js";
-import {internal} from "../utils/httpError.js";
+import {forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
@@ -48,7 +48,17 @@ export async function getMCToken(sessionTicket) {
             htmlSnippet: isString ? res.data.slice(0, 800) : undefined
         });
     } catch (err) {
+        const status = err.response?.status;
         const detail = err.details || err.response?.data || err.message || err;
+        if (status === 401) {
+            throw unauthorized("Failed to get Minecraft token", detail);
+        }
+        if (status === 403) {
+            throw forbidden("Failed to get Minecraft token", detail);
+        }
+        if (status && status >= 400 && status < 500) {
+            throw unauthorized("Failed to get Minecraft token", detail);
+        }
         throw internal("Failed to get Minecraft token", detail);
     }
 }
@@ -61,6 +71,17 @@ export async function getMCInventory(mcToken, includeReceipt = false) {
         const entitlements = data?.result?.inventory?.entitlements || [];
         return entitlements;
     } catch (err) {
-        throw internal("Failed to get MC inventory", err.response?.data || err.message);
+        const status = err.response?.status;
+        const detail = err.response?.data || err.message || err;
+        if (status === 401) {
+            throw unauthorized("Failed to get MC inventory", detail);
+        }
+        if (status === 403) {
+            throw forbidden("Failed to get MC inventory", detail);
+        }
+        if (status && status >= 400 && status < 500) {
+            throw unauthorized("Failed to get MC inventory", detail);
+        }
+        throw internal("Failed to get MC inventory", detail);
     }
 }
