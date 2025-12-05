@@ -4,7 +4,7 @@ import {forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
-const ENTITLEMENTS_BASE = "https://entitlements.mktpl.minecraft-services.net/api/v1.0/player/inventory";
+const ENTITLEMENTS_BASE = "https://entitlements.mktpl.minecraft-services.net/api/v1.0";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
 
@@ -66,7 +66,7 @@ export async function getMCToken(sessionTicket) {
 export async function getMCInventory(mcToken, includeReceipt = false) {
     if (!mcToken) throw internal("Failed to get MC inventory", "mcToken missing");
     try {
-        const url = `${ENTITLEMENTS_BASE}?includeReceipt=${includeReceipt ? "true" : "false"}`;
+        const url = `${ENTITLEMENTS_BASE}/player/inventory?includeReceipt=${includeReceipt ? "true" : "false"}`;
         const {data} = await http.get(url, {headers: {Authorization: mcToken, Accept: "application/json"}});
         const entitlements = data?.result?.inventory?.entitlements || [];
         return entitlements;
@@ -83,5 +83,27 @@ export async function getMCInventory(mcToken, includeReceipt = false) {
             throw unauthorized("Failed to get MC inventory", detail);
         }
         throw internal("Failed to get MC inventory", detail);
+    }
+}
+
+export async function getMCBalances(mcToken) {
+    if (!mcToken) throw internal("Failed to get MC balances", "mcToken missing");
+    try {
+        const url = `${ENTITLEMENTS_BASE}/currencies/virtual/balances`;
+        const {data} = await http.post(url, {}, {headers: {Authorization: mcToken, Accept: "application/json"}});
+        return data;
+    } catch (err) {
+        const status = err.response?.status;
+        const detail = err.response?.data || err.message || err;
+        if (status === 401) {
+            throw unauthorized("Failed to get MC balances", detail);
+        }
+        if (status === 403) {
+            throw forbidden("Failed to get MC balances", detail);
+        }
+        if (status && status >= 400 && status < 500) {
+            throw unauthorized("Failed to get MC balances", detail);
+        }
+        throw internal("Failed to get MC balances", detail);
     }
 }

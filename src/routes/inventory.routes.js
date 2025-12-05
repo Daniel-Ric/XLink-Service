@@ -4,7 +4,7 @@ import jwtLib from "jsonwebtoken";
 import {jwtMiddleware} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
 import {getEntityToken, getPlayFabInventory} from "../services/playfab.service.js";
-import {getMCInventory} from "../services/minecraft.service.js";
+import {getMCBalances, getMCInventory} from "../services/minecraft.service.js";
 import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
@@ -98,6 +98,34 @@ router.get("/minecraft", jwtMiddleware, asyncHandler(async (req, res) => {
     const includeReceipt = String(rawInclude ?? "false").toLowerCase() === "true";
     const entitlements = await getMCInventory(mcToken, includeReceipt);
     res.json({count: entitlements.length, entitlements});
+}));
+
+/**
+ * @swagger
+ * /inventory/minecraft/balances:
+ *   get:
+ *     summary: Get Minecraft virtual currency balances
+ *     description: >
+ *       Returns the current virtual currency balances from the Minecraft Marketplace
+ *       entitlements service using an MCToken.
+ *     tags: [Inventory]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: x-mc-token
+ *         required: true
+ *         schema: { type: string }
+ *         description: Minecraft Authorization header (MCToken …) as obtained from /minecraft/token or /auth/callback
+ *     responses:
+ *       200:
+ *         description: Minecraft virtual currency balances
+ */
+router.get("/minecraft/balances", jwtMiddleware, asyncHandler(async (req, res) => {
+    const mcToken = req.headers["x-mc-token"];
+    if (!mcToken) throw badRequest("Missing x-mc-token header");
+    const balances = await getMCBalances(mcToken);
+    res.json(balances);
 }));
 
 /**
