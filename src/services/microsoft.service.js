@@ -22,9 +22,7 @@ export async function getTokenFromDeviceCode(clientId, deviceCode) {
     if (!deviceCode) throw badRequest("device_code is required");
     try {
         const body = new URLSearchParams({
-            client_id: clientId,
-            grant_type: "urn:ietf:params:oauth:grant-type:device_code",
-            device_code: deviceCode
+            client_id: clientId, grant_type: "urn:ietf:params:oauth:grant-type:device_code", device_code: deviceCode
         });
         const {data} = await http.post(TOKEN_URL, body.toString(), {headers: {"content-type": "application/x-www-form-urlencoded"}});
         return data;
@@ -36,5 +34,19 @@ export async function getTokenFromDeviceCode(clientId, deviceCode) {
             throw e;
         }
         throw internal("Failed to exchange device_code", payload || err.message);
+    }
+}
+
+export async function refreshMsToken(clientId, refreshToken) {
+    if (!refreshToken) throw badRequest("refresh_token is required");
+    try {
+        const body = new URLSearchParams({
+            client_id: clientId, grant_type: "refresh_token", refresh_token: refreshToken, scope: SCOPE
+        });
+        const {data} = await http.post(TOKEN_URL, body.toString(), {headers: {"content-type": "application/x-www-form-urlencoded"}});
+        return data;
+    } catch (err) {
+        const payload = err.response?.data;
+        throw internal("Failed to refresh ms token", payload || err.message);
     }
 }

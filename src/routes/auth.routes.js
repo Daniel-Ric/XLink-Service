@@ -2,7 +2,7 @@ import express from "express";
 import Joi from "joi";
 import {asyncHandler} from "../utils/async.js";
 import {jwtMiddleware, signJwt} from "../utils/jwt.js";
-import {getTokenFromDeviceCode, requestDeviceCode} from "../services/microsoft.service.js";
+import {getTokenFromDeviceCode, refreshMsToken, requestDeviceCode} from "../services/microsoft.service.js";
 import {getXBLToken, getXSTSToken} from "../services/xbox.service.js";
 import {loginWithXbox} from "../services/playfab.service.js";
 import {getMCToken} from "../services/minecraft.service.js";
@@ -83,6 +83,77 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
 
     const msAccessToken = tokenData.access_token;
     const msRefreshToken = tokenData.refresh_token;
+    const msExpiresIn = tokenData.expires_in;
+
+    const xblToken = await getXBLToken(msAccessToken);
+
+    const xboxTokenInfo = await getXSTSToken(xblToken, "http://xboxlive.com");
+    const redeemTokenInfo = await getXSTSToken(xblToken, "https://b980a380.minecraft.playfabapi.com/");
+    const playfabTokenInfo = await getXSTSToken(xblToken, "rp://playfabapi.com/");
+
+    const xboxUserInfo = xboxTokenInfo.DisplayClaims?.xui?.[0] || {};
+    const {xid, uhs, gtg} = xboxUserInfo;
+
+    const xboxliveToken = `XBL3.0 x=${uhs};${xboxTokenInfo.Token}`;
+    const redeemToken = `XBL3.0 x=${uhs};${redeemTokenInfo.Token}`;
+    const playfabToken = `XBL3.0 x=${uhs};${playfabTokenInfo.Token}`;
+
+    const {SessionTicket, PlayFabId} = await loginWithXbox(playfabToken, titleId);
+    const mcToken = await getMCToken(SessionTicket);
+    const jwtToken = signJwt({xuid: xid, gamertag: gtg});
+
+    res.json({
+        jwt: jwtToken, xuid: xid, gamertag: gtg, uhs, msAccessToken, msRefreshToken, msExpiresIn, xblToken, xsts: {
+            xbox: xboxTokenInfo, redeem: redeemTokenInfo, playfab: playfabTokenInfo
+        }, xboxliveToken, playfabToken, redeemToken, mcToken, sessionTicket: SessionTicket, playFabId: PlayFabId
+    });
+}));
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresh Xbox / PlayFab / Minecraft tokens using msRefreshToken
+ *     description: >
+ *       Uses a previously issued Microsoft OAuth refresh token (`msRefreshToken`) to obtain a new
+ *       Microsoft access token and then re-derives Xbox Live, PlayFab and Minecraft tokens,
+ *       similar to `/auth/callback` but without requiring the device-code flow again.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [msRefreshToken]
+ *             properties:
+ *               msRefreshToken:
+ *                 type: string
+ *                 description: Microsoft OAuth refresh_token from a previous /auth/callback
+ *     responses:
+ *       200:
+ *         description: Tokens successfully refreshed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthCallbackResponse'
+ *       400:
+ *         description: Invalid refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
+    const schema = Joi.object({msRefreshToken: Joi.string().required()});
+    const {value, error} = schema.validate(req.body);
+    if (error) throw badRequest(error.message);
+
+    const titleId = env.PLAYFAB_TITLE_ID || "20ca2";
+    const tokenData = await refreshMsToken(env.CLIENT_ID, value.msRefreshToken);
+
+    const msAccessToken = tokenData.access_token;
+    const msRefreshToken = tokenData.refresh_token || value.msRefreshToken;
     const msExpiresIn = tokenData.expires_in;
 
     const xblToken = await getXBLToken(msAccessToken);
