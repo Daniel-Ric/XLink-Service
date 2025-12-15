@@ -95,8 +95,8 @@ function decodeOne(input) {
         hasExp = true;
         secondsRemaining = payload.exp - now;
     }
-    if (!ok && /^[A-Za-z0-9+/=.-]+$/.test(raw) && raw.length > 40 && raw.includes("-")) {
-        header = {typ: "PlayFabSessionTicket"};
+    if (!ok && typeof raw === "string" && raw.trim().length >= 24) {
+        header = {typ: "OpaqueToken"};
         payload = {length: raw.length};
         ok = true;
         kind = "OPAQUE";
@@ -127,42 +127,93 @@ router.post("/decode-token", jwtMiddleware, asyncHandler(async (req, res) => {
 }));
 
 router.post("/decode-callback", jwtMiddleware, asyncHandler(async (req, res) => {
-    const schema = Joi.object({
-        jwt: Joi.string().optional(),
-        xuid: Joi.string().optional(),
-        gamertag: Joi.string().optional(),
-        xboxliveToken: Joi.string().optional(),
-        playfabToken: Joi.string().optional(),
-        redeemToken: Joi.string().optional(),
-        mcToken: Joi.string().optional(),
-        sessionTicket: Joi.string().optional(),
-        playFabId: Joi.string().optional(),
-        msAccessToken: Joi.string().optional(),
-        msRefreshToken: Joi.string().optional(),
-        xblToken: Joi.string().optional(),
-        xstsXbox: Joi.string().optional(),
-        xstsRedeem: Joi.string().optional(),
-        xstsPlayFab: Joi.string().optional()
-    }).min(1);
+    const schema = Joi.object().unknown(true);
     const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
-    const decoded = {};
-    if (value.jwt) decoded.jwt = decodeOne(value.jwt);
-    if (value.xboxliveToken) decoded.xboxliveToken = decodeOne(value.xboxliveToken);
-    if (value.playfabToken) decoded.playfabToken = decodeOne(value.playfabToken);
-    if (value.redeemToken) decoded.redeemToken = decodeOne(value.redeemToken);
-    if (value.mcToken) decoded.mcToken = decodeOne(value.mcToken);
-    if (value.sessionTicket) decoded.sessionTicket = decodeOne(value.sessionTicket);
-    if (value.msAccessToken) decoded.msAccessToken = decodeOne(value.msAccessToken);
-    if (value.xblToken) decoded.xblToken = decodeOne(value.xblToken);
-    if (value.xstsXbox) decoded.xstsXbox = decodeOne(value.xstsXbox);
-    if (value.xstsRedeem) decoded.xstsRedeem = decodeOne(value.xstsRedeem);
-    if (value.xstsPlayFab) decoded.xstsPlayFab = decodeOne(value.xstsPlayFab);
-    const user = {
-        xuid: value.xuid || decoded.jwt?.payload?.xuid || null,
-        gamertag: value.gamertag || decoded.jwt?.payload?.gamertag || null,
-        playFabId: value.playFabId || null
+
+    const src = value || {};
+    const bundle = (src.callback && typeof src.callback === "object") ? src.callback : src;
+
+    const get = (obj, path) => {
+        try {
+            return path.split(".").reduce((o, k) => (o && o[k] != null ? o[k] : undefined), obj);
+        } catch {
+            return undefined;
+        }
     };
+
+    const extracted = {
+        jwt: bundle.jwt,
+        xuid: bundle.xuid,
+        gamertag: bundle.gamertag,
+        uhs: bundle.uhs,
+        msAccessToken: bundle.msAccessToken,
+        msRefreshToken: bundle.msRefreshToken,
+        xblToken: bundle.xblToken,
+        xboxliveToken: bundle.xboxliveToken,
+        playfabToken: bundle.playfabToken,
+        redeemToken: bundle.redeemToken,
+        mcToken: bundle.mcToken,
+        sessionTicket: bundle.sessionTicket,
+        playFabId: bundle.playFabId,
+        xstsXbox: bundle.xstsXbox,
+        xstsRedeem: bundle.xstsRedeem,
+        xstsPlayFab: bundle.xstsPlayFab
+    };
+
+    const xstsXboxRaw = get(bundle, "xsts.xbox.Token");
+    const xstsRedeemRaw = get(bundle, "xsts.redeem.Token");
+    const xstsPlayFabRaw = get(bundle, "xsts.playfab.Token");
+
+    extracted.xstsXbox = extracted.xstsXbox || xstsXboxRaw;
+    extracted.xstsRedeem = extracted.xstsRedeem || xstsRedeemRaw;
+    extracted.xstsPlayFab = extracted.xstsPlayFab || xstsPlayFabRaw;
+
+    const uhs = extracted.uhs || get(bundle, "xsts.xbox.DisplayClaims.xui.0.uhs") || get(bundle, "xsts.redeem.DisplayClaims.xui.0.uhs") || get(bundle, "xsts.playfab.DisplayClaims.xui.0.uhs");
+
+    if (uhs) extracted.uhs = uhs;
+
+    if (!extracted.xboxliveToken && extracted.xstsXbox && extracted.uhs) {
+        extracted.xboxliveToken = `XBL3.0 x=${extracted.uhs};${extracted.xstsXbox}`;
+    }
+    if (!extracted.redeemToken && extracted.xstsRedeem && extracted.uhs) {
+        extracted.redeemToken = `XBL3.0 x=${extracted.uhs};${extracted.xstsRedeem}`;
+    }
+    if (!extracted.playfabToken && extracted.xstsPlayFab && extracted.uhs) {
+        extracted.playfabToken = `XBL3.0 x=${extracted.uhs};${extracted.xstsPlayFab}`;
+    }
+
+    const decoded = {};
+    const add = (key, val) => {
+        if (val == null) return;
+        if (typeof val !== "string") return;
+        if (!val.trim()) return;
+        decoded[key] = decodeOne(val);
+    };
+
+    add("jwt", extracted.jwt);
+    add("msAccessToken", extracted.msAccessToken);
+    add("msRefreshToken", extracted.msRefreshToken);
+    add("xblToken", extracted.xblToken);
+
+    add("xstsXbox", extracted.xstsXbox);
+    add("xstsRedeem", extracted.xstsRedeem);
+    add("xstsPlayFab", extracted.xstsPlayFab);
+
+    add("xboxliveToken", extracted.xboxliveToken);
+    add("redeemToken", extracted.redeemToken);
+    add("playfabToken", extracted.playfabToken);
+
+    add("mcToken", extracted.mcToken);
+    add("sessionTicket", extracted.sessionTicket);
+
+    const user = {
+        xuid: extracted.xuid || decoded.jwt?.payload?.xuid || get(bundle, "xsts.xbox.DisplayClaims.xui.0.xid") || null,
+        gamertag: extracted.gamertag || decoded.jwt?.payload?.gamertag || get(bundle, "xsts.xbox.DisplayClaims.xui.0.gtg") || null,
+        playFabId: extracted.playFabId || null,
+        uhs: extracted.uhs || null
+    };
+
     res.json({user, decoded});
 }));
 

@@ -109,16 +109,9 @@ app.use(rateLimit({windowMs: 60000, max: 600, standardHeaders: true, legacyHeade
 if (env.SWAGGER_ENABLED) {
     app.get("/openapi.json", (req, res) => res.json(swaggerSpec));
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-        explorer: true,
-        swaggerOptions: {
-            tagsSorter: "none",
-            operationsSorter: (a, b) => {
-                const pathOrder = [
-                    "/auth/device",
-                    "/auth/callback",
-                    "/auth/whoami",
-                    "/auth/jwt/refresh"
-                ];
+        explorer: true, swaggerOptions: {
+            tagsSorter: "none", operationsSorter: (a, b) => {
+                const pathOrder = ["/auth/device", "/auth/callback", "/auth/whoami", "/auth/jwt/refresh"];
 
                 const aPath = a.get("path");
                 const bPath = b.get("path");
@@ -150,7 +143,7 @@ app.use("/stats", statsRoutes);
 app.use("/inventory", inventoryRoutes);
 app.use("/playfab", playfabRoutes);
 app.use("/minecraft", minecraftRoutes);
-if (env.NODE_ENV !== "production") app.use("/debug", debugRoutes);
+app.use("/debug", debugRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
