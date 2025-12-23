@@ -1,10 +1,12 @@
 import {randomUUID} from "crypto";
+
 import {env} from "../config/env.js";
 import {forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
 const ENTITLEMENTS_BASE = "https://entitlements.mktpl.minecraft-services.net/api/v1.0";
+const STORE_BASE = "https://store.mktpl.minecraft-services.net/api/v1.0";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
 
@@ -13,6 +15,7 @@ export async function getMCToken(sessionTicket) {
         if (!sessionTicket || typeof sessionTicket !== "string") {
             throw internal("Failed to get Minecraft token", "SessionTicket missing/invalid");
         }
+
         const gameVersion = env.MC_GAME_VERSION;
         const platform = env.MC_PLATFORM;
         const playFabTitleId = env.PLAYFAB_TITLE_ID || "20ca2";
@@ -41,6 +44,7 @@ export async function getMCToken(sessionTicket) {
         if (res.data?.result?.authorizationHeader) {
             return res.data.result.authorizationHeader;
         }
+
         const isString = typeof res.data === "string";
         throw internal("Failed to get Minecraft token", {
             status: 500,
@@ -105,5 +109,85 @@ export async function getMCBalances(mcToken) {
             throw unauthorized("Failed to get MC balances", detail);
         }
         throw internal("Failed to get MC balances", detail);
+    }
+}
+
+export async function getMCWishlistPage(mcToken, body = {}) {
+    if (!mcToken) throw internal("Failed to get MC wishlist", "mcToken missing");
+    try {
+        const url = `${STORE_BASE}/layout/pages/PagedList_Wishlist`;
+        const inventoryVersion = body?.inventoryVersion;
+        const res = await http.post(url, body, {
+            headers: {
+                Authorization: mcToken,
+                Accept: "application/json",
+                "content-type": "application/json", ...(inventoryVersion ? {
+                    inventoryetag: inventoryVersion,
+                    inventoryversion: inventoryVersion
+                } : {})
+            }
+        });
+
+        const headerInventory = res.headers?.inventoryetag;
+        const headerListsVersion = res.headers?.["x-userlists-version"];
+
+        return {
+            data: res.data, meta: {
+                inventoryVersion: headerInventory || res.data?.result?.inventoryVersion,
+                userListsVersion: headerListsVersion || res.data?.result?.userListsVersion
+            }
+        };
+    } catch (err) {
+        const status = err.response?.status;
+        const detail = err.response?.data || err.message || err;
+        if (status === 401) {
+            throw unauthorized("Failed to get MC wishlist", detail);
+        }
+        if (status === 403) {
+            throw forbidden("Failed to get MC wishlist", detail);
+        }
+        if (status && status >= 400 && status < 500) {
+            throw unauthorized("Failed to get MC wishlist", detail);
+        }
+        throw internal("Failed to get MC wishlist", detail);
+    }
+}
+
+export async function updateMCWishlist(mcToken, body = {}) {
+    if (!mcToken) throw internal("Failed to update MC wishlist", "mcToken missing");
+    try {
+        const url = `${STORE_BASE}/player/list_wishlist`;
+        const inventoryVersion = body?.inventoryVersion;
+        const payload = {
+            itemId: body.itemId, listVersion: body.listVersion, operation: body.operation
+        };
+
+        const res = await http.post(url, payload, {
+            headers: {
+                Authorization: mcToken,
+                Accept: "application/json",
+                "content-type": "application/json", ...(inventoryVersion ? {
+                    inventoryetag: inventoryVersion,
+                    inventoryversion: inventoryVersion
+                } : {})
+            }
+        });
+
+        return {
+            ok: true, userListsVersion: res.headers?.etag, inventoryVersion: res.headers?.inventoryetag
+        };
+    } catch (err) {
+        const status = err.response?.status;
+        const detail = err.response?.data || err.message || err;
+        if (status === 401) {
+            throw unauthorized("Failed to update MC wishlist", detail);
+        }
+        if (status === 403) {
+            throw forbidden("Failed to update MC wishlist", detail);
+        }
+        if (status && status >= 400 && status < 500) {
+            throw unauthorized("Failed to update MC wishlist", detail);
+        }
+        throw internal("Failed to update MC wishlist", detail);
     }
 }

@@ -24,6 +24,9 @@ import playfabRoutes from "./routes/playfab.routes.js";
 import peopleRoutes from "./routes/people.routes.js";
 import capturesRoutes from "./routes/captures.routes.js";
 import titlesRoutes from "./routes/titles.routes.js";
+
+import wishlistRoutes from "./routes/wishlist.routes.js";
+
 import debugRoutes from "./routes/debug.routes.js";
 
 import {errorHandler, notFoundHandler} from "./middleware/error.js";
@@ -78,10 +81,12 @@ app.use((req, res, next) => {
     req.id = id;
     res.setHeader("X-Request-Id", id);
     const start = process.hrtime.bigint();
+
     res.on("finish", () => {
         const url = req.url || "/";
         if (mutePaths.some(p => url === p || url.startsWith(p + "/"))) return;
         const ms = Number((process.hrtime.bigint() - start) / 1000000n);
+
         if (env.LOG_PRETTY) {
             const line = [timestamp(), badge(res.statusCode), colorMethod(req.method || "GET"), chalk.white(url), colorStatus(res.statusCode), colorTime(ms), chalk.dim(`#${id.slice(0, 6)}`)].join(" ");
             console.log(line);
@@ -89,6 +94,7 @@ app.use((req, res, next) => {
             console.log(`${new Date().toISOString()} ${req.method} ${url} ${res.statusCode} ${ms}ms ${id}`);
         }
     });
+
     next();
 });
 
@@ -110,7 +116,18 @@ if (env.SWAGGER_ENABLED) {
     app.get("/openapi.json", (req, res) => res.json(swaggerSpec));
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
         explorer: true, swaggerOptions: {
-            tagsSorter: "none", operationsSorter: (a, b) => {
+            tagsSorter: (a, b) => {
+                const tagOrder = ["Auth", "Wishlist", "Debug"];
+
+                const aIndex = tagOrder.indexOf(a);
+                const bIndex = tagOrder.indexOf(b);
+
+                if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                if (aIndex !== -1) return aIndex === 0 ? -1 : 1;
+                if (bIndex !== -1) return bIndex === 0 ? 1 : -1;
+
+                return a.localeCompare(b);
+            }, operationsSorter: (a, b) => {
                 const pathOrder = ["/auth/device", "/auth/callback", "/auth/whoami", "/auth/jwt/refresh"];
 
                 const aPath = a.get("path");
@@ -120,7 +137,6 @@ if (env.SWAGGER_ENABLED) {
                 const bIndex = pathOrder.indexOf(bPath);
 
                 if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-
                 if (aIndex !== -1) return -1;
                 if (bIndex !== -1) return 1;
 
@@ -141,9 +157,10 @@ app.use("/presence", presenceRoutes);
 app.use("/achievements", achievementsRoutes);
 app.use("/stats", statsRoutes);
 app.use("/inventory", inventoryRoutes);
+app.use("/wishlist", wishlistRoutes);
 app.use("/playfab", playfabRoutes);
 app.use("/minecraft", minecraftRoutes);
-app.use("/debug", debugRoutes);
+if (env.NODE_ENV !== "production") app.use("/debug", debugRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
