@@ -18,7 +18,9 @@ export function verifyJwt(token) {
 export function jwtMiddleware(req, res, next) {
     const authHeader = req.headers["authorization"];
     if (!authHeader) return next(unauthorized("Missing Authorization header (Bearer token)"));
-    const [, token] = authHeader.split(" ");
+    const match = String(authHeader).match(/^Bearer\s+(.+)$/i);
+    const token = match ? match[1].trim() : "";
+    if (!token) return next(unauthorized("Missing Authorization header (Bearer token)"));
     const decoded = verifyJwt(token);
     if (!decoded) return next(forbidden("Invalid or expired JWT"));
     req.user = decoded;
