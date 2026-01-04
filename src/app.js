@@ -19,6 +19,7 @@ import healthRoutes from "./routes/health.routes.js";
 import statsRoutes from "./routes/stats.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
 import lookupRoutes from "./routes/lookup.routes.js";
+import redeemRoutes from "./routes/redeem.routes.js";
 
 import playfabRoutes from "./routes/playfab.routes.js";
 import peopleRoutes from "./routes/people.routes.js";
@@ -149,6 +150,7 @@ if (env.SWAGGER_ENABLED) {
 app.use("/", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/lookup", lookupRoutes);
+app.use("/redeem", redeemRoutes);
 app.use("/profile", profileRoutes);
 app.use("/titles", titlesRoutes);
 app.use("/captures", capturesRoutes);
