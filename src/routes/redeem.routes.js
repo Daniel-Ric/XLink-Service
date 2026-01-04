@@ -13,27 +13,29 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Redeem
- *     description: RedeemNow / Microsoft Store Redeem flow (Lookup + Redeem).
+ *     description: Microsoft RedeemNow flow (PrepareRedeem lookup + RedeemToken redeem) via Store Web Dynamics.
  */
 
 /**
  * @swagger
  * /redeem/lookup:
  *   post:
- *     summary: Lookup a redeem code (what it contains)
+ *     summary: Lookup a redeem code (PrepareRedeem / LookupToken)
  *     description: |
- *       This endpoint performs the same "lookup" step as the official redeem page.
+ *       Runs the same **PrepareRedeem** call used by the official Microsoft redeem page.
  *
- *       **What you need to provide**
- *       - `x-redeem-token` header: an XSTS token in `XBL3.0 x=<uhs>;<token>` format.
+ *       **You must provide**
+ *       - Header `x-redeem-token`: XSTS token in format `XBL3.0 x=<uhs>;<token>`
  *
- *       **Where do I get `x-redeem-token`?**
- *       - Call `POST /auth/callback` in this API. Its response contains the redeem XSTS token which must be forwarded
- *         into this endpoint as the `x-redeem-token` header.
+ *       **Where does `x-redeem-token` come from?**
+ *       - Call `POST /auth/callback` in this API and take the redeem XSTS token from that response.
  *
- *       **What does this endpoint do?**
- *       - Calls Microsoft Store "PrepareRedeem" with `context=LookupToken` and returns the raw response.
- *       - Use this to preview if a code is valid and what it would grant (gift card value, entitlement, etc.).
+ *       **What this endpoint does**
+ *       - Calls: `POST https://buynow.production.store-web.dynamics.com/v1.0/Redeem/PrepareRedeem?appId=RedeemNow&context=LookupToken`
+ *       - Forwards the redeem XSTS token as `Authorization` and sends the same headers/body shape as the browser flow.
+ *
+ *       **What you get back**
+ *       - The raw lookup JSON (e.g. gift card value/currency or entitlement details).
  *     tags: [Redeem]
  *     security:
  *       - BearerAuth: []
@@ -49,8 +51,8 @@ const router = express.Router();
  *         required: false
  *         schema:
  *           type: string
- *           example: "de-DE,de;q=0.9"
- *         description: Optional locale hint. If not provided, defaults to `en-US`.
+ *           example: "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"
+ *         description: Optional. If omitted, `locale` is used and defaults to `en-US`.
  *     requestBody:
  *       required: true
  *       content:
@@ -61,22 +63,22 @@ const router = express.Router();
  *             properties:
  *               code:
  *                 type: string
- *                 description: The redeem code the user wants to check.
+ *                 description: Redeem code to look up.
  *               market:
  *                 type: string
  *                 default: "US"
- *                 description: Market / country code for the Store API (e.g. `US`, `DE`).
+ *                 description: Store market (country) code. Example `DE`, `US`.
  *               locale:
  *                 type: string
  *                 default: "en-US"
- *                 description: Locale for the Store API (e.g. `en-US`, `de-DE`). If omitted, `Accept-Language` is used.
+ *                 description: UI locale. Used to derive the Store `language` field for lookup. Example `de-DE`.
  *           example:
  *             code: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
  *             market: "DE"
  *             locale: "de-DE"
  *     responses:
  *       200:
- *         description: Raw PrepareRedeem lookup response from Microsoft Store.
+ *         description: Raw PrepareRedeem response.
  *       400:
  *         description: Validation error / missing headers.
  */
@@ -93,10 +95,22 @@ router.post("/lookup", jwtMiddleware, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
 
-    const locale = value.locale || req.headers["accept-language"] || "en-US";
+    const acceptLanguage = req.headers["accept-language"];
+    const locale = value.locale || acceptLanguage || "en-US";
     const market = value.market || "US";
 
-    const data = await prepareRedeem(redeemToken, {code: value.code, market, locale}, {correlationId: req.id});
+    const flow = {
+        muid: crypto.randomBytes(16).toString("hex").toUpperCase(),
+        correlationId: crypto.randomUUID(),
+        referenceId: crypto.randomBytes(32).toString("hex").toUpperCase(),
+        trackingId: crypto.randomUUID(),
+        vectorId: crypto.randomBytes(32).toString("hex").toUpperCase(),
+        cvBase: "FIzDSTrg7TZ2naZyEL1T/P",
+        acceptLanguage: acceptLanguage || String(locale)
+    };
+
+    const data = await prepareRedeem(redeemToken, {code: value.code, market, locale}, flow);
+
     res.json(data);
 }));
 
@@ -104,22 +118,26 @@ router.post("/lookup", jwtMiddleware, asyncHandler(async (req, res) => {
  * @swagger
  * /redeem/redeem:
  *   post:
- *     summary: Redeem a code
+ *     summary: Redeem a code (PrepareRedeem + RedeemToken)
  *     description: |
- *       Redeems the provided code by executing the same two-step process as the official redeem flow:
- *       1) PrepareRedeem (lookup)
- *       2) RedeemToken (final redeem)
+ *       Redeems a code using the same two requests as the official redeem page:
+ *       1) **PrepareRedeem** (`context=LookupToken`)
+ *       2) **RedeemToken**
  *
- *       **What you need to provide**
- *       - `x-redeem-token` header: an XSTS token in `XBL3.0 x=<uhs>;<token>` format.
+ *       **You must provide**
+ *       - Header `x-redeem-token`: XSTS token in format `XBL3.0 x=<uhs>;<token>`
  *
- *       **Where do I get `x-redeem-token`?**
- *       - Call `POST /auth/callback` in this API. Its response contains the redeem XSTS token which must be forwarded
- *         into this endpoint as the `x-redeem-token` header.
+ *       **Where does `x-redeem-token` come from?**
+ *       - Call `POST /auth/callback` in this API and take the redeem XSTS token from that response.
  *
- *       **About `paymentSessionId`**
- *       - You do **not** provide a `paymentSessionId`.
- *       - The server generates a fresh UUID v4 for every redeem call and uses it for the Store redeem request.
+ *       **Do I need to provide `paymentSessionId`?**
+ *       - **No.** The server generates a UUID v4 automatically and sends it to Microsoft.
+ *
+ *       **What this endpoint does**
+ *       - Calls:
+ *         - `POST https://buynow.production.store-web.dynamics.com/v1.0/Redeem/PrepareRedeem?appId=RedeemNow&context=LookupToken`
+ *         - `POST https://buynow.production.store-web.dynamics.com/v1.0/Redeem/RedeemToken?appId=RedeemNow`
+ *       - Uses the same headers/body shape as the browser flow (including `flights`).
  *     tags: [Redeem]
  *     security:
  *       - BearerAuth: []
@@ -135,8 +153,8 @@ router.post("/lookup", jwtMiddleware, asyncHandler(async (req, res) => {
  *         required: false
  *         schema:
  *           type: string
- *           example: "de-DE,de;q=0.9"
- *         description: Optional locale hint. If not provided, defaults to `en-US`.
+ *           example: "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"
+ *         description: Optional. If omitted, `locale` is used and defaults to `en-US`.
  *     requestBody:
  *       required: true
  *       content:
@@ -147,22 +165,22 @@ router.post("/lookup", jwtMiddleware, asyncHandler(async (req, res) => {
  *             properties:
  *               code:
  *                 type: string
- *                 description: The redeem code the user wants to redeem.
+ *                 description: Redeem code to redeem.
  *               market:
  *                 type: string
  *                 default: "US"
- *                 description: Market / country code for the Store API (e.g. `US`, `DE`).
+ *                 description: Store market (country) code. Example `DE`, `US`.
  *               locale:
  *                 type: string
  *                 default: "en-US"
- *                 description: Locale for the Store API (e.g. `en-US`, `de-DE`). If omitted, `Accept-Language` is used.
+ *                 description: UI locale. Used to send `language` in lookup and `locale` in redeem. Example `de-DE`.
  *           example:
  *             code: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
  *             market: "DE"
  *             locale: "de-DE"
  *     responses:
  *       200:
- *         description: Object containing the lookup response and the redeem response.
+ *         description: Object containing both lookup and redeem raw responses.
  *       400:
  *         description: Validation error / missing headers.
  */
@@ -179,15 +197,25 @@ router.post("/redeem", jwtMiddleware, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
 
-    const locale = value.locale || req.headers["accept-language"] || "en-US";
+    const acceptLanguage = req.headers["accept-language"];
+    const locale = value.locale || acceptLanguage || "en-US";
     const market = value.market || "US";
 
-    const lookup = await prepareRedeem(redeemToken, {code: value.code, market, locale}, {correlationId: req.id});
+    const flow = {
+        muid: crypto.randomBytes(16).toString("hex").toUpperCase(),
+        correlationId: crypto.randomUUID(),
+        referenceId: crypto.randomBytes(32).toString("hex").toUpperCase(),
+        trackingId: crypto.randomUUID(),
+        vectorId: crypto.randomBytes(32).toString("hex").toUpperCase(),
+        cvBase: "FIzDSTrg7TZ2naZyEL1T/P",
+        acceptLanguage: acceptLanguage || String(locale)
+    };
+
+    const lookup = await prepareRedeem(redeemToken, {code: value.code, market, locale}, flow);
+
     const paymentSessionId = crypto.randomUUID();
 
-    const redeemed = await redeemCode(redeemToken, {
-        code: value.code, paymentSessionId, market, locale
-    }, {correlationId: req.id});
+    const redeemed = await redeemCode(redeemToken, {code: value.code, paymentSessionId, market, locale}, flow);
 
     res.json({lookup, redeem: redeemed});
 }));
