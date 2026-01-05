@@ -122,8 +122,7 @@ export async function getMCWishlistPage(mcToken, body = {}) {
                 Authorization: mcToken,
                 Accept: "application/json",
                 "content-type": "application/json", ...(inventoryVersion ? {
-                    inventoryetag: inventoryVersion,
-                    inventoryversion: inventoryVersion
+                    inventoryetag: inventoryVersion, inventoryversion: inventoryVersion
                 } : {})
             }
         });
@@ -167,8 +166,7 @@ export async function updateMCWishlist(mcToken, body = {}) {
                 Authorization: mcToken,
                 Accept: "application/json",
                 "content-type": "application/json", ...(inventoryVersion ? {
-                    inventoryetag: inventoryVersion,
-                    inventoryversion: inventoryVersion
+                    inventoryetag: inventoryVersion, inventoryversion: inventoryVersion
                 } : {})
             }
         });
