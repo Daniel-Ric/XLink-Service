@@ -174,7 +174,9 @@ export async function updateMCWishlist(mcToken, body = {}) {
         });
 
         return {
-            ok: true, userListsVersion: res.headers?.etag, inventoryVersion: res.headers?.inventoryetag
+            ok: true,
+            userListsVersion: res.headers?.["x-userlists-version"] || res.headers?.etag,
+            inventoryVersion: res.headers?.inventoryetag
         };
     } catch (err) {
         const status = err.response?.status;
