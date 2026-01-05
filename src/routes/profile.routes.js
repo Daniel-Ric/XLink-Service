@@ -202,17 +202,18 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
             } catch {
             }
         }
-        if (mcToken) {
-            try {
-                mcInventory = await getMCInventory(mcToken, value.includeReceipt);
-                if (!value.includeReceipt && Array.isArray(mcInventory)) {
-                    mcInventory = mcInventory.map(e => {
-                        const {Receipt, receipt, ...rest} = e;
-                        return rest;
-                    });
-                }
-            } catch {
+    }
+
+    if (mcToken) {
+        try {
+            mcInventory = await getMCInventory(mcToken, value.includeReceipt);
+            if (!value.includeReceipt && Array.isArray(mcInventory)) {
+                mcInventory = mcInventory.map(e => {
+                    const {Receipt, receipt, ...rest} = e;
+                    return rest;
+                });
             }
+        } catch {
         }
     }
 
