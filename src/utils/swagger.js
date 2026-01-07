@@ -152,7 +152,13 @@ const options = {
                     }
                 }, ErrorResponse: {
                     type: "object", properties: {
-                        error: {type: "string"}, details: {type: "string"}
+                        error: {
+                            type: "object", properties: {
+                                code: {type: "string"},
+                                message: {type: "string"},
+                                details: {type: "string"}
+                            }
+                        }
                     }
                 }
             }

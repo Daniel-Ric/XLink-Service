@@ -1,5 +1,5 @@
 import {env} from "../config/env.js";
-import {badRequest, internal} from "../utils/httpError.js";
+import {badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 import {cached} from "../utils/cache.js";
 
@@ -14,7 +14,12 @@ export async function getXBLToken(msAccessToken) {
         });
         return data.Token;
     } catch (err) {
-        throw internal("Failed to get XBL token", err.response?.data || err.message);
+        const status = err.response?.status;
+        const detail = err.response?.data || err.message;
+        if (status === 401) throw unauthorized("Failed to get XBL token", detail);
+        if (status === 403) throw forbidden("Failed to get XBL token", detail);
+        if (status && status >= 400 && status < 500) throw badRequest("Failed to get XBL token", detail);
+        throw internal("Failed to get XBL token", detail);
     }
 }
 
@@ -35,6 +40,10 @@ export async function getXSTSToken(xblToken, relyingParty) {
             redirect: payload.Redirect,
             raw: payload
         } : err.message;
+        const status = err.response?.status;
+        if (status === 401) throw unauthorized("Failed to get XSTS token", details);
+        if (status === 403) throw forbidden("Failed to get XSTS token", details);
+        if (status && status >= 400 && status < 500) throw badRequest("Failed to get XSTS token", details);
         throw internal("Failed to get XSTS token", details);
     }
 }
@@ -54,8 +63,13 @@ export async function getProfileSettings(xuid, xboxliveToken, settings) {
             return data;
         } catch (errV3) {
             const s = errV3.response?.status;
-            if (s === 401 || s === 403) {
-                throw internal("Failed to get profile settings", {
+            if (s === 401) {
+                throw unauthorized("Failed to get profile settings", {
+                    status: s, body: errV3.response?.data || errV3.message
+                });
+            }
+            if (s === 403) {
+                throw forbidden("Failed to get profile settings", {
                     status: s, body: errV3.response?.data || errV3.message
                 });
             }
@@ -63,9 +77,12 @@ export async function getProfileSettings(xuid, xboxliveToken, settings) {
                 const {data} = await call(2);
                 return data;
             } catch (errV2) {
-                throw internal("Failed to get profile settings", {
-                    status: errV2.response?.status, body: errV2.response?.data || errV2.message
-                });
+                const status = errV2.response?.status;
+                const details = {status, body: errV2.response?.data || errV2.message};
+                if (status === 401) throw unauthorized("Failed to get profile settings", details);
+                if (status === 403) throw forbidden("Failed to get profile settings", details);
+                if (status && status >= 400 && status < 500) throw badRequest("Failed to get profile settings", details);
+                throw internal("Failed to get profile settings", details);
             }
         }
     }, 30000);

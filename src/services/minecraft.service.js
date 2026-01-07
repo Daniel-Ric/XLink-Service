@@ -1,7 +1,7 @@
 import {randomUUID} from "crypto";
 
 import {env} from "../config/env.js";
-import {forbidden, internal, unauthorized} from "../utils/httpError.js";
+import {badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
@@ -13,7 +13,7 @@ const http = createHttp(env.HTTP_TIMEOUT_MS);
 export async function getMCToken(sessionTicket) {
     try {
         if (!sessionTicket || typeof sessionTicket !== "string") {
-            throw internal("Failed to get Minecraft token", "SessionTicket missing/invalid");
+            throw badRequest("SessionTicket missing/invalid");
         }
 
         const gameVersion = env.MC_GAME_VERSION;
@@ -68,7 +68,7 @@ export async function getMCToken(sessionTicket) {
 }
 
 export async function getMCInventory(mcToken, includeReceipt = false) {
-    if (!mcToken) throw internal("Failed to get MC inventory", "mcToken missing");
+    if (!mcToken) throw badRequest("mcToken missing");
     try {
         const url = `${ENTITLEMENTS_BASE}/player/inventory?includeReceipt=${includeReceipt ? "true" : "false"}`;
         const {data} = await http.get(url, {headers: {Authorization: mcToken, Accept: "application/json"}});
@@ -91,7 +91,7 @@ export async function getMCInventory(mcToken, includeReceipt = false) {
 }
 
 export async function getMCBalances(mcToken) {
-    if (!mcToken) throw internal("Failed to get MC balances", "mcToken missing");
+    if (!mcToken) throw badRequest("mcToken missing");
     try {
         const url = `${ENTITLEMENTS_BASE}/currencies/virtual/balances`;
         const {data} = await http.post(url, {}, {headers: {Authorization: mcToken, Accept: "application/json"}});
@@ -113,7 +113,7 @@ export async function getMCBalances(mcToken) {
 }
 
 export async function getMCWishlistPage(mcToken, body = {}) {
-    if (!mcToken) throw internal("Failed to get MC wishlist", "mcToken missing");
+    if (!mcToken) throw badRequest("mcToken missing");
     try {
         const url = `${STORE_BASE}/layout/pages/PagedList_Wishlist`;
         const inventoryVersion = body?.inventoryVersion;
@@ -153,7 +153,7 @@ export async function getMCWishlistPage(mcToken, body = {}) {
 }
 
 export async function updateMCWishlist(mcToken, body = {}) {
-    if (!mcToken) throw internal("Failed to update MC wishlist", "mcToken missing");
+    if (!mcToken) throw badRequest("mcToken missing");
     try {
         const url = `${STORE_BASE}/player/list_wishlist`;
         const inventoryVersion = body?.inventoryVersion;
