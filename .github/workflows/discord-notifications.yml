@@ -2,9 +2,9 @@ name: Discord Notifications
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
     types: [opened, reopened, synchronize, closed, ready_for_review, converted_to_draft, edited, labeled, unlabeled, assigned, unassigned, review_requested, review_request_removed]
   pull_request_review:
     types: [submitted, edited, dismissed]
@@ -53,7 +53,7 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' || github.event_name != 'push' }}
+    if: ${{ github.ref == 'refs/heads/master' || github.event_name != 'push' }}
     steps:
       - name: Send Discord notification
         env:
@@ -67,7 +67,7 @@ jobs:
           SERVER_URL: ${{ github.server_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+          if [ "${GITHUB_REF}" != "refs/heads/master" ]; then
             exit 0
           fi
 
