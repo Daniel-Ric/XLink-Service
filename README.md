@@ -190,12 +190,19 @@ curl "http://localhost:3000/inventory/minecraft?includeReceipt=false"   -H "Auth
 curl -X POST http://localhost:3000/inventory/playfab   -H "Authorization: Bearer <JWT>"   -H "Content-Type: application/json"   -d '{"sessionTicket":"<PLAYFAB_SESSION_TICKET>","count":50}'
 ```
 
-### 9) Captures (screenshots) → `/captures/screenshots`
+### 9) PlayFab inventory test (title id e9d1) → `/inventory/playfab/test`
+```bash
+curl -X POST http://localhost:3000/inventory/playfab/test   -H "Authorization: Bearer <JWT>"   -H "Content-Type: application/json"   -d '{"playfabToken":"XBL3.0 x=<uhs>;<xstsToken>","entityType":"title_player_account","count":50}'
+```
+* `playfabToken` comes from `POST /auth/callback` in this API (response field `playfabToken`).
+* Use `entityType=master_player_account` to target the master entity. If you want a specific entity id, pass `entityId`. Otherwise the service uses the PlayFabId returned by LoginWithXbox.
+
+### 10) Captures (screenshots) → `/captures/screenshots`
 ```bash
 curl "http://localhost:3000/captures/screenshots?max=24"   -H "Authorization: Bearer <JWT>"   -H "x-xbl-token: XBL3.0 x=<uhs>;<xstsToken>"
 ```
 
-### 10) Debug: decode token → `/debug/decode-token` (non-production)
+### 11) Debug: decode token → `/debug/decode-token` (non-production)
 ```bash
 curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Bearer <JWT>"   -H "Content-Type: application/json"   -d '{"token":"XBL3.0 x=<uhs>;<xstsToken>","type":"xsts"}'
 ```
@@ -255,6 +262,7 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 | Method | Endpoint                           | Description                                           | Headers      |
 |-------:|------------------------------------|-------------------------------------------------------|--------------|
 | POST   | `/inventory/playfab`               | PlayFab inventory via SessionTicket/EntityToken       | —            |
+| POST   | `/inventory/playfab/test`          | PlayFab inventory test via XSTS (title id e9d1)       | —            |
 | GET    | `/inventory/minecraft`             | Minecraft entitlements (optional `includeReceipt`)    | `x-mc-token` |
 | GET    | `/inventory/minecraft/balances`    | Minecraft Marketplace currency balances               | `x-mc-token` |
 | GET    | `/inventory/minecraft/creators/top`| Top creators from entitlements (by item count)        | `x-mc-token` |

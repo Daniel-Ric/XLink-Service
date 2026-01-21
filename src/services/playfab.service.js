@@ -4,9 +4,14 @@ import {createHttp} from "../utils/http.js";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
 
-export async function loginWithXbox(xstsToken, titleId = env.PLAYFAB_TITLE_ID) {
+export function resolvePlayFabTitleId(titleId = env.PLAYFAB_TITLE_ID) {
     if (!titleId) throw badRequest("PLAYFAB_TITLE_ID missing. Set it in .env");
-    const baseUrl = `https://${titleId}.playfabapi.com/Client/LoginWithXbox`;
+    return titleId;
+}
+
+export async function loginWithXbox(xstsToken, titleId = env.PLAYFAB_TITLE_ID) {
+    const resolvedTitleId = resolvePlayFabTitleId(titleId);
+    const baseUrl = `https://${resolvedTitleId}.playfabapi.com/Client/LoginWithXbox`;
     try {
         const {data} = await http.post(baseUrl, {
             TitleId: titleId,
@@ -31,9 +36,10 @@ export async function loginWithXbox(xstsToken, titleId = env.PLAYFAB_TITLE_ID) {
     }
 }
 
-export async function getEntityToken(sessionTicket, entity) {
+export async function getEntityToken(sessionTicket, entity, titleId = env.PLAYFAB_TITLE_ID) {
     if (!sessionTicket) throw badRequest("sessionTicket is required");
-    const url = `https://${env.PLAYFAB_TITLE_ID}.playfabapi.com/Authentication/GetEntityToken`;
+    const resolvedTitleId = resolvePlayFabTitleId(titleId);
+    const url = `https://${resolvedTitleId}.playfabapi.com/Authentication/GetEntityToken`;
     try {
         const {data} = await http.post(url, entity ? {Entity: entity} : {}, {
             headers: {
@@ -57,9 +63,10 @@ export async function getEntityToken(sessionTicket, entity) {
     }
 }
 
-export async function getPlayFabInventory(entityToken, entityId, entityType = "title_player_account", collectionId = "default", count = 50) {
+export async function getPlayFabInventory(entityToken, entityId, entityType = "title_player_account", collectionId = "default", count = 50, titleId = env.PLAYFAB_TITLE_ID) {
     if (!entityToken || !entityId) throw badRequest("entityToken and entityId are required");
-    const url = `https://${env.PLAYFAB_TITLE_ID}.playfabapi.com/Inventory/GetInventoryItems`;
+    const resolvedTitleId = resolvePlayFabTitleId(titleId);
+    const url = `https://${resolvedTitleId}.playfabapi.com/Inventory/GetInventoryItems`;
     try {
         const {data} = await http.post(url, {
             Entity: {Type: entityType, Id: entityId}, CollectionId: collectionId, Count: count

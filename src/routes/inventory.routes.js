@@ -3,11 +3,12 @@ import Joi from "joi";
 import jwtLib from "jsonwebtoken";
 import {jwtMiddleware} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
-import {getEntityToken, getPlayFabInventory} from "../services/playfab.service.js";
+import {getEntityToken, getPlayFabInventory, loginWithXbox} from "../services/playfab.service.js";
 import {getMCBalances, getMCInventory} from "../services/minecraft.service.js";
 import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
+const PLAYFAB_TEST_TITLE_ID = "e9d1";
 
 /**
  * @swagger
@@ -62,6 +63,80 @@ router.post("/playfab", jwtMiddleware, asyncHandler(async (req, res) => {
     }) : await getEntityToken(value.sessionTicket);
 
     const inv = await getPlayFabInventory(entityData.EntityToken, entityData.Entity.Id, entityData.Entity.Type, value.collectionId, value.count);
+
+    res.json({entity: entityData.Entity, items: inv.Items || []});
+}));
+
+/**
+ * @swagger
+ * /inventory/playfab/test:
+ *   post:
+ *     summary: Test PlayFab inventory for title id e9d1
+ *     description: >
+ *       Logs in with a PlayFab XSTS token, exchanges for an EntityToken, and returns inventory
+ *       items for the selected entity type using title id e9d1.
+ *     tags: [Inventory]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [playfabToken]
+ *             properties:
+ *               playfabToken:
+ *                 type: string
+ *                 description: PlayFab XSTS token in the form XBL3.0 x={uhs};{token}
+ *                 example: "XBL3.0 x=<uhs>;<xstsToken>"
+ *               entityType:
+ *                 type: string
+ *                 enum: [title_player_account, master_player_account]
+ *                 default: title_player_account
+ *                 example: "title_player_account"
+ *               entityId:
+ *                 type: string
+ *                 description: Optional entity id override for the chosen entity type
+ *               collectionId:
+ *                 type: string
+ *                 default: "default"
+ *                 example: "default"
+ *               count:
+ *                 type: integer
+ *                 default: 50
+ *                 minimum: 1
+ *                 maximum: 200
+ *     responses:
+ *       200:
+ *         description: PlayFab inventory items for the chosen entity
+ */
+router.post("/playfab/test", jwtMiddleware, asyncHandler(async (req, res) => {
+    const schema = Joi.object({
+        playfabToken: Joi.string().required(),
+        entityType: Joi.string().valid("title_player_account", "master_player_account").default("title_player_account"),
+        entityId: Joi.string().optional(),
+        collectionId: Joi.string().default("default"),
+        count: Joi.number().integer().min(1).max(200).default(50)
+    });
+    const {value, error} = schema.validate(req.body);
+    if (error) throw badRequest(error.message);
+
+    const loginData = await loginWithXbox(value.playfabToken, PLAYFAB_TEST_TITLE_ID);
+    const sessionTicket = loginData.SessionTicket;
+    const playFabId = loginData.PlayFabId;
+    if (value.entityType === "master_player_account" && !value.entityId && !playFabId) {
+        throw badRequest("PlayFabId is required for master_player_account");
+    }
+
+    const entityOverride = value.entityId ? {
+        Type: value.entityType, Id: value.entityId
+    } : value.entityType === "master_player_account" ? {
+        Type: value.entityType, Id: playFabId
+    } : null;
+
+    const entityData = await getEntityToken(sessionTicket, entityOverride || undefined, PLAYFAB_TEST_TITLE_ID);
+    const inv = await getPlayFabInventory(entityData.EntityToken, entityData.Entity.Id, entityData.Entity.Type, value.collectionId, value.count, PLAYFAB_TEST_TITLE_ID);
 
     res.json({entity: entityData.Entity, items: inv.Items || []});
 }));
