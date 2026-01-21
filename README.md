@@ -32,7 +32,8 @@
 * **Microsoft/Xbox Auth Flow**: Device Code → Tokens (XBL, XSTS for multiple relying parties) → PlayFab login → Minecraft multiplayer token.
 * **Comprehensive Xbox Endpoints**: Profile, Titles (TitleHub), Presence (including batch), People, Captures (clips/screenshots), Stats, Achievements.
 * **PlayFab Client Read**: Account, PlayerProfile, Catalog, TitleData, UserData/ReadOnlyData via SessionTicket/EntityToken.
-* **Minecraft Services**: Generate MCToken from PlayFab SessionTicket and fetch entitlements/inventory (optional receipts).
+* **Minecraft Services**: Generate MCToken, fetch entitlements/balances, and access Marketplace wishlist + inbox messaging.
+* **Redeem Flow Support**: Prepare/redeem Microsoft Store codes using RedeemNow-compatible calls.
 * **JWT-Secured**: First-party JWTs guard the API; includes a refresh endpoint.
 * **OpenAPI/Swagger**: Live docs at `/api-docs` and `GET /openapi.json`.
 * **Solid Express Base**: Helmet, CORS, compression, Joi validation, centralized error handling.
@@ -78,13 +79,18 @@ Validated via Joi (`src/config/env.js`).
 | `NODE_ENV`         | `development` | `development` \| `production` \| `test`                                |
 | `CORS_ORIGIN`      | `*`           | CORS origin(s), comma-separated (e.g., `http://localhost:5173`)          |
 | `JWT_SECRET`       | — **required**| At least 16 chars, used to sign API JWTs                                 |
+| `JWT_EXPIRES_IN`   | `1h`          | JWT expiry (e.g., `1h`, `30m`, `2d`)                                      |
 | `CLIENT_ID`        | — **required**| Microsoft App Client ID (Device Code flow)                               |
 | `HTTP_TIMEOUT_MS`  | `15000`       | Timeout for outgoing HTTP calls (ms)                                     |
 | `LOG_LEVEL`        | `info`        | General log level                                                        |
+| `LOG_PRETTY`       | `true` (dev)  | Pretty logs (`true`/`false`), defaults to `false` in production           |
 | `MC_GAME_VERSION`  | `1.21.62`     | Minecraft game version for token generation                              |
 | `MC_PLATFORM`      | `Windows10`   | Platform identifier for Minecraft                                        |
 | `PLAYFAB_TITLE_ID` | `20ca2`       | PlayFab Title ID                                                         |
 | `ACCEPT_LANGUAGE`  | `en-US`       | Default `Accept-Language` for TitleHub                                   |
+| `SWAGGER_ENABLED`  | `true`        | Enable Swagger UI and OpenAPI endpoints                                  |
+| `SWAGGER_SERVER_URL` | —           | Override OpenAPI server URL (defaults to `http://localhost:${PORT}`)      |
+| `TRUST_PROXY`      | `loopback`    | Express `trust proxy` setting (`true`, `false`, or value like `loopback`) |
 
 > **CORS**: In production, set `CORS_ORIGIN` to explicit origins (no `*`).
 
@@ -115,13 +121,17 @@ XLink-Service/
 │   │   ├── playfab.routes.js
 │   │   ├── minecraft.routes.js
 │   │   ├── lookup.routes.js
+│   │   ├── redeem.routes.js
+│   │   ├── wishlist.routes.js
+│   │   ├── messaging.routes.js
 │   │   ├── health.routes.js
 │   │   └── debug.routes.js    # only mounted in non-production
 │   ├── services/              # Integrations (Microsoft, Xbox, PlayFab, Minecraft)
 │   │   ├── microsoft.service.js
 │   │   ├── xbox.service.js    # LRU cache for hot endpoints
 │   │   ├── playfab.service.js
-│   │   └── minecraft.service.js
+│   │   ├── minecraft.service.js
+│   │   └── redeem.service.js
 │   ├── utils/
 │   │   ├── async.js           # asyncHandler
 │   │   ├── http.js            # Axios instance with keep-alive agents
@@ -167,7 +177,7 @@ curl "http://localhost:3000/titles/recent?limit=20"   -H "Authorization: Bearer 
 
 ### 6) Presence batch → `/presence/batch`
 ```bash
-curl -X POST http://localhost:3000/presence/batch   -H "Authorization: Bearer <JWT)"   -H "x-xbl-token: XBL3.0 x=<uhs>;<xstsToken>"   -H "Content-Type: application/json"   -d '{"xuids":["2533274...","2814650..."]}'
+curl -X POST http://localhost:3000/presence/batch   -H "Authorization: Bearer <JWT>"   -H "x-xbl-token: XBL3.0 x=<uhs>;<xstsToken>"   -H "Content-Type: application/json"   -d '{"xuids":["2533274...","2814650..."]}'
 ```
 
 ### 7) Minecraft entitlements → `/inventory/minecraft`
@@ -182,7 +192,7 @@ curl -X POST http://localhost:3000/inventory/playfab   -H "Authorization: Bearer
 
 ### 9) Captures (screenshots) → `/captures/screenshots`
 ```bash
-curl "http://localhost:3000/captures/screenshots?max=24"   -H "Authorization: Bearer <JWT)"   -H "x-xbl-token: XBL3.0 x=<uhs>;<xstsToken>"
+curl "http://localhost:3000/captures/screenshots?max=24"   -H "Authorization: Bearer <JWT>"   -H "x-xbl-token: XBL3.0 x=<uhs>;<xstsToken>"
 ```
 
 ### 10) Debug: decode token → `/debug/decode-token` (non-production)
@@ -201,6 +211,7 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 |-------:|----------------------|--------------------------------------------------|
 | GET    | `/auth/device`       | Request Microsoft device code                    |
 | POST   | `/auth/callback`     | Redeem device code → JWT, XBL/XSTS, PlayFab, MC |
+| POST   | `/auth/refresh`      | Refresh tokens via Microsoft refresh_token       |
 | GET    | `/auth/whoami`       | Decoded JWT user info                            |
 | POST   | `/auth/jwt/refresh`  | Refresh your API JWT                             |
 
@@ -215,6 +226,7 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 |-------:|--------------------|--------------------------------------------|---------------|
 | GET    | `/profile/me`      | Profile settings (selectable fields)       | `x-xbl-token` |
 | GET    | `/profile/titles`  | User's TitleHub list                       | `x-xbl-token` |
+| POST   | `/profile/overview`| Combined profile, stats, optional inventory| `x-xbl-token` |
 | GET    | `/titles/recent`   | Recently played (sorted)                   | `x-xbl-token` |
 
 ### Presence & People
@@ -244,16 +256,38 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 |-------:|------------------------------------|-------------------------------------------------------|--------------|
 | POST   | `/inventory/playfab`               | PlayFab inventory via SessionTicket/EntityToken       | —            |
 | GET    | `/inventory/minecraft`             | Minecraft entitlements (optional `includeReceipt`)    | `x-mc-token` |
+| GET    | `/inventory/minecraft/balances`    | Minecraft Marketplace currency balances               | `x-mc-token` |
 | GET    | `/inventory/minecraft/creators/top`| Top creators from entitlements (by item count)        | `x-mc-token` |
 | GET    | `/inventory/minecraft/search`      | Search entitlements (`productId`, `q`, `limit`)       | `x-mc-token` |
+| POST   | `/wishlist/list`                   | Marketplace wishlist page                             | `x-mc-token` |
+| POST   | `/wishlist/item`                   | Add/remove Marketplace wishlist item                  | `x-mc-token` |
 | POST   | `/messaging/inbox/start`           | Marketplace inbox session (start/resume)              | `x-mc-token` |
+| POST   | `/messaging/session/start`         | Alias of inbox start                                  | `x-mc-token` |
 | POST   | `/messaging/inbox/event`           | Mark seen/delete message events                       | `x-mc-token` |
 | POST   | `/minecraft/token`                 | Create Minecraft multiplayer token from SessionTicket | —            |
+| POST   | `/minecraft/token/refresh`         | Refresh PlayFab SessionTicket + Minecraft token       | —            |
+
+### PlayFab
+| Method | Endpoint                    | Description                                      |
+|-------:|-----------------------------|--------------------------------------------------|
+| POST   | `/playfab/account`          | PlayFab account info via SessionTicket           |
+| POST   | `/playfab/profile`          | Player profile via SessionTicket/PlayFabId       |
+| POST   | `/playfab/catalog`          | Catalog items (optional catalog version)         |
+| POST   | `/playfab/titledata`        | TitleData values (optional keys)                 |
+| POST   | `/playfab/userdata`         | UserData (optional keys or PlayFabId)            |
+| POST   | `/playfab/userdata/readonly`| UserReadOnlyData (optional keys or PlayFabId)    |
+
+### Redeem
+| Method | Endpoint           | Description                                      | Headers          |
+|-------:|--------------------|--------------------------------------------------|------------------|
+| POST   | `/redeem/lookup`   | PrepareRedeem lookup for a code                  | `x-redeem-token` |
+| POST   | `/redeem/redeem`   | PrepareRedeem + RedeemToken flow                 | `x-redeem-token` |
 
 ### Debug & Health
 | Method | Endpoint              | Description                          |
 |-------:|-----------------------|--------------------------------------|
 | POST   | `/debug/decode-token` | Decode JWT, XSTS (XBL3.0), MCToken, and PlayFab sessionTicket token (no verify) |
+| POST   | `/debug/decode-callback` | Extract + decode tokens from /auth/callback payload |
 | GET    | `/healthz`            | Liveness                             |
 | GET    | `/readyz`             | Readiness                            |
 
@@ -263,8 +297,8 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 
 ## ⛔ Rate Limiting
 
+* **Global limiter**: 600 requests/minute/IP (all routes).
 * **`/auth/*`**: 30 requests/minute/IP (see `src/middleware/rateLimit.js`).
-* Other endpoints: no limiter configured by default (easy to add).
 
 ---
 
@@ -284,11 +318,12 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 2. `cors` (configurable via `CORS_ORIGIN`)
 3. `express.json({ limit: "1mb" })`
 4. `compression` (gzip)
-5. **Custom logger** (color badges, muted noise)
-6. **Route-specific**:
+5. **Global rate limiter** (600 req/min)
+6. **Custom logger** (color badges, muted noise)
+7. **Route-specific**:
     * `jwtMiddleware` (JWT validation)
     * `authLimiter` (only for `/auth/*`)
-7. `notFoundHandler` → `errorHandler` (uniform JSON errors)
+8. `notFoundHandler` → `errorHandler` (uniform JSON errors)
 
 ---
 
@@ -363,7 +398,7 @@ Please follow the code style and provide clear descriptions to ease reviews.
   Tune `HTTP_TIMEOUT_MS` (default 15000 ms).
 
 * **Rate limits**  
-  `/auth/*` is limited to 30 req/min; add additional limiters as needed.
+  Global limit is 600 req/min/IP; `/auth/*` is limited to 30 req/min/IP.
 
 ---
 
