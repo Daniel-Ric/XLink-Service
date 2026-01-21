@@ -89,16 +89,19 @@ router.post("/playfab", jwtMiddleware, asyncHandler(async (req, res) => {
  *               playfabToken:
  *                 type: string
  *                 description: PlayFab XSTS token in the form XBL3.0 x={uhs};{token}
+ *                 example: "XBL3.0 x=<uhs>;<xstsToken>"
  *               entityType:
  *                 type: string
  *                 enum: [title_player_account, master_player_account]
  *                 default: title_player_account
+ *                 example: "title_player_account"
  *               entityId:
  *                 type: string
  *                 description: Optional entity id override for the chosen entity type
  *               collectionId:
  *                 type: string
  *                 default: "default"
+ *                 example: "default"
  *               count:
  *                 type: integer
  *                 default: 50

@@ -194,6 +194,8 @@ curl -X POST http://localhost:3000/inventory/playfab   -H "Authorization: Bearer
 ```bash
 curl -X POST http://localhost:3000/inventory/playfab/test   -H "Authorization: Bearer <JWT>"   -H "Content-Type: application/json"   -d '{"playfabToken":"XBL3.0 x=<uhs>;<xstsToken>","entityType":"title_player_account","count":50}'
 ```
+* `playfabToken` comes from `POST /auth/callback` in this API (response field `playfabToken`).
+* Use `entityType=master_player_account` to target the master entity. If you want a specific entity id, pass `entityId`. Otherwise the service uses the PlayFabId returned by LoginWithXbox.
 
 ### 10) Captures (screenshots) → `/captures/screenshots`
 ```bash
