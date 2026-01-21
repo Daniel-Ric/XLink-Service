@@ -7,6 +7,7 @@ import {createHttp} from "../utils/http.js";
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
 const ENTITLEMENTS_BASE = "https://entitlements.mktpl.minecraft-services.net/api/v1.0";
 const STORE_BASE = "https://store.mktpl.minecraft-services.net/api/v1.0";
+const MESSAGING_BASE = "https://messaging.mktpl.minecraft-services.net/api/v1.0";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
 
@@ -189,5 +190,131 @@ export async function updateMCWishlist(mcToken, body = {}) {
             throw unauthorized("Failed to update MC wishlist", detail);
         }
         throw internal("Failed to update MC wishlist", detail);
+    }
+}
+
+export function buildMarketplaceMessagingPayload(options = {}) {
+    const sessionId = options.sessionId || randomUUID();
+    const sessionContext = typeof options.sessionContext === "string" ? options.sessionContext : "";
+    const payload = {sessionId, sessionContext};
+
+    if (options.previousSessionId) payload.previousSessionId = options.previousSessionId;
+    if (options.continuationToken) payload.continuationToken = options.continuationToken;
+
+    return {payload, sessionId};
+}
+
+export async function startMarketplaceMessagingSession(mcToken, options = {}) {
+    if (!mcToken) throw badRequest("mcToken missing");
+    try {
+        const {payload, sessionId} = buildMarketplaceMessagingPayload(options);
+        const sessionHeaderId = options.sessionHeaderId || sessionId;
+        const url = `${MESSAGING_BASE}/session/start`;
+        const res = await http.post(url, payload, {
+            headers: {
+                Authorization: mcToken,
+                Accept: "application/json",
+                "accept-language": env.ACCEPT_LANGUAGE,
+                "content-type": "application/json",
+                "session-id": sessionHeaderId
+            }
+        });
+
+        return {
+            data: res.data,
+            headers: res.headers,
+            sessionId,
+            sessionHeaderId
+        };
+    } catch (err) {
+        const status = err.response?.status;
+        const detail = err.response?.data || err.message || err;
+        if (status === 401) {
+            throw unauthorized("Failed to start marketplace messaging session", detail);
+        }
+        if (status === 403) {
+            throw forbidden("Failed to start marketplace messaging session", detail);
+        }
+        if (status && status >= 400 && status < 500) {
+            throw unauthorized("Failed to start marketplace messaging session", detail);
+        }
+        throw internal("Failed to start marketplace messaging session", detail);
+    }
+}
+
+export function buildMarketplaceMessageEventsPayload(options = {}) {
+    const sessionId = options.sessionId || randomUUID();
+    const sessionContext = typeof options.sessionContext === "string" ? options.sessionContext : "";
+    const payload = {SessionId: sessionId, SessionContext: sessionContext};
+
+    if (options.continuationToken) payload.continuationToken = options.continuationToken;
+
+    const events = Array.isArray(options.events) ? options.events : null;
+    if (events && events.length > 0) {
+        payload.events = events.map(event => {
+            const eventPayload = {
+                eventType: event.eventType,
+                instanceId: event.instanceId,
+                reportId: event.reportId,
+                sessionId: event.sessionId || sessionId
+            };
+            if (event.eventDateTime) eventPayload.eventDateTime = event.eventDateTime;
+            return eventPayload;
+        });
+        return {payload, sessionId};
+    }
+
+    if (!options.eventType || !options.instanceId || !options.reportId) {
+        throw badRequest("Missing messaging event data");
+    }
+
+    const eventPayload = {
+        eventType: options.eventType,
+        instanceId: options.instanceId,
+        reportId: options.reportId,
+        sessionId
+    };
+    if (options.eventDateTime) eventPayload.eventDateTime = options.eventDateTime;
+
+    payload.events = [eventPayload];
+
+    return {payload, sessionId};
+}
+
+export async function sendMarketplaceMessageEvents(mcToken, options = {}) {
+    if (!mcToken) throw badRequest("mcToken missing");
+    try {
+        const {payload, sessionId} = buildMarketplaceMessageEventsPayload(options);
+        const sessionHeaderId = options.sessionHeaderId || sessionId;
+        const url = `${MESSAGING_BASE}/messages/event`;
+        const res = await http.post(url, payload, {
+            headers: {
+                Authorization: mcToken,
+                Accept: "application/json",
+                "accept-language": env.ACCEPT_LANGUAGE,
+                "content-type": "application/json",
+                "session-id": sessionHeaderId
+            }
+        });
+
+        return {
+            data: res.data,
+            headers: res.headers,
+            sessionId,
+            sessionHeaderId
+        };
+    } catch (err) {
+        const status = err.response?.status;
+        const detail = err.response?.data || err.message || err;
+        if (status === 401) {
+            throw unauthorized("Failed to send marketplace messaging event", detail);
+        }
+        if (status === 403) {
+            throw forbidden("Failed to send marketplace messaging event", detail);
+        }
+        if (status && status >= 400 && status < 500) {
+            throw unauthorized("Failed to send marketplace messaging event", detail);
+        }
+        throw internal("Failed to send marketplace messaging event", detail);
     }
 }

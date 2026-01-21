@@ -27,6 +27,7 @@ import capturesRoutes from "./routes/captures.routes.js";
 import titlesRoutes from "./routes/titles.routes.js";
 
 import wishlistRoutes from "./routes/wishlist.routes.js";
+import messagingRoutes from "./routes/messaging.routes.js";
 
 import debugRoutes from "./routes/debug.routes.js";
 
@@ -160,6 +161,7 @@ app.use("/achievements", achievementsRoutes);
 app.use("/stats", statsRoutes);
 app.use("/inventory", inventoryRoutes);
 app.use("/wishlist", wishlistRoutes);
+app.use("/messaging", messagingRoutes);
 app.use("/playfab", playfabRoutes);
 app.use("/minecraft", minecraftRoutes);
 if (env.NODE_ENV !== "production") app.use("/debug", debugRoutes);

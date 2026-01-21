@@ -246,6 +246,8 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 | GET    | `/inventory/minecraft`             | Minecraft entitlements (optional `includeReceipt`)    | `x-mc-token` |
 | GET    | `/inventory/minecraft/creators/top`| Top creators from entitlements (by item count)        | `x-mc-token` |
 | GET    | `/inventory/minecraft/search`      | Search entitlements (`productId`, `q`, `limit`)       | `x-mc-token` |
+| POST   | `/messaging/inbox/start`           | Marketplace inbox session (start/resume)              | `x-mc-token` |
+| POST   | `/messaging/inbox/event`           | Mark seen/delete message events                       | `x-mc-token` |
 | POST   | `/minecraft/token`                 | Create Minecraft multiplayer token from SessionTicket | —            |
 
 ### Debug & Health

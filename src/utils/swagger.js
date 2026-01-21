@@ -37,6 +37,8 @@ const options = {
         }, {
             name: "Minecraft", description: "Minecraft multiplayer token helper and Marketplace-related features."
         }, {
+            name: "Messaging", description: "Marketplace inbox and messaging sessions."
+        }, {
             name: "Debug", description: "Token inspection helpers for JWT, XSTS, Minecraft tokens and PlayFab tickets."
         }], components: {
             securitySchemes: {
