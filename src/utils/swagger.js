@@ -80,7 +80,11 @@ const options = {
                         redeemToken: {type: "string"},
                         mcToken: {type: "string"},
                         sessionTicket: {type: "string"},
-                        playFabId: {type: "string"}
+                        playFabId: {type: "string"},
+                        entityToken: {type: "string"},
+                        entityTokenExpiresOn: {type: "string"},
+                        entityTokenMaster: {type: "string"},
+                        entityTokenMasterExpiresOn: {type: "string"}
                     }
                 }, ProfileOverviewRequest: {
                     type: "object", properties: {

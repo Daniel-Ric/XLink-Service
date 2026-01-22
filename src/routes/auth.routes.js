@@ -4,11 +4,12 @@ import {asyncHandler} from "../utils/async.js";
 import {jwtMiddleware, signJwt} from "../utils/jwt.js";
 import {getTokenFromDeviceCode, refreshMsToken, requestDeviceCode} from "../services/microsoft.service.js";
 import {getXBLToken, getXSTSToken} from "../services/xbox.service.js";
-import {loginWithXbox} from "../services/playfab.service.js";
+import {getEntityToken, loginWithXbox} from "../services/playfab.service.js";
 import {getMCToken} from "../services/minecraft.service.js";
 import {env} from "../config/env.js";
 import {authLimiter} from "../middleware/rateLimit.js";
 import {badRequest} from "../utils/httpError.js";
+import {buildAuthCallbackResponse} from "../utils/authResponse.js";
 
 const router = express.Router();
 
@@ -100,13 +101,33 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
 
     const {SessionTicket, PlayFabId} = await loginWithXbox(playfabToken, titleId);
     const mcToken = await getMCToken(SessionTicket);
+    const entityData = await getEntityToken(SessionTicket);
+    const masterEntityData = PlayFabId ? await getEntityToken(SessionTicket, {
+        Type: "master_player_account", Id: PlayFabId
+    }) : null;
     const jwtToken = signJwt({xuid: xid, gamertag: gtg});
 
-    res.json({
-        jwt: jwtToken, xuid: xid, gamertag: gtg, uhs, msAccessToken, msRefreshToken, msExpiresIn, xblToken, xsts: {
-            xbox: xboxTokenInfo, redeem: redeemTokenInfo, playfab: playfabTokenInfo
-        }, xboxliveToken, playfabToken, redeemToken, mcToken, sessionTicket: SessionTicket, playFabId: PlayFabId
-    });
+    res.json(buildAuthCallbackResponse({
+        jwtToken,
+        xuid: xid,
+        gamertag: gtg,
+        uhs,
+        msAccessToken,
+        msRefreshToken,
+        msExpiresIn,
+        xblToken,
+        xsts: {xbox: xboxTokenInfo, redeem: redeemTokenInfo, playfab: playfabTokenInfo},
+        xboxliveToken,
+        playfabToken,
+        redeemToken,
+        mcToken,
+        sessionTicket: SessionTicket,
+        playFabId: PlayFabId,
+        entityToken: entityData.EntityToken,
+        entityTokenExpiresOn: entityData.TokenExpiration,
+        entityTokenMaster: masterEntityData?.EntityToken,
+        entityTokenMasterExpiresOn: masterEntityData?.TokenExpiration
+    }));
 }));
 
 /**
@@ -171,13 +192,33 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
 
     const {SessionTicket, PlayFabId} = await loginWithXbox(playfabToken, titleId);
     const mcToken = await getMCToken(SessionTicket);
+    const entityData = await getEntityToken(SessionTicket);
+    const masterEntityData = PlayFabId ? await getEntityToken(SessionTicket, {
+        Type: "master_player_account", Id: PlayFabId
+    }) : null;
     const jwtToken = signJwt({xuid: xid, gamertag: gtg});
 
-    res.json({
-        jwt: jwtToken, xuid: xid, gamertag: gtg, uhs, msAccessToken, msRefreshToken, msExpiresIn, xblToken, xsts: {
-            xbox: xboxTokenInfo, redeem: redeemTokenInfo, playfab: playfabTokenInfo
-        }, xboxliveToken, playfabToken, redeemToken, mcToken, sessionTicket: SessionTicket, playFabId: PlayFabId
-    });
+    res.json(buildAuthCallbackResponse({
+        jwtToken,
+        xuid: xid,
+        gamertag: gtg,
+        uhs,
+        msAccessToken,
+        msRefreshToken,
+        msExpiresIn,
+        xblToken,
+        xsts: {xbox: xboxTokenInfo, redeem: redeemTokenInfo, playfab: playfabTokenInfo},
+        xboxliveToken,
+        playfabToken,
+        redeemToken,
+        mcToken,
+        sessionTicket: SessionTicket,
+        playFabId: PlayFabId,
+        entityToken: entityData.EntityToken,
+        entityTokenExpiresOn: entityData.TokenExpiration,
+        entityTokenMaster: masterEntityData?.EntityToken,
+        entityTokenMasterExpiresOn: masterEntityData?.TokenExpiration
+    }));
 }));
 
 /**
