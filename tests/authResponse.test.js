@@ -21,7 +21,9 @@ test("buildAuthCallbackResponse maps callback payload", () => {
         sessionTicket: "ticket",
         playFabId: "pfid",
         entityToken: "entity-token",
-        entityTokenExpiresOn: "2025-01-01T00:00:00Z"
+        entityTokenExpiresOn: "2025-01-01T00:00:00Z",
+        entityTokenMaster: "entity-master",
+        entityTokenMasterExpiresOn: "2025-01-01T01:00:00Z"
     });
 
     assert.deepEqual(result, {
@@ -41,6 +43,8 @@ test("buildAuthCallbackResponse maps callback payload", () => {
         sessionTicket: "ticket",
         playFabId: "pfid",
         entityToken: "entity-token",
-        entityTokenExpiresOn: "2025-01-01T00:00:00Z"
+        entityTokenExpiresOn: "2025-01-01T00:00:00Z",
+        entityTokenMaster: "entity-master",
+        entityTokenMasterExpiresOn: "2025-01-01T01:00:00Z"
     });
 });

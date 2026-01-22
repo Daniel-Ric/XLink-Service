@@ -102,6 +102,9 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
     const {SessionTicket, PlayFabId} = await loginWithXbox(playfabToken, titleId);
     const mcToken = await getMCToken(SessionTicket);
     const entityData = await getEntityToken(SessionTicket);
+    const masterEntityData = PlayFabId ? await getEntityToken(SessionTicket, {
+        Type: "master_player_account", Id: PlayFabId
+    }) : null;
     const jwtToken = signJwt({xuid: xid, gamertag: gtg});
 
     res.json(buildAuthCallbackResponse({
@@ -121,7 +124,9 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
         sessionTicket: SessionTicket,
         playFabId: PlayFabId,
         entityToken: entityData.EntityToken,
-        entityTokenExpiresOn: entityData.TokenExpiration
+        entityTokenExpiresOn: entityData.TokenExpiration,
+        entityTokenMaster: masterEntityData?.EntityToken,
+        entityTokenMasterExpiresOn: masterEntityData?.TokenExpiration
     }));
 }));
 
@@ -188,6 +193,9 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
     const {SessionTicket, PlayFabId} = await loginWithXbox(playfabToken, titleId);
     const mcToken = await getMCToken(SessionTicket);
     const entityData = await getEntityToken(SessionTicket);
+    const masterEntityData = PlayFabId ? await getEntityToken(SessionTicket, {
+        Type: "master_player_account", Id: PlayFabId
+    }) : null;
     const jwtToken = signJwt({xuid: xid, gamertag: gtg});
 
     res.json(buildAuthCallbackResponse({
@@ -207,7 +215,9 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
         sessionTicket: SessionTicket,
         playFabId: PlayFabId,
         entityToken: entityData.EntityToken,
-        entityTokenExpiresOn: entityData.TokenExpiration
+        entityTokenExpiresOn: entityData.TokenExpiration,
+        entityTokenMaster: masterEntityData?.EntityToken,
+        entityTokenMasterExpiresOn: masterEntityData?.TokenExpiration
     }));
 }));
 

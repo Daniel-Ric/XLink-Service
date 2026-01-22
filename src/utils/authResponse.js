@@ -16,6 +16,8 @@ export function buildAuthCallbackResponse(data) {
         sessionTicket: data.sessionTicket,
         playFabId: data.playFabId,
         entityToken: data.entityToken,
-        entityTokenExpiresOn: data.entityTokenExpiresOn
+        entityTokenExpiresOn: data.entityTokenExpiresOn,
+        entityTokenMaster: data.entityTokenMaster,
+        entityTokenMasterExpiresOn: data.entityTokenMasterExpiresOn
     };
 }
