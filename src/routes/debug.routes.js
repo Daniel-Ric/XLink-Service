@@ -156,6 +156,7 @@ router.post("/decode-callback", jwtMiddleware, asyncHandler(async (req, res) => 
         mcToken: bundle.mcToken,
         sessionTicket: bundle.sessionTicket,
         playFabId: bundle.playFabId,
+        entityToken: bundle.entityToken,
         xstsXbox: bundle.xstsXbox,
         xstsRedeem: bundle.xstsRedeem,
         xstsPlayFab: bundle.xstsPlayFab
@@ -206,6 +207,7 @@ router.post("/decode-callback", jwtMiddleware, asyncHandler(async (req, res) => 
 
     add("mcToken", extracted.mcToken);
     add("sessionTicket", extracted.sessionTicket);
+    add("entityToken", extracted.entityToken);
 
     const user = {
         xuid: extracted.xuid || decoded.jwt?.payload?.xuid || get(bundle, "xsts.xbox.DisplayClaims.xui.0.xid") || null,
