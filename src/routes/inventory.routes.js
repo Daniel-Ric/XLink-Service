@@ -1,10 +1,9 @@
 import express from "express";
 import Joi from "joi";
-import jwtLib from "jsonwebtoken";
 import {jwtMiddleware} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
 import {getEntityToken, getPlayFabInventory, loginWithXbox} from "../services/playfab.service.js";
-import {getMCBalances, getMCInventory} from "../services/minecraft.service.js";
+import {extractReceiptEntitlements, getMCBalances, getMCInventory} from "../services/minecraft.service.js";
 import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
@@ -236,21 +235,17 @@ router.get("/minecraft/creators/top", jwtMiddleware, asyncHandler(async (req, re
 
     const counts = {};
     for (const e of (ents || [])) {
-        const rawReceipt = e?.Receipt ?? e?.receipt ?? null;
-        if (typeof rawReceipt !== "string" || !rawReceipt) continue;
-
-        let decoded;
-        try {
-            decoded = jwtLib.decode(rawReceipt);
-        } catch {
+        const directCreator = e?.creatorId ?? e?.CreatorId ?? e?.creatorID ?? null;
+        if (directCreator) {
+            counts[directCreator] = (counts[directCreator] || 0) + 1;
             continue;
         }
-
-        const recEnts = decoded?.Receipt?.Entitlements;
+        const rawReceipt = e?.Receipt ?? e?.receipt ?? null;
+        const recEnts = extractReceiptEntitlements(rawReceipt);
         if (!Array.isArray(recEnts)) continue;
 
         for (const re of recEnts) {
-            const cid = re?.CreatorId ?? re?.creatorId ?? null;
+            const cid = re?.CreatorId ?? re?.creatorId ?? re?.creatorID ?? null;
             if (!cid) continue;
             counts[cid] = (counts[cid] || 0) + 1;
         }
