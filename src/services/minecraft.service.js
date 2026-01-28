@@ -1,4 +1,5 @@
 import {randomUUID} from "crypto";
+import jwtLib from "jsonwebtoken";
 
 import {env} from "../config/env.js";
 import {badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
@@ -89,6 +90,77 @@ export async function getMCInventory(mcToken, includeReceipt = false) {
         }
         throw internal("Failed to get MC inventory", detail);
     }
+}
+
+export function extractReceiptEntitlements(rawReceipt) {
+    if (!rawReceipt) return null;
+    if (typeof rawReceipt === "string") {
+        const trimmed = rawReceipt.trim();
+        if (!trimmed) return null;
+        const normalized = trimmed.replace(/^(bearer|jwt)\s+/i, "");
+        if (!normalized) return null;
+        if (normalized.startsWith("{") || normalized.startsWith("[")) {
+            try {
+                const parsed = JSON.parse(normalized);
+                return parsed?.Receipt?.Entitlements || parsed?.receipt?.entitlements || parsed?.entitlements || null;
+            } catch {
+                return null;
+            }
+        }
+        const decoded = jwtLib.decode(normalized, {complete: true, json: true});
+        const payload = decoded?.payload || decoded;
+        const decodedEnts = payload?.Receipt?.Entitlements || payload?.Receipt?.entitlements || payload?.receipt?.entitlements || payload?.Entitlements || payload?.entitlements || null;
+        if (Array.isArray(decodedEnts)) return decodedEnts;
+        const receiptValue = payload?.Receipt ?? payload?.receipt ?? null;
+        if (typeof receiptValue === "string") {
+            try {
+                const parsed = JSON.parse(receiptValue);
+                return parsed?.Receipt?.Entitlements || parsed?.Receipt?.entitlements || parsed?.receipt?.entitlements || parsed?.Entitlements || parsed?.entitlements || null;
+            } catch {
+                return null;
+            }
+        }
+        if (typeof payload === "string") {
+            try {
+                const parsed = JSON.parse(payload);
+                return parsed?.Receipt?.Entitlements || parsed?.Receipt?.entitlements || parsed?.receipt?.entitlements || parsed?.Entitlements || parsed?.entitlements || null;
+            } catch {
+                return null;
+            }
+        }
+        const parts = normalized.split(".");
+        if (parts.length >= 2) {
+            const payloadPart = parts[1];
+            const base64Payload = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+            const padLength = base64Payload.length % 4;
+            const padded = padLength ? base64Payload.padEnd(base64Payload.length + (4 - padLength), "=") : base64Payload;
+            try {
+                const parsed = JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+                return parsed?.Receipt?.Entitlements || parsed?.Receipt?.entitlements || parsed?.receipt?.entitlements || parsed?.Entitlements || parsed?.entitlements || null;
+            } catch {
+                return null;
+            }
+        }
+        if (!normalized.includes(".")) {
+            try {
+                const parsed = JSON.parse(Buffer.from(normalized, "base64").toString("utf8"));
+                return parsed?.Receipt?.Entitlements || parsed?.Receipt?.entitlements || parsed?.receipt?.entitlements || parsed?.Entitlements || parsed?.entitlements || null;
+            } catch {
+                return null;
+            }
+        }
+        return null;
+    }
+    if (typeof rawReceipt === "object") {
+        const direct = rawReceipt?.Receipt?.Entitlements || rawReceipt?.Receipt?.entitlements || rawReceipt?.receipt?.entitlements || rawReceipt?.Entitlements || rawReceipt?.entitlements || null;
+        if (Array.isArray(direct)) return direct;
+        const nested = rawReceipt?.Receipt ?? rawReceipt?.receipt ?? null;
+        if (nested && nested !== rawReceipt) {
+            return extractReceiptEntitlements(nested);
+        }
+        return null;
+    }
+    return null;
 }
 
 export async function getMCBalances(mcToken) {

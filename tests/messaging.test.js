@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import {buildMarketplaceMessageEventsPayload, buildMarketplaceMessagingPayload} from "../src/services/minecraft.service.js";
+import jwtLib from "jsonwebtoken";
+import {buildMarketplaceMessageEventsPayload, buildMarketplaceMessagingPayload, extractReceiptEntitlements} from "../src/services/minecraft.service.js";
 
 test("buildMarketplaceMessagingPayload uses defaults", () => {
     const {payload, sessionId} = buildMarketplaceMessagingPayload({});
@@ -71,4 +72,51 @@ test("buildMarketplaceMessageEventsPayload builds multiple events", () => {
         sessionId,
         eventDateTime: "2026-01-21T10:14:44.051Z"
     }]);
+});
+
+test("extractReceiptEntitlements reads jwt receipt entitlements", () => {
+    const receiptPayload = {Receipt: {Entitlements: [{CreatorId: "creator-1"}]}};
+    const token = jwtLib.sign(receiptPayload, "secret");
+    const ents = extractReceiptEntitlements(token);
+    assert.deepEqual(ents, receiptPayload.Receipt.Entitlements);
+});
+
+test("extractReceiptEntitlements reads jwt with prefix", () => {
+    const receiptPayload = {Receipt: {Entitlements: [{CreatorId: "creator-1b"}]}};
+    const token = jwtLib.sign(receiptPayload, "secret");
+    const ents = extractReceiptEntitlements(`Bearer ${token}`);
+    assert.deepEqual(ents, receiptPayload.Receipt.Entitlements);
+});
+
+test("extractReceiptEntitlements reads jwt with string receipt payload", () => {
+    const receiptPayload = {Entitlements: [{CreatorId: "creator-1c"}]};
+    const token = jwtLib.sign({Receipt: JSON.stringify(receiptPayload)}, "secret");
+    const ents = extractReceiptEntitlements(token);
+    assert.deepEqual(ents, receiptPayload.Entitlements);
+});
+
+test("extractReceiptEntitlements reads json receipt entitlements", () => {
+    const receiptPayload = {Receipt: {Entitlements: [{CreatorId: "creator-2"}]}};
+    const ents = extractReceiptEntitlements(JSON.stringify(receiptPayload));
+    assert.deepEqual(ents, receiptPayload.Receipt.Entitlements);
+});
+
+test("extractReceiptEntitlements reads base64 receipt entitlements", () => {
+    const receiptPayload = {Receipt: {Entitlements: [{CreatorId: "creator-3"}]}};
+    const encoded = Buffer.from(JSON.stringify(receiptPayload), "utf8").toString("base64").replace(/=+$/, "");
+    const ents = extractReceiptEntitlements(encoded);
+    assert.deepEqual(ents, receiptPayload.Receipt.Entitlements);
+});
+
+test("extractReceiptEntitlements reads object receipt entitlements", () => {
+    const receiptPayload = {Receipt: {Entitlements: [{CreatorId: "creator-4"}]}};
+    const ents = extractReceiptEntitlements(receiptPayload);
+    assert.deepEqual(ents, receiptPayload.Receipt.Entitlements);
+});
+
+test("extractReceiptEntitlements reads nested receipt strings", () => {
+    const receiptPayload = {Receipt: {Entitlements: [{CreatorId: "creator-5"}]}};
+    const token = jwtLib.sign(receiptPayload, "secret");
+    const ents = extractReceiptEntitlements({receipt: token});
+    assert.deepEqual(ents, receiptPayload.Receipt.Entitlements);
 });
