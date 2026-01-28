@@ -1,4 +1,5 @@
 import {randomUUID} from "crypto";
+import jwtLib from "jsonwebtoken";
 
 import {env} from "../config/env.js";
 import {badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
@@ -89,6 +90,43 @@ export async function getMCInventory(mcToken, includeReceipt = false) {
         }
         throw internal("Failed to get MC inventory", detail);
     }
+}
+
+export function extractReceiptEntitlements(rawReceipt) {
+    if (!rawReceipt) return null;
+    if (typeof rawReceipt === "string") {
+        const trimmed = rawReceipt.trim();
+        if (!trimmed) return null;
+        if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                return parsed?.Receipt?.Entitlements || parsed?.receipt?.entitlements || parsed?.entitlements || null;
+            } catch {
+                return null;
+            }
+        }
+        let decoded = null;
+        try {
+            decoded = jwtLib.decode(trimmed);
+        } catch {
+            decoded = null;
+        }
+        const decodedEnts = decoded?.Receipt?.Entitlements || decoded?.receipt?.entitlements || decoded?.entitlements || null;
+        if (Array.isArray(decodedEnts)) return decodedEnts;
+        if (!trimmed.includes(".")) {
+            try {
+                const parsed = JSON.parse(Buffer.from(trimmed, "base64").toString("utf8"));
+                return parsed?.Receipt?.Entitlements || parsed?.receipt?.entitlements || parsed?.entitlements || null;
+            } catch {
+                return null;
+            }
+        }
+        return null;
+    }
+    if (typeof rawReceipt === "object") {
+        return rawReceipt?.Receipt?.Entitlements || rawReceipt?.receipt?.entitlements || rawReceipt?.entitlements || null;
+    }
+    return null;
 }
 
 export async function getMCBalances(mcToken) {
