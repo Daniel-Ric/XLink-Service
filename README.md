@@ -6,6 +6,11 @@
 
 > A standalone Node.js/Express service for Microsoft/Xbox Live auth, Xbox Profile/Presence/Captures/Stats, PlayFab client read APIs, and Minecraft (multiplayer token + entitlements) — protected by JWT and shipped with Swagger/OpenAPI docs.
 
+> [!IMPORTANT]
+> **Project Disclaimer**  
+> XLink Service" by SpindexGFX is an independent project. It is not affiliated with, endorsed by, sponsored by, or otherwise connected to Mojang AB, Microsoft Corporation, or any of their subsidiaries or affiliates. No partnership, approval, or official relationship with Mojang AB or Microsoft is implied.  
+> All names, logos, brands, trademarks, service marks, and registered trademarks are the property of their respective owners and are used strictly for identification and reference purposes only. This project does not claim ownership of third-party intellectual property and does not grant any license to use it.
+
 ---
 
 ## 📚 Table of Contents
