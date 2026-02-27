@@ -113,7 +113,6 @@ const corsOptions = {
     exposedHeaders: ["X-Request-Id"]
 };
 
-app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 
 app.use(helmet({contentSecurityPolicy: false, crossOriginResourcePolicy: {policy: "cross-origin"}}));
