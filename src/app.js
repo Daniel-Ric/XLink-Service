@@ -109,7 +109,6 @@ const corsOptions = {
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    // Keep this list broad enough for browser preflight requests from different clients.
     allowedHeaders: [
         "Content-Type",
         "Authorization",
