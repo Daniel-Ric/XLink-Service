@@ -101,13 +101,20 @@ app.use((req, res, next) => {
 });
 
 const allowlist = (env.CORS_ORIGIN || "*").split(",").map(s => s.trim()).filter(Boolean);
-app.use(cors({
+const corsOptions = {
     origin: (origin, cb) => {
         if (!origin) return cb(null, true);
         if (allowlist.includes("*") || allowlist.includes(origin)) return cb(null, true);
         cb(new Error("CORS not allowed"));
-    }, credentials: true
-}));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-xbl-token", "x-request-id", "x-correlation-id"],
+    exposedHeaders: ["X-Request-Id"]
+};
+
+app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
 
 app.use(helmet({contentSecurityPolicy: false, crossOriginResourcePolicy: {policy: "cross-origin"}}));
 app.use(express.json({limit: "1mb"}));
