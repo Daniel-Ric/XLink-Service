@@ -109,7 +109,15 @@ const corsOptions = {
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-xbl-token", "x-request-id", "x-correlation-id"],
+    allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "x-xbl-token",
+        "xbl-token",
+        "x-request-id",
+        "x-correlation-id"
+    ],
     exposedHeaders: ["X-Request-Id"]
 };
 
