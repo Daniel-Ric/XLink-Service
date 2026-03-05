@@ -122,8 +122,14 @@ router.get("/friends/presence", jwtMiddleware, asyncHandler(async (req, res) => 
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
 
-    const limit = Math.min(Math.max(parseInt(req.query.limit || "50", 10), 1), 200);
+    const schema = Joi.object({
+        limit: Joi.number().integer().min(1).max(200).default(50)
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
+
     const locale = req.headers["accept-language"];
+    const limit = value.limit;
 
     const data = await getPeopleSocial(xuid, xboxliveToken, limit, locale);
 

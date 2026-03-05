@@ -48,7 +48,13 @@ router.get("/recent", jwtMiddleware, asyncHandler(async (req, res) => {
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
 
-    const limit = Math.min(Math.max(parseInt(req.query.limit || "20", 10), 1), 100);
+    const schema = Joi.object({
+        limit: Joi.number().integer().min(1).max(100).default(20)
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
+
+    const limit = value.limit;
     const locale = req.headers["accept-language"];
 
     const titlesRaw = await getTitleHub(xuid, xboxliveToken, {

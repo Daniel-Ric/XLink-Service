@@ -230,7 +230,13 @@ router.get("/minecraft/balances", jwtMiddleware, asyncHandler(async (req, res) =
 router.get("/minecraft/creators/top", jwtMiddleware, asyncHandler(async (req, res) => {
     const mcToken = req.headers["x-mc-token"];
     if (!mcToken) throw badRequest("Missing x-mc-token header");
-    const limit = Math.min(Math.max(parseInt(req.query.limit || "5", 10), 1), 50);
+    const schema = Joi.object({
+        limit: Joi.number().integer().min(1).max(50).default(5)
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
+
+    const limit = value.limit;
     const ents = await getMCInventory(mcToken, true);
 
     const counts = {};
@@ -296,9 +302,17 @@ router.get("/minecraft/search", jwtMiddleware, asyncHandler(async (req, res) => 
     const mcToken = req.headers["x-mc-token"];
     if (!mcToken) throw badRequest("Missing x-mc-token header");
 
-    const limit = Math.min(Math.max(parseInt(req.query.limit || "50", 10), 1), 200);
-    const productId = (req.query.productId || "").trim();
-    const q = (req.query.q || "").toLowerCase();
+    const schema = Joi.object({
+        limit: Joi.number().integer().min(1).max(200).default(50),
+        productId: Joi.string().allow("").default(""),
+        q: Joi.string().allow("").default("")
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
+
+    const limit = value.limit;
+    const productId = value.productId.trim();
+    const q = value.q.toLowerCase();
 
     const ents = await getMCInventory(mcToken, true);
     let filtered = ents;
