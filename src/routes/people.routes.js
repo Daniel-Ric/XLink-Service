@@ -43,9 +43,14 @@ router.get("/friends", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
-    const maxItems = Math.max(1, Math.min(parseInt(req.query.maxItems || "200", 10), 2000));
+    const schema = Joi.object({
+        maxItems: Joi.number().integer().min(1).max(2000).default(200)
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
+
     const locale = req.headers["accept-language"];
-    const data = await getPeopleSocial(xuid, xboxliveToken, maxItems, locale);
+    const data = await getPeopleSocial(xuid, xboxliveToken, value.maxItems, locale);
 
     const list = (data?.people || data?.People || []);
     const people = list.filter(p => (p?.isFollowingCaller === true) && (p?.isFollowedByCaller === true));
@@ -82,9 +87,14 @@ router.get("/followers", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
     const xboxliveToken = req.headers["x-xbl-token"];
     if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
-    const maxItems = Math.max(1, Math.min(parseInt(req.query.maxItems || "200", 10), 2000));
+    const schema = Joi.object({
+        maxItems: Joi.number().integer().min(1).max(2000).default(200)
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
+
     const locale = req.headers["accept-language"];
-    const data = await getPeopleFollowers(xuid, xboxliveToken, maxItems, locale);
+    const data = await getPeopleFollowers(xuid, xboxliveToken, value.maxItems, locale);
     const people = (data?.people || data?.People || []);
     res.json({count: people.length, people});
 }));
