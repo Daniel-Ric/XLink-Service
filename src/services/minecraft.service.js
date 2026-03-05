@@ -2,7 +2,7 @@ import {randomUUID} from "crypto";
 import jwtLib from "jsonwebtoken";
 
 import {env} from "../config/env.js";
-import {badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
+import {HttpError, badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
@@ -54,6 +54,7 @@ export async function getMCToken(sessionTicket) {
             htmlSnippet: isString ? res.data.slice(0, 800) : undefined
         });
     } catch (err) {
+        if (err instanceof HttpError) throw err;
         const status = err.response?.status;
         const detail = err.details || err.response?.data || err.message || err;
         if (status === 401) {
@@ -376,6 +377,7 @@ export async function sendMarketplaceMessageEvents(mcToken, options = {}) {
             sessionHeaderId
         };
     } catch (err) {
+        if (err instanceof HttpError) throw err;
         const status = err.response?.status;
         const detail = err.response?.data || err.message || err;
         if (status === 401) {
