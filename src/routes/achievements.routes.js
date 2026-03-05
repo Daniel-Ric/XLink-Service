@@ -88,7 +88,9 @@ router.get("/summary", jwtMiddleware, asyncHandler(async (req, res) => {
     if (error) throw badRequest(error.message);
 
     const data = await getAchievements(xuid, xboxliveToken, {titleId: value.titleId});
-    const list = Array.isArray(data.achievements) ? data.achievements : (data.achievements || data.titles || []);
+    const achievements = Array.isArray(data?.achievements) ? data.achievements : [];
+    const titles = Array.isArray(data?.titles) ? data.titles : [];
+    const list = achievements.length ? achievements : titles;
     let total = 0, earned = 0;
     for (const a of list) {
         total++;
