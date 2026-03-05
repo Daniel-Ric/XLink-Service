@@ -1,4 +1,5 @@
 import express from "express";
+import Joi from "joi";
 import {jwtMiddleware} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
 import {getTitleHub} from "../services/xbox.service.js";
