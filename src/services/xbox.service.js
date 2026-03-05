@@ -1,9 +1,14 @@
+import crypto from "node:crypto";
 import {env} from "../config/env.js";
 import {badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 import {cached} from "../utils/cache.js";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
+
+function tokenFingerprint(token) {
+    return crypto.createHash("sha256").update(String(token || "")).digest("hex").slice(0, 16);
+}
 
 export async function getXBLToken(msAccessToken) {
     try {
@@ -57,7 +62,7 @@ export async function getProfileSettings(xuid, xboxliveToken, settings) {
         });
     }
 
-    return cached(["profile", xuid, settings], async () => {
+    return cached(["profile", tokenFingerprint(xboxliveToken), xuid, settings], async () => {
         try {
             const {data} = await call(3);
             return data;
@@ -101,7 +106,7 @@ export async function getAchievements(xuid, xboxliveToken, {titleId} = {}) {
 }
 
 export async function getPresence(xuid, xboxliveToken) {
-    return cached(["presence", xuid], async () => {
+    return cached(["presence", tokenFingerprint(xboxliveToken), xuid], async () => {
         try {
             const {data} = await http.get(`https://userpresence.xboxlive.com/users/xuid(${xuid})`, {
                 headers: {
@@ -151,7 +156,7 @@ export async function getTitleHub(xuid, xboxliveToken, {
     if (!xboxliveToken) throw badRequest("xboxliveToken is required");
     const fieldsStr = Array.isArray(fields) ? fields.join(",") : String(fields || "detail");
     const url = `https://titlehub.xboxlive.com/users/xuid(${xuid})/titles/titlehistory/decoration/${encodeURIComponent(fieldsStr)}?maxItems=${encodeURIComponent(maxItems)}`;
-    const key = ["titlehub", xuid, fieldsStr, maxItems, locale || env.ACCEPT_LANGUAGE || "en-US"];
+    const key = ["titlehub", tokenFingerprint(xboxliveToken), xuid, fieldsStr, maxItems, locale || env.ACCEPT_LANGUAGE || "en-US"];
     return cached(key, async () => {
         try {
             const {data} = await http.get(url, {
@@ -435,7 +440,7 @@ export async function getXuidByGamertag(gamertag, xboxliveToken) {
     const call = ver => http.get(url, {
         headers: {"x-xbl-contract-version": ver, Authorization: xboxliveToken}
     });
-    const key = ["xuidByGamertag", gamertag.toLowerCase()];
+    const key = ["xuidByGamertag", tokenFingerprint(xboxliveToken), gamertag.toLowerCase()];
     return cached(key, async () => {
         try {
             const {data} = await call(3);
@@ -456,7 +461,7 @@ export async function getXuidByGamertag(gamertag, xboxliveToken) {
 }
 
 export async function getGamertagByXuid(xuid, xboxliveToken) {
-    const key = ["gamertagByXuid", xuid];
+    const key = ["gamertagByXuid", tokenFingerprint(xboxliveToken), xuid];
     return cached(key, async () => {
         const data = await getProfileSettings(xuid, xboxliveToken, "Gamertag");
         const settings = data?.profileUsers?.[0]?.settings || [];
