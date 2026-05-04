@@ -115,10 +115,12 @@ const corsOptions = {
         "X-Requested-With",
         "x-xbl-token",
         "xbl-token",
+        "x-mc-token",
+        "x-redeem-token",
         "x-request-id",
         "x-correlation-id"
     ],
-    exposedHeaders: ["X-Request-Id"]
+    exposedHeaders: ["X-Request-Id", "InventoryETag", "X-UserLists-Version"]
 };
 
 app.use(cors(corsOptions));
