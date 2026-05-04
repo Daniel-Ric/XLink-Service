@@ -8,6 +8,7 @@ import {createHttp} from "../utils/http.js";
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
 const ENTITLEMENTS_BASE = "https://entitlements.mktpl.minecraft-services.net/api/v1.0";
 const STORE_BASE = "https://store.mktpl.minecraft-services.net/api/v1.0";
+const STORE_BASE_V2 = "https://store.mktpl.minecraft-services.net/api/v2.0";
 const MESSAGING_BASE = "https://messaging.mktpl.minecraft-services.net/api/v1.0";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
@@ -223,6 +224,59 @@ export async function getMCWishlistPage(mcToken, body = {}) {
             throw unauthorized("Failed to get MC wishlist", detail);
         }
         throw internal("Failed to get MC wishlist", detail);
+    }
+}
+
+export function buildMCCapesPagePayload(options = {}) {
+    return {
+        ...options,
+        entitlements: Array.isArray(options.entitlements) ? options.entitlements : []
+    };
+}
+
+export async function getMCCapesPage(mcToken, body = {}) {
+    if (!mcToken) throw badRequest("mcToken missing");
+    try {
+        const url = `${STORE_BASE_V2}/layout/pages/DressingRoom_Capes`;
+        const payload = buildMCCapesPagePayload(body);
+        if (!payload.inventoryVersion || !payload.listVersion) {
+            const versionSource = await getMCWishlistPage(mcToken, {
+                entitlements: [],
+                recentlyViewed: []
+            });
+            payload.inventoryVersion = payload.inventoryVersion || versionSource?.meta?.inventoryVersion;
+            payload.listVersion = payload.listVersion || versionSource?.meta?.userListsVersion;
+        }
+        const inventoryVersion = payload?.inventoryVersion;
+        const res = await http.post(url, payload, {
+            headers: {
+                Authorization: mcToken,
+                Accept: "application/json",
+                "content-type": "application/json", ...(inventoryVersion ? {
+                    inventoryetag: inventoryVersion, inventoryversion: inventoryVersion
+                } : {})
+            }
+        });
+
+        return {
+            data: res.data, meta: {
+                inventoryVersion: res.headers?.inventoryetag || res.data?.result?.inventoryVersion,
+                userListsVersion: res.headers?.["x-userlists-version"] || res.data?.result?.userListsVersion
+            }
+        };
+    } catch (err) {
+        const status = err.response?.status;
+        const detail = err.response?.data || err.message || err;
+        if (status === 401) {
+            throw unauthorized("Failed to get MC capes", detail);
+        }
+        if (status === 403) {
+            throw forbidden("Failed to get MC capes", detail);
+        }
+        if (status && status >= 400 && status < 500) {
+            throw unauthorized("Failed to get MC capes", detail);
+        }
+        throw internal("Failed to get MC capes", detail);
     }
 }
 

@@ -3,7 +3,7 @@ import Joi from "joi";
 import {jwtMiddleware} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
 import {getEntityToken, getPlayFabInventory, loginWithXbox} from "../services/playfab.service.js";
-import {extractReceiptEntitlements, getMCBalances, getMCInventory} from "../services/minecraft.service.js";
+import {extractReceiptEntitlements, getMCBalances, getMCCapesPage, getMCInventory} from "../services/minecraft.service.js";
 import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
@@ -200,6 +200,67 @@ router.get("/minecraft/balances", jwtMiddleware, asyncHandler(async (req, res) =
     if (!mcToken) throw badRequest("Missing x-mc-token header");
     const balances = await getMCBalances(mcToken);
     res.json(balances);
+}));
+
+/**
+ * @swagger
+ * /inventory/minecraft/capes:
+ *   post:
+ *     summary: Get Minecraft Dressing Room capes
+ *     description: >
+ *       Returns the raw Minecraft Marketplace DressingRoom_Capes layout page for the calling
+ *       account using an MCToken. Marketplace version fields are resolved automatically when
+ *       no body is provided.
+ *     tags: [Inventory]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: x-mc-token
+ *         required: true
+ *         schema: { type: string }
+ *         description: Minecraft Authorization header (MCToken ...) as obtained from /minecraft/token or /auth/callback
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               entitlements:
+ *                 type: array
+ *                 default: []
+ *                 items:
+ *                   type: object
+ *               inventoryVersion:
+ *                 type: string
+ *                 example: "1/MTQ2Nw=="
+ *               listVersion:
+ *                 type: string
+ *                 example: "5d2713ce-f8f8-45f1-8f8e-ae3532e9f23b"
+ *     responses:
+ *       200:
+ *         description: Minecraft DressingRoom_Capes layout page JSON (raw)
+ */
+router.post("/minecraft/capes", jwtMiddleware, asyncHandler(async (req, res) => {
+    const mcToken = req.headers["x-mc-token"];
+    if (!mcToken) throw badRequest("Missing x-mc-token header");
+
+    const schema = Joi.object({
+        entitlements: Joi.array().items(Joi.any()).default([]),
+        inventoryVersion: Joi.string().optional(),
+        listVersion: Joi.string().optional()
+    }).unknown(true);
+
+    const {value, error} = schema.validate(req.body || {});
+    if (error) throw badRequest(error.message);
+
+    const result = await getMCCapesPage(mcToken, value);
+
+    if (result?.meta?.inventoryVersion) res.setHeader("InventoryETag", result.meta.inventoryVersion);
+    if (result?.meta?.userListsVersion) res.setHeader("X-UserLists-Version", result.meta.userListsVersion);
+
+    res.json(result.data);
 }));
 
 /**
