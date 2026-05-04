@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import jwtLib from "jsonwebtoken";
-import {buildMarketplaceMessageEventsPayload, buildMarketplaceMessagingPayload, extractReceiptEntitlements} from "../src/services/minecraft.service.js";
+import {buildMarketplaceMessageEventsPayload, buildMarketplaceMessagingPayload, buildMCCapesPagePayload, extractReceiptEntitlements} from "../src/services/minecraft.service.js";
 
 test("buildMarketplaceMessagingPayload uses defaults", () => {
     const {payload, sessionId} = buildMarketplaceMessagingPayload({});
@@ -72,6 +72,19 @@ test("buildMarketplaceMessageEventsPayload builds multiple events", () => {
         sessionId,
         eventDateTime: "2026-01-21T10:14:44.051Z"
     }]);
+});
+
+test("buildMCCapesPagePayload defaults entitlements", () => {
+    const payload = buildMCCapesPagePayload({
+        inventoryVersion: "1/MTQ2Nw==",
+        listVersion: "5d2713ce-f8f8-45f1-8f8e-ae3532e9f23b"
+    });
+
+    assert.deepEqual(payload, {
+        entitlements: [],
+        inventoryVersion: "1/MTQ2Nw==",
+        listVersion: "5d2713ce-f8f8-45f1-8f8e-ae3532e9f23b"
+    });
 });
 
 test("extractReceiptEntitlements reads jwt receipt entitlements", () => {

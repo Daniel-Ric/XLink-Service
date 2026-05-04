@@ -270,6 +270,7 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 | POST   | `/inventory/playfab/test`          | PlayFab inventory test via XSTS (title id e9d1)       | —            |
 | GET    | `/inventory/minecraft`             | Minecraft entitlements (optional `includeReceipt`)    | `x-mc-token` |
 | GET    | `/inventory/minecraft/balances`    | Minecraft Marketplace currency balances               | `x-mc-token` |
+| POST   | `/inventory/minecraft/capes`       | Minecraft Dressing Room capes layout page (body optional) | `x-mc-token` |
 | GET    | `/inventory/minecraft/creators/top`| Top creators from entitlements (by item count)        | `x-mc-token` |
 | GET    | `/inventory/minecraft/search`      | Search entitlements (`productId`, `q`, `limit`)       | `x-mc-token` |
 | POST   | `/wishlist/list`                   | Marketplace wishlist page                             | `x-mc-token` |
