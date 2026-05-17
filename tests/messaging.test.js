@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import jwtLib from "jsonwebtoken";
-import {buildMarketplaceMessageEventsPayload, buildMarketplaceMessagingPayload, buildMCCapesPagePayload, extractReceiptEntitlements} from "../src/services/minecraft.service.js";
+import {buildMarketplaceMessageEventsPayload, buildMarketplaceMessagingPayload, buildMCCapesPagePayload, buildMCWishlistPagePayload, buildMCWishlistUpdatePayload, extractReceiptEntitlements} from "../src/services/minecraft.service.js";
 
 test("buildMarketplaceMessagingPayload uses defaults", () => {
     const {payload, sessionId} = buildMarketplaceMessagingPayload({});
@@ -84,6 +84,63 @@ test("buildMCCapesPagePayload defaults entitlements", () => {
         entitlements: [],
         inventoryVersion: "1/MTQ2Nw==",
         listVersion: "5d2713ce-f8f8-45f1-8f8e-ae3532e9f23b"
+    });
+});
+
+test("buildMCWishlistPagePayload matches marketplace list body", () => {
+    const payload = buildMCWishlistPagePayload({
+        inventoryVersion: "1/MTQ2Nw==",
+        listVersion: "5d2713ce-f8f8-45f1-8f8e-ae3532e9f23b"
+    });
+
+    assert.deepEqual(payload, {
+        entitlements: [],
+        inventoryVersion: "1/MTQ2Nw==",
+        listVersion: "5d2713ce-f8f8-45f1-8f8e-ae3532e9f23b"
+    });
+});
+
+test("buildMCWishlistPagePayload keeps provided wishlist arrays", () => {
+    const payload = buildMCWishlistPagePayload({
+        entitlements: [{id: "owned"}],
+        recentlyViewed: ["PagedList_Wishlist"],
+        extra: true
+    });
+
+    assert.deepEqual(payload, {
+        entitlements: [{id: "owned"}],
+        recentlyViewed: ["PagedList_Wishlist"],
+        extra: true
+    });
+});
+
+test("buildMCWishlistUpdatePayload matches marketplace add body", () => {
+    const payload = buildMCWishlistUpdatePayload({
+        itemId: "fd7b7f00-30cb-4f1a-a802-fd26025eaf14",
+        listVersion: "040aae3b-6940-4d38-9394-1ea9836f1d55",
+        operation: "Add",
+        inventoryVersion: "1/MTQ3Mg=="
+    });
+
+    assert.deepEqual(payload, {
+        itemId: "fd7b7f00-30cb-4f1a-a802-fd26025eaf14",
+        listVersion: "040aae3b-6940-4d38-9394-1ea9836f1d55",
+        operation: "Add"
+    });
+});
+
+test("buildMCWishlistUpdatePayload matches marketplace remove body", () => {
+    const payload = buildMCWishlistUpdatePayload({
+        itemId: "fd7b7f00-30cb-4f1a-a802-fd26025eaf14",
+        listVersion: "8e88b487-526e-45cb-90ee-15e400c736a1",
+        operation: "Remove",
+        inventoryVersion: "1/MTQ3Mg=="
+    });
+
+    assert.deepEqual(payload, {
+        itemId: "fd7b7f00-30cb-4f1a-a802-fd26025eaf14",
+        listVersion: "8e88b487-526e-45cb-90ee-15e400c736a1",
+        operation: "Remove"
     });
 });
 

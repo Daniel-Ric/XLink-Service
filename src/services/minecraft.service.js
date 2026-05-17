@@ -2,7 +2,7 @@ import {randomUUID} from "crypto";
 import jwtLib from "jsonwebtoken";
 
 import {env} from "../config/env.js";
-import {HttpError, badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
+import {HttpError, badRequest, conflict, forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
@@ -12,6 +12,65 @@ const STORE_BASE_V2 = "https://store.mktpl.minecraft-services.net/api/v2.0";
 const MESSAGING_BASE = "https://messaging.mktpl.minecraft-services.net/api/v1.0";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
+
+function getHeader(headers, names) {
+    for (const name of names) {
+        const value = headers?.[name];
+        if (value) return value;
+    }
+    return undefined;
+}
+
+function normalizeMarketplaceVersion(value) {
+    if (typeof value !== "string") return value;
+    let normalized = value.trim();
+    if (normalized.startsWith("W/")) normalized = normalized.slice(2).trim();
+    if ((normalized.startsWith("\"") && normalized.endsWith("\"")) || (normalized.startsWith("'") && normalized.endsWith("'"))) {
+        normalized = normalized.slice(1, -1);
+    }
+    return normalized || undefined;
+}
+
+function extractMarketplaceVersions(res) {
+    const inventoryVersion = normalizeMarketplaceVersion(
+        getHeader(res.headers, ["inventoryetag", "inventoryversion"]) ||
+        res.data?.result?.inventoryVersion ||
+        res.data?.inventoryVersion
+    );
+    const userListsVersion = normalizeMarketplaceVersion(
+        getHeader(res.headers, ["x-userlists-version", "userlistsversion", "etag"]) ||
+        res.data?.result?.userListsVersion ||
+        res.data?.userListsVersion
+    );
+
+    return {inventoryVersion, userListsVersion};
+}
+
+function marketplaceInventoryHeaders(inventoryVersion) {
+    return {
+        ...(inventoryVersion ? {
+            inventoryetag: inventoryVersion,
+            inventoryversion: inventoryVersion
+        } : {})
+    };
+}
+
+export function buildMCWishlistPagePayload(options = {}) {
+    const payload = {
+        ...options,
+        entitlements: Array.isArray(options.entitlements) ? options.entitlements : []
+    };
+    if (Array.isArray(options.recentlyViewed)) payload.recentlyViewed = options.recentlyViewed;
+    return payload;
+}
+
+export function buildMCWishlistUpdatePayload(options = {}) {
+    return {
+        itemId: options.itemId,
+        listVersion: options.listVersion,
+        operation: options.operation
+    };
+}
 
 export async function getMCToken(sessionTicket) {
     try {
@@ -190,28 +249,26 @@ export async function getMCBalances(mcToken) {
 export async function getMCWishlistPage(mcToken, body = {}) {
     if (!mcToken) throw badRequest("mcToken missing");
     try {
-        const url = `${STORE_BASE}/layout/pages/PagedList_Wishlist`;
-        const inventoryVersion = body?.inventoryVersion;
-        const res = await http.post(url, body, {
+        const url = `${STORE_BASE_V2}/layout/pages/PagedList_Wishlist`;
+        const payload = buildMCWishlistPagePayload(body);
+        const inventoryVersion = payload?.inventoryVersion;
+        const res = await http.post(url, payload, {
             headers: {
                 Authorization: mcToken,
                 Accept: "application/json",
-                "content-type": "application/json", ...(inventoryVersion ? {
-                    inventoryetag: inventoryVersion, inventoryversion: inventoryVersion
-                } : {})
+                "content-type": "application/json",
+                ...marketplaceInventoryHeaders(inventoryVersion)
             }
         });
 
-        const headerInventory = res.headers?.inventoryetag;
-        const headerListsVersion = res.headers?.["x-userlists-version"];
+        const versions = extractMarketplaceVersions(res);
 
         return {
-            data: res.data, meta: {
-                inventoryVersion: headerInventory || res.data?.result?.inventoryVersion,
-                userListsVersion: headerListsVersion || res.data?.result?.userListsVersion
-            }
+            data: res.data,
+            meta: versions
         };
     } catch (err) {
+        if (err instanceof HttpError) throw err;
         const status = err.response?.status;
         const detail = err.response?.data || err.message || err;
         if (status === 401) {
@@ -219,6 +276,12 @@ export async function getMCWishlistPage(mcToken, body = {}) {
         }
         if (status === 403) {
             throw forbidden("Failed to get MC wishlist", detail);
+        }
+        if (status === 409) {
+            throw conflict("Failed to get MC wishlist", detail);
+        }
+        if (status === 400) {
+            throw badRequest("Failed to get MC wishlist", detail);
         }
         if (status && status >= 400 && status < 500) {
             throw unauthorized("Failed to get MC wishlist", detail);
@@ -241,8 +304,7 @@ export async function getMCCapesPage(mcToken, body = {}) {
         const payload = buildMCCapesPagePayload(body);
         if (!payload.inventoryVersion || !payload.listVersion) {
             const versionSource = await getMCWishlistPage(mcToken, {
-                entitlements: [],
-                recentlyViewed: []
+                entitlements: []
             });
             payload.inventoryVersion = payload.inventoryVersion || versionSource?.meta?.inventoryVersion;
             payload.listVersion = payload.listVersion || versionSource?.meta?.userListsVersion;
@@ -252,19 +314,19 @@ export async function getMCCapesPage(mcToken, body = {}) {
             headers: {
                 Authorization: mcToken,
                 Accept: "application/json",
-                "content-type": "application/json", ...(inventoryVersion ? {
-                    inventoryetag: inventoryVersion, inventoryversion: inventoryVersion
-                } : {})
+                "content-type": "application/json",
+                ...marketplaceInventoryHeaders(inventoryVersion)
             }
         });
 
+        const versions = extractMarketplaceVersions(res);
+
         return {
-            data: res.data, meta: {
-                inventoryVersion: res.headers?.inventoryetag || res.data?.result?.inventoryVersion,
-                userListsVersion: res.headers?.["x-userlists-version"] || res.data?.result?.userListsVersion
-            }
+            data: res.data,
+            meta: versions
         };
     } catch (err) {
+        if (err instanceof HttpError) throw err;
         const status = err.response?.status;
         const detail = err.response?.data || err.message || err;
         if (status === 401) {
@@ -272,6 +334,12 @@ export async function getMCCapesPage(mcToken, body = {}) {
         }
         if (status === 403) {
             throw forbidden("Failed to get MC capes", detail);
+        }
+        if (status === 409) {
+            throw conflict("Failed to get MC capes", detail);
+        }
+        if (status === 400) {
+            throw badRequest("Failed to get MC capes", detail);
         }
         if (status && status >= 400 && status < 500) {
             throw unauthorized("Failed to get MC capes", detail);
@@ -285,26 +353,27 @@ export async function updateMCWishlist(mcToken, body = {}) {
     try {
         const url = `${STORE_BASE}/player/list_wishlist`;
         const inventoryVersion = body?.inventoryVersion;
-        const payload = {
-            itemId: body.itemId, listVersion: body.listVersion, operation: body.operation
-        };
+        const payload = buildMCWishlistUpdatePayload(body);
 
         const res = await http.post(url, payload, {
             headers: {
                 Authorization: mcToken,
                 Accept: "application/json",
-                "content-type": "application/json", ...(inventoryVersion ? {
-                    inventoryetag: inventoryVersion, inventoryversion: inventoryVersion
-                } : {})
+                "content-type": "application/json",
+                ...marketplaceInventoryHeaders(inventoryVersion)
             }
         });
 
+        const versions = extractMarketplaceVersions(res);
+
         return {
             ok: true,
-            userListsVersion: res.headers?.["x-userlists-version"] || res.headers?.etag,
-            inventoryVersion: res.headers?.inventoryetag
+            userListsVersion: versions.userListsVersion,
+            inventoryVersion: versions.inventoryVersion,
+            data: res.data
         };
     } catch (err) {
+        if (err instanceof HttpError) throw err;
         const status = err.response?.status;
         const detail = err.response?.data || err.message || err;
         if (status === 401) {
@@ -312,6 +381,12 @@ export async function updateMCWishlist(mcToken, body = {}) {
         }
         if (status === 403) {
             throw forbidden("Failed to update MC wishlist", detail);
+        }
+        if (status === 409) {
+            throw conflict("Failed to update MC wishlist", detail);
+        }
+        if (status === 400) {
+            throw badRequest("Failed to update MC wishlist", detail);
         }
         if (status && status >= 400 && status < 500) {
             throw unauthorized("Failed to update MC wishlist", detail);

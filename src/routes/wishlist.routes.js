@@ -34,13 +34,34 @@ function setCachedVersions(mcToken, listVersion, inventoryVersion) {
     });
 }
 
-async function resolveVersions(mcToken) {
+function clearCachedVersions(mcToken) {
+    versionCache.delete(mcToken);
+}
+
+function stringifyDetails(value) {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    try {
+        return JSON.stringify(value);
+    } catch {
+        return String(value);
+    }
+}
+
+function isMarketplaceVersionError(err) {
+    if (![400, 409].includes(err?.status)) return false;
+    const text = `${err.message || ""} ${stringifyDetails(err.details)}`.toLowerCase();
+    return text.includes("version") || text.includes("etag") || text.includes("userlist") || text.includes("inventory");
+}
+
+async function resolveVersions(mcToken, options = {}) {
+    if (options.refresh) clearCachedVersions(mcToken);
+
     const cached = getCachedVersions(mcToken);
     if (cached?.listVersion && cached?.inventoryVersion) return cached;
 
     const pre = await getMCWishlistPage(mcToken, {
-        entitlements: [],
-        recentlyViewed: []
+        entitlements: []
     });
 
     const listVersion = pre?.meta?.userListsVersion || pre?.data?.result?.userListsVersion;
@@ -60,7 +81,7 @@ async function resolveVersions(mcToken) {
  *     summary: Get wishlist (Marketplace PagedList_Wishlist)
  *     description: |
  *       Returns the current Minecraft Marketplace wishlist by proxying the official endpoint
- *       `POST /api/v1.0/layout/pages/PagedList_Wishlist`.
+ *       `POST /api/v2.0/layout/pages/PagedList_Wishlist`.
  *
  *       **What you must provide**
  *       - Header `x-mc-token`: the full Marketplace authorization header (starts with `MCToken ...`)
@@ -112,7 +133,7 @@ router.post("/list", jwtMiddleware, asyncHandler(async (req, res) => {
     if (!mcToken) throw badRequest("Missing x-mc-token header");
 
     const schema = Joi.object({
-        recentlyViewed: Joi.array().items(Joi.string()).default([])
+        recentlyViewed: Joi.array().items(Joi.string()).optional()
     }).unknown(true);
 
     const {value, error} = schema.validate(req.body || {});
@@ -121,14 +142,23 @@ router.post("/list", jwtMiddleware, asyncHandler(async (req, res) => {
     const cached = getCachedVersions(mcToken);
 
     const payload = {
-        entitlements: [],
-        recentlyViewed: value.recentlyViewed || []
+        entitlements: []
     };
+    if (Array.isArray(value.recentlyViewed)) payload.recentlyViewed = value.recentlyViewed;
 
     if (cached?.inventoryVersion) payload.inventoryVersion = cached.inventoryVersion;
     if (cached?.listVersion) payload.listVersion = cached.listVersion;
 
-    const result = await getMCWishlistPage(mcToken, payload);
+    let result;
+    try {
+        result = await getMCWishlistPage(mcToken, payload);
+    } catch (err) {
+        if (!cached || !isMarketplaceVersionError(err)) throw err;
+        clearCachedVersions(mcToken);
+        const retryPayload = {entitlements: []};
+        if (Array.isArray(value.recentlyViewed)) retryPayload.recentlyViewed = value.recentlyViewed;
+        result = await getMCWishlistPage(mcToken, retryPayload);
+    }
 
     if (result?.meta?.inventoryVersion) res.setHeader("InventoryETag", result.meta.inventoryVersion);
     if (result?.meta?.userListsVersion) res.setHeader("X-UserLists-Version", result.meta.userListsVersion);
@@ -213,14 +243,26 @@ router.post("/item", jwtMiddleware, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
 
-    const versions = await resolveVersions(mcToken);
+    let versions = await resolveVersions(mcToken);
 
-    const result = await updateMCWishlist(mcToken, {
-        itemId: value.itemId,
-        operation: value.operation,
-        listVersion: versions.listVersion,
-        inventoryVersion: versions.inventoryVersion
-    });
+    let result;
+    try {
+        result = await updateMCWishlist(mcToken, {
+            itemId: value.itemId,
+            operation: value.operation,
+            listVersion: versions.listVersion,
+            inventoryVersion: versions.inventoryVersion
+        });
+    } catch (err) {
+        if (!isMarketplaceVersionError(err)) throw err;
+        versions = await resolveVersions(mcToken, {refresh: true});
+        result = await updateMCWishlist(mcToken, {
+            itemId: value.itemId,
+            operation: value.operation,
+            listVersion: versions.listVersion,
+            inventoryVersion: versions.inventoryVersion
+        });
+    }
 
     if (result?.inventoryVersion) res.setHeader("InventoryETag", result.inventoryVersion);
     if (result?.userListsVersion) res.setHeader("X-UserLists-Version", result.userListsVersion);
