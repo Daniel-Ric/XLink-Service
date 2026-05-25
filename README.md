@@ -18,6 +18,7 @@
 * [✨ Highlights](#-highlights)
 * [🚀 Quick Start](#-quick-start)
 * [🔧 Configuration](#-configuration)
+  * [Microsoft/Xbox Client IDs](#microsoftxbox-client-ids)
 * [📂 Project Structure](#-project-structure)
 * [💻 Usage Examples](#-usage-examples)
 * [📖 API Reference](#-api-reference)
@@ -85,7 +86,7 @@ Validated via Joi (`src/config/env.js`).
 | `CORS_ORIGIN`      | `*`           | CORS origin(s), comma-separated (e.g., `http://localhost:5173`)          |
 | `JWT_SECRET`       | — **required**| At least 16 chars, used to sign API JWTs                                 |
 | `JWT_EXPIRES_IN`   | `1h`          | JWT expiry (e.g., `1h`, `30m`, `2d`)                                      |
-| `CLIENT_ID`        | — **required**| Microsoft App Client ID (Device Code flow)                               |
+| `CLIENT_ID`        | — **required**| Microsoft/Xbox OAuth client ID used by the Device Code flow. See [Microsoft/Xbox client IDs](#microsoftxbox-client-ids). |
 | `HTTP_TIMEOUT_MS`  | `15000`       | Timeout for outgoing HTTP calls (ms)                                     |
 | `LOG_LEVEL`        | `info`        | General log level                                                        |
 | `LOG_PRETTY`       | `true` (dev)  | Pretty logs (`true`/`false`), defaults to `false` in production           |
@@ -98,6 +99,32 @@ Validated via Joi (`src/config/env.js`).
 | `TRUST_PROXY`      | `loopback`    | Express `trust proxy` setting (`true`, `false`, or value like `loopback`) |
 
 > **CORS**: In production, set `CORS_ORIGIN` to explicit origins (no `*`).
+
+### Microsoft/Xbox Client IDs
+
+`CLIENT_ID` controls which Microsoft/Xbox OAuth application is shown in the device-code consent screen and which title identity is used when Microsoft tokens are exchanged for Xbox Live/XSTS tokens.
+
+For this service, the most practical default is the Minecraft: Bedrock Android client ID because it is commonly used with the Xbox Live SISU/device-code flow and is also used by `go-xsapi`'s `MinecraftAndroid` example configuration.
+
+| Target client | Client ID | Notes |
+|---------------|-----------|-------|
+| Minecraft: Java / Win32 | `00000000402b5328` | Java Edition title client ID. |
+| Minecraft: Bedrock Windows / Win32 | `0000000040159362` | Bedrock Windows title client ID. |
+| Minecraft: Bedrock Android | `0000000048183522` | Recommended default for this service. Used by the current `.env` and by `go-xsapi`'s Minecraft Android SISU example. |
+| Minecraft: Bedrock iOS | `000000004c17c01a` | Bedrock iOS title client ID. |
+| Minecraft: Bedrock Nintendo | `00000000441cc96b` | Bedrock Nintendo title client ID. |
+| Minecraft: Bedrock PlayStation | `000000004827c78e` | Bedrock PlayStation title client ID. |
+| Minecraft Education | `b36b1432-1a1c-4c82-9b76-24de1cab42f2` | Minecraft Education client ID. |
+
+Example:
+
+```env
+CLIENT_ID=0000000048183522
+```
+
+Changing `CLIENT_ID` invalidates assumptions made by previously issued Microsoft refresh tokens. After changing it, start a new `/auth/device` login instead of reusing old `msRefreshToken` values.
+
+The source project does not own or verify these Microsoft/Mojang/Xbox identifiers. They are listed as interoperability references for users who already understand the target title and platform they want to authenticate as.
 
 ---
 
