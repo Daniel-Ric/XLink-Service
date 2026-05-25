@@ -15,6 +15,11 @@ jobs:
           ACTION: ${{ github.event.action }}
           SHA: ${{ github.sha }}
         run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL is not configured. Skipping Discord notification."
+            exit 0
+          fi
+
           EVENT_JSON="$GITHUB_EVENT_PATH"
 
           REPO_URL="$(jq -r '.repository.html_url // ""' "$EVENT_JSON")"
@@ -87,4 +92,7 @@ jobs:
               ]
             }')"
 
-          curl -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK_URL"
+          curl --fail --show-error --silent \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$DISCORD_WEBHOOK_URL"
