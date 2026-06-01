@@ -66,12 +66,19 @@ const router = express.Router();
  *                 description: Redeem code to look up.
  *               market:
  *                 type: string
- *                 default: "US"
- *                 description: Store market (country) code. Example `DE`, `US`.
+ *                 description: Store market (country) code. Example `DE`, `US`. If omitted, derived from `locale`.
  *               locale:
  *                 type: string
  *                 default: "en-US"
  *                 description: UI locale. Used to derive the Store `language` field for lookup. Example `de-DE`.
+ *               flights:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Optional override for Microsoft Redeem flight flags.
+ *               cvBase:
+ *                 type: string
+ *                 description: Optional override for the MS-CV base value.
  *           example:
  *             code: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
  *             market: "DE"
@@ -94,20 +101,12 @@ router.post("/lookup", jwtMiddleware, asyncHandler(async (req, res) => {
 
     const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
+    const value = validateRedeemBody(req.body);
 
     const acceptLanguage = req.headers["accept-language"];
     const locale = value.locale || acceptLanguage || "en-US";
-    const market = value.market || "US";
-
-    const flow = {
-        muid: crypto.randomBytes(16).toString("hex").toUpperCase(),
-        correlationId: crypto.randomUUID(),
-        referenceId: crypto.randomBytes(32).toString("hex").toUpperCase(),
-        trackingId: crypto.randomUUID(),
-        vectorId: crypto.randomBytes(32).toString("hex").toUpperCase(),
-        cvBase: "FIzDSTrg7TZ2naZyEL1T/P",
-        acceptLanguage: acceptLanguage || String(locale)
-    };
+    const market = value.market;
+    const flow = buildRedeemFlow(value, acceptLanguage || String(locale));
 
     const data = await prepareRedeem(redeemToken, {code: value.code, market, locale}, flow);
 
@@ -168,12 +167,19 @@ router.post("/lookup", jwtMiddleware, asyncHandler(async (req, res) => {
  *                 description: Redeem code to redeem.
  *               market:
  *                 type: string
- *                 default: "US"
- *                 description: Store market (country) code. Example `DE`, `US`.
+ *                 description: Store market (country) code. Example `DE`, `US`. If omitted, derived from `locale`.
  *               locale:
  *                 type: string
  *                 default: "en-US"
  *                 description: UI locale. Used to send `language` in lookup and `locale` in redeem. Example `de-DE`.
+ *               flights:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Optional override for Microsoft Redeem flight flags.
+ *               cvBase:
+ *                 type: string
+ *                 description: Optional override for the MS-CV base value.
  *           example:
  *             code: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
  *             market: "DE"
@@ -199,17 +205,8 @@ router.post("/redeem", jwtMiddleware, asyncHandler(async (req, res) => {
 
     const acceptLanguage = req.headers["accept-language"];
     const locale = value.locale || acceptLanguage || "en-US";
-    const market = value.market || "US";
-
-    const flow = {
-        muid: crypto.randomBytes(16).toString("hex").toUpperCase(),
-        correlationId: crypto.randomUUID(),
-        referenceId: crypto.randomBytes(32).toString("hex").toUpperCase(),
-        trackingId: crypto.randomUUID(),
-        vectorId: crypto.randomBytes(32).toString("hex").toUpperCase(),
-        cvBase: "FIzDSTrg7TZ2naZyEL1T/P",
-        acceptLanguage: acceptLanguage || String(locale)
-    };
+    const market = value.market;
+    const flow = buildRedeemFlow(value, acceptLanguage || String(locale));
 
     const lookup = await prepareRedeem(redeemToken, {code: value.code, market, locale}, flow);
 
