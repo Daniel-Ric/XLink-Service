@@ -102,7 +102,7 @@ Validated via Joi (`src/config/env.js`).
 | `REDEEM_DEVICE_FAMILY` | `Web`     | Redeem device family sent to Microsoft                                    |
 | `SWAGGER_ENABLED`  | `true`        | Enable Swagger UI and OpenAPI endpoints                                  |
 | `SWAGGER_SERVER_URL` | —           | Override OpenAPI server URL (defaults to `http://localhost:${PORT}`)      |
-| `TRUST_PROXY`      | `loopback`    | Express `trust proxy` setting (`true`, `false`, or value like `loopback`) |
+| `TRUST_PROXY`      | `loopback`    | Express `trust proxy` setting (`false`, `loopback`, subnet, or hop count like `1`) |
 
 > **CORS**: In production, set `CORS_ORIGIN` to explicit origins (no `*`).
 

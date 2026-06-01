@@ -12,6 +12,7 @@ import {badRequest} from "../utils/httpError.js";
 import {buildAuthCallbackResponse} from "../utils/authResponse.js";
 
 const router = express.Router();
+const REDEEM_RELYING_PARTY = "https://b980a380.minecraft.playfabapi.com/";
 
 /**
  * @swagger
@@ -89,7 +90,7 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
     const xblToken = await getXBLToken(msAccessToken);
 
     const xboxTokenInfo = await getXSTSToken(xblToken, "http://xboxlive.com");
-    const redeemTokenInfo = await getXSTSToken(xblToken, "https://b980a380.minecraft.playfabapi.com/");
+    const redeemTokenInfo = await getXSTSToken(xblToken, REDEEM_RELYING_PARTY);
     const playfabTokenInfo = await getXSTSToken(xblToken, "rp://playfabapi.com/");
 
     const xboxUserInfo = xboxTokenInfo.DisplayClaims?.xui?.[0] || {};
@@ -180,7 +181,7 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
     const xblToken = await getXBLToken(msAccessToken);
 
     const xboxTokenInfo = await getXSTSToken(xblToken, "http://xboxlive.com");
-    const redeemTokenInfo = await getXSTSToken(xblToken, "https://b980a380.minecraft.playfabapi.com/");
+    const redeemTokenInfo = await getXSTSToken(xblToken, REDEEM_RELYING_PARTY);
     const playfabTokenInfo = await getXSTSToken(xblToken, "rp://playfabapi.com/");
 
     const xboxUserInfo = xboxTokenInfo.DisplayClaims?.xui?.[0] || {};

@@ -36,4 +36,6 @@ if (error) {
     process.exit(1);
 }
 
+if (value.TRUST_PROXY === true) value.TRUST_PROXY = "loopback";
+
 export const env = value;
