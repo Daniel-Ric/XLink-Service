@@ -10,6 +10,7 @@ export function createHttp(timeoutMs = 15000) {
         timeout: Number(timeoutMs) || 15000,
         httpAgent,
         httpsAgent,
+        proxy: false,
         validateStatus: s => s >= 200 && s < 300,
         maxRedirects: 5
     });
