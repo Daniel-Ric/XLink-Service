@@ -9,6 +9,41 @@ import {prepareRedeem, redeemCode} from "../services/redeem.service.js";
 
 const router = express.Router();
 
+const redeemBodySchema = Joi.object({
+    code: Joi.string().min(4).max(64).required(),
+    market: Joi.string().min(2).max(5).optional(),
+    locale: Joi.string().min(2).max(32).optional(),
+    flights: Joi.array().items(Joi.string().min(1).max(128)).max(400).optional(),
+    cvBase: Joi.string().min(8).max(128).optional(),
+    userAgent: Joi.string().min(16).max(512).optional(),
+    secChUa: Joi.string().min(8).max(256).optional(),
+    clientType: Joi.string().min(2).max(64).optional(),
+    deviceFamily: Joi.string().min(2).max(64).optional()
+}).unknown(true);
+
+function buildRedeemFlow(value, acceptLanguage) {
+    return {
+        muid: crypto.randomBytes(16).toString("hex").toUpperCase(),
+        correlationId: crypto.randomUUID(),
+        referenceId: crypto.randomBytes(32).toString("hex").toUpperCase(),
+        trackingId: crypto.randomUUID(),
+        vectorId: crypto.randomBytes(32).toString("hex").toUpperCase(),
+        cvBase: value.cvBase,
+        flights: value.flights,
+        userAgent: value.userAgent,
+        secChUa: value.secChUa,
+        clientType: value.clientType,
+        deviceFamily: value.deviceFamily,
+        acceptLanguage
+    };
+}
+
+function validateRedeemBody(body) {
+    const {value, error} = redeemBodySchema.validate(body || {});
+    if (error) throw badRequest(error.message);
+    return value;
+}
+
 /**
  * @swagger
  * tags:
@@ -93,14 +128,6 @@ router.post("/lookup", jwtMiddleware, asyncHandler(async (req, res) => {
     const redeemToken = req.headers["x-redeem-token"];
     if (!redeemToken) throw badRequest("Missing x-redeem-token header");
 
-    const schema = Joi.object({
-        code: Joi.string().min(4).max(64).required(),
-        market: Joi.string().min(2).max(5).optional(),
-        locale: Joi.string().min(2).max(32).optional()
-    }).unknown(true);
-
-    const {value, error} = schema.validate(req.body || {});
-    if (error) throw badRequest(error.message);
     const value = validateRedeemBody(req.body);
 
     const acceptLanguage = req.headers["accept-language"];
@@ -194,14 +221,7 @@ router.post("/redeem", jwtMiddleware, asyncHandler(async (req, res) => {
     const redeemToken = req.headers["x-redeem-token"];
     if (!redeemToken) throw badRequest("Missing x-redeem-token header");
 
-    const schema = Joi.object({
-        code: Joi.string().min(4).max(64).required(),
-        market: Joi.string().min(2).max(5).optional(),
-        locale: Joi.string().min(2).max(32).optional()
-    }).unknown(true);
-
-    const {value, error} = schema.validate(req.body || {});
-    if (error) throw badRequest(error.message);
+    const value = validateRedeemBody(req.body);
 
     const acceptLanguage = req.headers["accept-language"];
     const locale = value.locale || acceptLanguage || "en-US";
