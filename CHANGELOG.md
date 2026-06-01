@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.0.7 (2026-06-01)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add proxy support to HTTP client configuration (61effce)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Shared utilities: 1 file: src/utils/http.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +1 / -0
+
+## 1.0.8 (2026-06-01)
+
+### Summary
+
+- Change type: Repository update
+- Main change: Merge remote-tracking branch 'origin/master' (12e63da)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Changelog: 1 file: CHANGELOG.md
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +38 / -0
 ## 1.0.4 (2026-06-01)
 
 ### Summary
@@ -73,5 +110,6 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
