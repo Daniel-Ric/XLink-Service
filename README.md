@@ -94,6 +94,12 @@ Validated via Joi (`src/config/env.js`).
 | `MC_PLATFORM`      | `Windows10`   | Platform identifier for Minecraft                                        |
 | `PLAYFAB_TITLE_ID` | `20ca2`       | PlayFab Title ID                                                         |
 | `ACCEPT_LANGUAGE`  | `en-US`       | Default `Accept-Language` for TitleHub                                   |
+| `REDEEM_FLIGHTS_JSON` | —          | Optional JSON array overriding Microsoft Redeem flight flags              |
+| `REDEEM_USER_AGENT` | —            | Optional browser User-Agent override for Redeem calls                     |
+| `REDEEM_SEC_CH_UA` | —             | Optional `sec-ch-ua` override for Redeem calls                            |
+| `REDEEM_CV_BASE`   | —            | Optional `MS-CV` base override for Redeem calls                           |
+| `REDEEM_CLIENT_TYPE` | `MinecraftNet` | Redeem client type sent to Microsoft                                  |
+| `REDEEM_DEVICE_FAMILY` | `Web`     | Redeem device family sent to Microsoft                                    |
 | `SWAGGER_ENABLED`  | `true`        | Enable Swagger UI and OpenAPI endpoints                                  |
 | `SWAGGER_SERVER_URL` | —           | Override OpenAPI server URL (defaults to `http://localhost:${PORT}`)      |
 | `TRUST_PROXY`      | `loopback`    | Express `trust proxy` setting (`true`, `false`, or value like `loopback`) |

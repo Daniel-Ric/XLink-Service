@@ -19,6 +19,12 @@ const schema = Joi.object({
     MC_PLATFORM: Joi.string().default("Windows10"),
     PLAYFAB_TITLE_ID: Joi.string().default("20ca2"),
     ACCEPT_LANGUAGE: Joi.string().default("en-US"),
+    REDEEM_FLIGHTS_JSON: Joi.string().optional(),
+    REDEEM_USER_AGENT: Joi.string().optional(),
+    REDEEM_SEC_CH_UA: Joi.string().optional(),
+    REDEEM_CV_BASE: Joi.string().optional(),
+    REDEEM_CLIENT_TYPE: Joi.string().default("MinecraftNet"),
+    REDEEM_DEVICE_FAMILY: Joi.string().default("Web"),
     SWAGGER_ENABLED: Joi.boolean().truthy("true").falsy("false").default(true),
     SWAGGER_SERVER_URL: Joi.string().uri().optional(),
     TRUST_PROXY: Joi.alternatives().try(Joi.boolean(), Joi.string()).default("loopback")
