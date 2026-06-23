@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.0.0 (2026-06-23)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add gitignore (d05be9d)
+- Impact: Repository update with a large change footprint across repository files.
+- Bump reason: large change footprint (1 files, 4491 total line changes)
+
+### Changed Areas
+
+- Repository files: 1 file: .gitignore
+
+### Release Metrics
+
+- Version bump: major
+- Files changed: 1
+- Line changes: +4491 / -0
 ## 1.0.7 (2026-06-01)
 
 ### Summary
@@ -110,6 +128,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
