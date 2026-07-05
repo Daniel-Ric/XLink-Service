@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.0.0 (2026-07-05)
+
+### Summary
+
+- Change type: Test coverage
+- Main change: xLink - Implement XSAPI services with authentication and request handling (af5319f)
+- Impact: Test coverage with a large change footprint across HTTP API routes, Xbox, Minecraft, and PlayFab integrations, repository files.
+- Bump reason: large change footprint (7 files, 1001 total line changes)
+
+### Changed Areas
+
+- Shared utilities: 1 file: src/utils/xsapiContext.js
+- Tests: 1 file: tests/xsapi.test.js
+- Xbox and Minecraft API routes: 1 file: src/routes/xsapi.routes.js
+- Xbox, Microsoft, and PlayFab service integrations: 4 files: src/services/xsapiAuth.service.js, src/services/xsapiCrypto.service.js, plus 2 more
+
+### Release Metrics
+
+- Version bump: major
+- Files changed: 7
+- Line changes: +1001 / -0
 ## 2.0.0 (2026-06-23)
 
 ### Summary
@@ -128,6 +149,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
