@@ -3,6 +3,7 @@ import {env} from "../config/env.js";
 import {badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 import {cached} from "../utils/cache.js";
+import {xsapiRequest} from "./xsapiHttp.service.js";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
 
@@ -593,4 +594,38 @@ export async function mutateSocialRelationship(xuid, xboxliveToken, action, {loc
     } catch (err) {
         throw internal(`Failed to ${action} user`, err.response?.data || err.message);
     }
+}
+
+export async function updatePresenceTitle(xuid, xboxliveToken, body = {}, authContext = {}) {
+    if (!xuid) throw badRequest("xuid is required");
+    const url = `https://userpresence.xboxlive.com/users/xuid(${xuid})/devices/current/titles/current`;
+    const {data, status, headers} = await xsapiRequest({
+        method: "POST",
+        url,
+        body,
+        contractVersion: 3,
+        authContext: {...authContext, xboxliveToken},
+        sign: !!authContext.proofKeyJwk,
+        validateStatus: s => s === 200 || s === 201
+    });
+    return {
+        ok: true,
+        status,
+        heartbeatAfter: headers?.["x-heartbeat-after"] ? Number(headers["x-heartbeat-after"]) : undefined,
+        data: data || null
+    };
+}
+
+export async function removePresenceTitle(xuid, xboxliveToken, authContext = {}) {
+    if (!xuid) throw badRequest("xuid is required");
+    const url = `https://userpresence.xboxlive.com/users/xuid(${xuid})/devices/current/titles/current`;
+    const {data, status} = await xsapiRequest({
+        method: "DELETE",
+        url,
+        contractVersion: 3,
+        authContext: {...authContext, xboxliveToken},
+        sign: !!authContext.proofKeyJwk,
+        validateStatus: s => s === 200 || s === 204
+    });
+    return {ok: true, status, data: data || null};
 }
