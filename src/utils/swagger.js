@@ -39,6 +39,12 @@ const options = {
         }, {
             name: "Messaging", description: "Marketplace inbox and messaging sessions."
         }, {
+            name: "XSAPI", description: "Proof-key, SISU/XAL, NSAL and signed Xbox Services request helpers."
+        }, {
+            name: "RTA", description: "Xbox Real-Time Activity connection and subscription helpers."
+        }, {
+            name: "MPSD", description: "Xbox Multiplayer Session Directory activities, sessions and invites."
+        }, {
             name: "Debug", description: "Token inspection helpers for JWT, XSTS, Minecraft tokens and PlayFab tickets."
         }], components: {
             securitySchemes: {
