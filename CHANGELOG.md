@@ -1,5 +1,161 @@
 # Changelog
 
+## 3.1.0 (2026-07-05)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Expand PeopleHub API integration with new endpoints and methods (3a48196)
+- Impact: Repository update with a medium change footprint across HTTP API routes, Xbox, Minecraft, and PlayFab integrations.
+- Bump reason: medium change footprint (2 files, 263 total line changes)
+
+### Changed Areas
+
+- Xbox and Minecraft API routes: 1 file: src/routes/people.routes.js
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/xbox.service.js
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 2
+- Line changes: +251 / -12
+
+## 3.2.0 (2026-07-05)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add MPSD session services and route handlers (6fd768d)
+- Impact: Repository update with a medium change footprint across HTTP API routes, Xbox, Minecraft, and PlayFab integrations.
+- Bump reason: medium change footprint (2 files, 511 total line changes)
+
+### Changed Areas
+
+- Xbox and Minecraft API routes: 1 file: src/routes/mpsd.routes.js
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/mpsd.service.js
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 2
+- Line changes: +511 / -0
+
+## 3.3.0 (2026-07-05)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add RTA service and route handlers (eade709)
+- Impact: Repository update with a medium change footprint across HTTP API routes, Xbox, Minecraft, and PlayFab integrations.
+- Bump reason: medium change footprint (2 files, 351 total line changes)
+
+### Changed Areas
+
+- Xbox and Minecraft API routes: 1 file: src/routes/rta.routes.js
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/rta.service.js
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 2
+- Line changes: +351 / -0
+
+## 3.3.1 (2026-07-05)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add presence title update and removal endpoints (2625886)
+- Impact: Repository update with a small change footprint across HTTP API routes, Xbox, Minecraft, and PlayFab integrations.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Xbox and Minecraft API routes: 1 file: src/routes/presence.routes.js
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/xbox.service.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 2
+- Line changes: +112 / -8
+
+## 3.3.2 (2026-07-05)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Expand environment config with XSAPI/XAL support variables (9352765)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Deployment configuration: 1 file: production.env.example
+- Runtime configuration: 1 file: src/config/env.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 2
+- Line changes: +17 / -0
+
+## 3.3.3 (2026-07-05)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Integrate XSAPI, RTA, and MPSD routes and services (21ac4be)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Application bootstrap: 1 file: src/app.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +18 / -1
+
+## 3.3.4 (2026-07-05)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add XSAPI, RTA, and MPSD to Swagger docs (d29b074)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Shared utilities: 1 file: src/utils/swagger.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +6 / -0
+
+## 3.3.5 (2026-07-05)
+
+### Summary
+
+- Change type: Repository update
+- Main change: Merge remote-tracking branch 'origin/master' (ecdb4c4)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Changelog: 1 file: CHANGELOG.md
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +22 / -0
 ## 3.0.0 (2026-07-05)
 
 ### Summary
@@ -149,6 +305,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
