@@ -19,6 +19,13 @@ const schema = Joi.object({
     MC_PLATFORM: Joi.string().default("Windows10"),
     PLAYFAB_TITLE_ID: Joi.string().default("20ca2"),
     ACCEPT_LANGUAGE: Joi.string().default("en-US"),
+    XAL_CLIENT_ID: Joi.string().optional(),
+    XAL_TITLE_ID: Joi.alternatives().try(Joi.number(), Joi.string()).default(1739947436),
+    XAL_SANDBOX: Joi.string().default("RETAIL"),
+    XAL_DEVICE_TYPE: Joi.string().default("Android"),
+    XAL_DEVICE_VERSION: Joi.string().default("13"),
+    XAL_USER_AGENT: Joi.string().default("XAL Android 2025.04.20250326.000"),
+    XSAPI_SESSION_TTL_MS: Joi.number().default(600000),
     REDEEM_FLIGHTS_JSON: Joi.string().optional(),
     REDEEM_USER_AGENT: Joi.string().optional(),
     REDEEM_SEC_CH_UA: Joi.string().optional(),
@@ -37,5 +44,6 @@ if (error) {
 }
 
 if (value.TRUST_PROXY === true) value.TRUST_PROXY = "loopback";
+if (!value.XAL_CLIENT_ID) value.XAL_CLIENT_ID = value.CLIENT_ID;
 
 export const env = value;
