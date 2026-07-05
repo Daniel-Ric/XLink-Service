@@ -28,13 +28,24 @@ import titlesRoutes from "./routes/titles.routes.js";
 
 import wishlistRoutes from "./routes/wishlist.routes.js";
 import messagingRoutes from "./routes/messaging.routes.js";
+import xsapiRoutes from "./routes/xsapi.routes.js";
+import rtaRoutes from "./routes/rta.routes.js";
+import mpsdRoutes from "./routes/mpsd.routes.js";
 
 import debugRoutes from "./routes/debug.routes.js";
 
 import {errorHandler, notFoundHandler} from "./middleware/error.js";
+import {cleanupMpsdSessions} from "./services/mpsd.service.js";
+import {cleanupRtaConnections} from "./services/rta.service.js";
 
 const app = express();
 app.set("trust proxy", env.TRUST_PROXY);
+
+const cleanupInterval = setInterval(() => {
+    cleanupMpsdSessions();
+    cleanupRtaConnections();
+}, Math.min(Number(env.XSAPI_SESSION_TTL_MS) || 600000, 60000));
+cleanupInterval.unref?.();
 
 const mutePaths = ["/healthz", "/readyz", "/api-docs", "/api-docs/", "/api-docs/swagger-ui.css", "/api-docs/swagger-ui-bundle.js", "/api-docs/swagger-ui-standalone-preset.js", "/api-docs/favicon-32x32.png", "/api-docs/favicon-16x16.png", "/openapi.json"];
 
@@ -117,10 +128,13 @@ const corsOptions = {
         "xbl-token",
         "x-mc-token",
         "x-redeem-token",
+        "x-xsapi-proof-key",
+        "x-xsapi-xsts-tokens",
+        "x-xsapi-session-id",
         "x-request-id",
         "x-correlation-id"
     ],
-    exposedHeaders: ["X-Request-Id", "InventoryETag", "X-UserLists-Version"]
+    exposedHeaders: ["X-Request-Id", "InventoryETag", "X-UserLists-Version", "X-Heartbeat-After"]
 };
 
 app.use(cors(corsOptions));
@@ -178,6 +192,9 @@ app.use("/stats", statsRoutes);
 app.use("/inventory", inventoryRoutes);
 app.use("/wishlist", wishlistRoutes);
 app.use("/messaging", messagingRoutes);
+app.use("/xsapi", xsapiRoutes);
+app.use("/rta", rtaRoutes);
+app.use("/mpsd", mpsdRoutes);
 app.use("/playfab", playfabRoutes);
 app.use("/minecraft", minecraftRoutes);
 if (env.NODE_ENV !== "production") app.use("/debug", debugRoutes);
