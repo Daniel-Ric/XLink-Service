@@ -2,10 +2,26 @@ import express from "express";
 import Joi from "joi";
 import {jwtMiddleware} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
-import {getGamertagsBatch, getPeopleFollowers, getPeopleSocial, getPresenceBatch} from "../services/xbox.service.js";
+import {
+    getGamertagsBatch,
+    getPeopleFollowers,
+    getPeopleHubBatch,
+    getPeopleHubGroup,
+    getPeopleHubUserByXuid,
+    getPeopleSocial,
+    getPresenceBatch,
+    mutateSocialRelationship,
+    searchPeopleHub
+} from "../services/xbox.service.js";
 import {badRequest} from "../utils/httpError.js";
 
 const router = express.Router();
+
+function requireXblToken(req) {
+    const xboxliveToken = req.headers["x-xbl-token"];
+    if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
+    return xboxliveToken;
+}
 
 /**
  * @swagger
@@ -16,17 +32,134 @@ const router = express.Router();
 
 /**
  * @swagger
+ * /people/search:
+ *   get:
+ *     summary: Search Xbox users through PeopleHub
+ *     tags: [People]
+ *     parameters:
+ *       - in: header
+ *         name: x-xbl-token
+ *         schema: { type: string }
+ *         required: true
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema: { type: string }
+ *         description: Search query.
+ *     responses:
+ *       200:
+ *         description: Search results
+ */
+router.get("/search", jwtMiddleware, asyncHandler(async (req, res) => {
+    const schema = Joi.object({
+        q: Joi.string().trim().min(1).required(),
+        maxItems: Joi.number().integer().min(1).max(100).default(20)
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
+
+    const data = await searchPeopleHub(value.q, requireXblToken(req), {
+        maxItems: value.maxItems,
+        locale: req.headers["accept-language"]
+    });
+    const people = data?.people || data?.People || [];
+    res.json({count: people.length, people, raw: data});
+}));
+
+router.post("/batch", jwtMiddleware, asyncHandler(async (req, res) => {
+    const schema = Joi.object({
+        xuids: Joi.array().items(Joi.string()).min(1).max(100).required()
+    });
+    const {value, error} = schema.validate(req.body);
+    if (error) throw badRequest(error.message);
+
+    const data = await getPeopleHubBatch(value.xuids, requireXblToken(req), {
+        locale: req.headers["accept-language"]
+    });
+    const people = data?.people || data?.People || [];
+    res.json({count: people.length, people, raw: data});
+}));
+
+router.get("/following", jwtMiddleware, asyncHandler(async (req, res) => {
+    const schema = Joi.object({
+        maxItems: Joi.number().integer().min(1).max(2000).default(200)
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
+
+    const data = await getPeopleHubGroup("social", requireXblToken(req), {
+        maxItems: value.maxItems,
+        locale: req.headers["accept-language"]
+    });
+    const people = data?.people || data?.People || [];
+    res.json({count: people.length, people, raw: data});
+}));
+
+router.get("/requests/incoming", jwtMiddleware, asyncHandler(async (req, res) => {
+    const data = await getPeopleHubGroup("friendRequests(received)", requireXblToken(req), {
+        locale: req.headers["accept-language"]
+    });
+    const people = data?.people || data?.People || [];
+    res.json({count: people.length, people, raw: data});
+}));
+
+router.get("/requests/outgoing", jwtMiddleware, asyncHandler(async (req, res) => {
+    const data = await getPeopleHubGroup("friendRequests(sent)", requireXblToken(req), {
+        locale: req.headers["accept-language"]
+    });
+    const people = data?.people || data?.People || [];
+    res.json({count: people.length, people, raw: data});
+}));
+
+router.get("/recommendations", jwtMiddleware, asyncHandler(async (req, res) => {
+    const data = await getPeopleHubGroup("recommendations", requireXblToken(req), {
+        locale: req.headers["accept-language"]
+    });
+    const people = data?.people || data?.People || [];
+    res.json({count: people.length, people, raw: data});
+}));
+
+router.get("/xuid/:xuid", jwtMiddleware, asyncHandler(async (req, res) => {
+    const data = await getPeopleHubUserByXuid(req.params.xuid, requireXblToken(req), {
+        locale: req.headers["accept-language"]
+    });
+    res.json({person: data});
+}));
+
+router.put("/:xuid/follow", jwtMiddleware, asyncHandler(async (req, res) => {
+    const result = await mutateSocialRelationship(req.params.xuid, requireXblToken(req), "follow", {
+        locale: req.headers["accept-language"]
+    });
+    res.json(result);
+}));
+
+router.delete("/:xuid/follow", jwtMiddleware, asyncHandler(async (req, res) => {
+    const result = await mutateSocialRelationship(req.params.xuid, requireXblToken(req), "unfollow", {
+        locale: req.headers["accept-language"]
+    });
+    res.json(result);
+}));
+
+router.put("/:xuid/friend", jwtMiddleware, asyncHandler(async (req, res) => {
+    const result = await mutateSocialRelationship(req.params.xuid, requireXblToken(req), "friend", {
+        locale: req.headers["accept-language"]
+    });
+    res.json(result);
+}));
+
+router.delete("/:xuid/friend", jwtMiddleware, asyncHandler(async (req, res) => {
+    const result = await mutateSocialRelationship(req.params.xuid, requireXblToken(req), "unfriend", {
+        locale: req.headers["accept-language"]
+    });
+    res.json(result);
+}));
+
+/**
+ * @swagger
  * /people/friends:
  *   get:
- *     summary: List mutual friends (you follow them and they follow you)
- *     description: >
- *       Retrieves the caller's social graph and filters it down to mutual relationships:
- *       users that you follow **and** that follow you back. Internally uses PeopleHub
- *       social APIs and respects `maxItems`.
+ *     summary: List mutual friends
  *     tags: [People]
- *     security:
- *       - BearerAuth: []
- *       - XBLToken: []
  *     parameters:
  *       - in: header
  *         name: x-xbl-token
@@ -35,15 +168,13 @@ const router = express.Router();
  *       - in: query
  *         name: maxItems
  *         schema: { type: integer, default: 200 }
- *         description: Maximum number of people to scan before filtering to mutual friends (1–2000)
  *     responses:
  *       200:
  *         description: List of mutual friends
  */
 router.get("/friends", jwtMiddleware, asyncHandler(async (req, res) => {
     const {xuid} = req.user;
-    const xboxliveToken = req.headers["x-xbl-token"];
-    if (!xboxliveToken) throw badRequest("Missing x-xbl-token header");
+    const xboxliveToken = requireXblToken(req);
     const schema = Joi.object({
         maxItems: Joi.number().integer().min(1).max(2000).default(200)
     });

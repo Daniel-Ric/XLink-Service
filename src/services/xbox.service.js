@@ -486,3 +486,111 @@ export async function getScreenshots(xuid, xboxliveToken, {titleId, max = 24, si
         throw internal("Failed to get screenshots", err.response?.data || err.message);
     }
 }
+
+export async function searchPeopleHub(query, xboxliveToken, {locale, maxItems = 20} = {}) {
+    if (!query) throw badRequest("query is required");
+    const params = new URLSearchParams();
+    params.set("q", query);
+    if (maxItems) params.set("maxItems", String(Math.min(Number(maxItems) || 20, 100)));
+    const url = `https://peoplehub.xboxlive.com/users/me/people/search/decoration/detail,preferredColor?${params.toString()}`;
+    try {
+        const {data} = await http.get(url, {
+            headers: {
+                Authorization: xboxliveToken,
+                Accept: "application/json",
+                "Accept-Language": locale || env.ACCEPT_LANGUAGE || "en-US",
+                "x-xbl-contract-version": 7
+            }
+        });
+        return data;
+    } catch (err) {
+        throw internal("Failed to search people", err.response?.data || err.message);
+    }
+}
+
+export async function getPeopleHubGroup(selector, xboxliveToken, {xuid = "me", locale, maxItems = 200} = {}) {
+    if (!selector) throw badRequest("selector is required");
+    const owner = xuid === "me" ? "me" : `xuid(${xuid})`;
+    const url = `https://peoplehub.xboxlive.com/users/${owner}/people/${selector}/decoration/bio,detail,multiplayerSummary,preferredColor,presenceDetail?maxItems=${encodeURIComponent(maxItems)}`;
+    try {
+        const {data} = await http.get(url, {
+            headers: {
+                Authorization: xboxliveToken,
+                Accept: "application/json",
+                "Accept-Language": locale || env.ACCEPT_LANGUAGE || "en-US",
+                "x-xbl-contract-version": 7
+            }
+        });
+        return data;
+    } catch (err) {
+        throw internal(`Failed to get people group ${selector}`, err.response?.data || err.message);
+    }
+}
+
+export async function getPeopleHubBatch(xuids = [], xboxliveToken, {locale} = {}) {
+    const list = (xuids || []).filter(Boolean).map(String).slice(0, 100);
+    if (!list.length) return {people: []};
+    const url = "https://peoplehub.xboxlive.com/users/me/people/batch/decoration/bio,detail,multiplayerSummary,preferredColor,presenceDetail";
+    try {
+        const {data} = await http.post(url, {xuids: list}, {
+            headers: {
+                Authorization: xboxliveToken,
+                Accept: "application/json",
+                "Accept-Language": locale || env.ACCEPT_LANGUAGE || "en-US",
+                "Content-Type": "application/json; charset=utf-8",
+                "x-xbl-contract-version": 7
+            }
+        });
+        return data;
+    } catch (err) {
+        throw internal("Failed to get people batch", err.response?.data || err.message);
+    }
+}
+
+export async function getPeopleHubUserByXuid(xuid, xboxliveToken, {locale} = {}) {
+    if (!xuid) throw badRequest("xuid is required");
+    const data = await getPeopleHubBatch([xuid], xboxliveToken, {locale});
+    const people = data?.people || data?.People || [];
+    return people[0] || null;
+}
+
+export async function mutateSocialRelationship(xuid, xboxliveToken, action, {locale} = {}) {
+    if (!xuid) throw badRequest("xuid is required");
+    const headers = {
+        Authorization: xboxliveToken,
+        Accept: "application/json",
+        "Accept-Language": locale || env.ACCEPT_LANGUAGE || "en-US",
+        "Cache-Control": "no-cache",
+        "x-xbl-contract-version": 3
+    };
+
+    let method;
+    let url;
+    if (action === "follow") {
+        method = "PUT";
+        url = `https://social.xboxlive.com/users/me/people/xuid(${encodeURIComponent(xuid)})`;
+    } else if (action === "unfollow") {
+        method = "DELETE";
+        url = `https://social.xboxlive.com/users/me/people/friends/v2/xuid(${encodeURIComponent(xuid)})?deleteRelationships=follows`;
+    } else if (action === "friend") {
+        method = "PUT";
+        url = `https://social.xboxlive.com/users/me/people/friends/v2/xuid(${encodeURIComponent(xuid)})`;
+    } else if (action === "unfriend") {
+        method = "DELETE";
+        url = `https://social.xboxlive.com/users/me/people/friends/v2/xuid(${encodeURIComponent(xuid)})?deleteRelationships=friends`;
+    } else {
+        throw badRequest("Unsupported social action");
+    }
+
+    try {
+        const {data, status} = await http.request({
+            method,
+            url,
+            headers,
+            validateStatus: s => s === 200 || s === 201 || s === 204
+        });
+        return {ok: true, status, data: data || null};
+    } catch (err) {
+        throw internal(`Failed to ${action} user`, err.response?.data || err.message);
+    }
+}
