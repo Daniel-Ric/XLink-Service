@@ -13,7 +13,7 @@ const options = {
             name: "Health",
             description: "Liveness and readiness probes used by load balancers and orchestration platforms."
         }, {
-            name: "Auth", description: "Microsoft device-flow login, token exchange and JWT convenience endpoints."
+            name: "Auth", description: "Microsoft device-code and browser login, token exchange and JWT convenience endpoints."
         }, {
             name: "Lookup", description: "Utilities to resolve between Gamertag and XUID using Xbox Live profile APIs."
         }, {
@@ -62,6 +62,7 @@ const options = {
                         device_code: {type: "string"},
                         user_code: {type: "string"},
                         verification_url: {type: "string"},
+                        verification_uri: {type: "string"},
                         expires_in: {type: "integer"},
                         interval: {type: "integer"},
                         message: {type: "string"}
@@ -175,6 +176,84 @@ const options = {
                 }
             }
         }, security: [{BearerAuth: []}], paths: {
+            "/auth/browser": {
+                get: {
+                    summary: "Start Microsoft browser sign-in",
+                    description: "Redirects to Microsoft Entra sign-in and consent using authorization code flow with PKCE.",
+                    tags: ["Auth"],
+                    security: [],
+                    responses: {
+                        302: {description: "Redirect to Microsoft sign-in"},
+                        400: {
+                            description: "Browser OAuth is not configured or CLIENT_ID is not an Entra GUID",
+                            content: {"application/json": {schema: {$ref: "#/components/schemas/ErrorResponse"}}}
+                        }
+                    }
+                }
+            },
+            "/auth/browser/callback": {
+                get: {
+                    summary: "Complete Microsoft browser sign-in",
+                    description: "Validates the one-time OAuth state, exchanges the authorization code and creates the standard auth token bundle.",
+                    tags: ["Auth"],
+                    security: [],
+                    parameters: [{
+                        in: "query",
+                        name: "code",
+                        schema: {type: "string"}
+                    }, {
+                        in: "query",
+                        name: "state",
+                        required: true,
+                        schema: {type: "string"}
+                    }, {
+                        in: "query",
+                        name: "error",
+                        schema: {type: "string"}
+                    }],
+                    responses: {
+                        200: {
+                            description: "Standard auth response when no frontend redirect is configured",
+                            content: {"application/json": {schema: {$ref: "#/components/schemas/AuthCallbackResponse"}}}
+                        },
+                        303: {description: "Redirect to the configured frontend with a short-lived one-time result code"},
+                        400: {
+                            description: "Invalid, expired, reused state or rejected Microsoft sign-in",
+                            content: {"application/json": {schema: {$ref: "#/components/schemas/ErrorResponse"}}}
+                        }
+                    }
+                }
+            },
+            "/auth/browser/token": {
+                post: {
+                    summary: "Redeem a browser-login result code",
+                    description: "Exchanges the short-lived one-time frontend code for the standard auth response.",
+                    tags: ["Auth"],
+                    security: [],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    required: ["code"],
+                                    properties: {code: {type: "string"}}
+                                }
+                            }
+                        }
+                    },
+                    responses: {
+                        200: {
+                            description: "Standard auth response",
+                            content: {"application/json": {schema: {$ref: "#/components/schemas/AuthCallbackResponse"}}}
+                        },
+                        400: {
+                            description: "Missing, invalid, expired or reused result code",
+                            content: {"application/json": {schema: {$ref: "#/components/schemas/ErrorResponse"}}}
+                        }
+                    }
+                }
+            },
             "/debug/decode-token": {
                 post: {
                     summary: "Decode JWT, XSTS (XBL3.0), MCToken, and PlayFab sessionTicket",
