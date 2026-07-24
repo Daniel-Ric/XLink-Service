@@ -2,17 +2,49 @@ import express from "express";
 import Joi from "joi";
 import {asyncHandler} from "../utils/async.js";
 import {jwtMiddleware, signJwt} from "../utils/jwt.js";
-import {getTokenFromDeviceCode, refreshMsToken, requestDeviceCode} from "../services/microsoft.service.js";
-import {getXBLToken, getXSTSToken} from "../services/xbox.service.js";
-import {getEntityToken, loginWithXbox} from "../services/playfab.service.js";
-import {getMCToken} from "../services/minecraft.service.js";
+import {
+    buildBrowserAuthorizationUrl,
+    exchangeAuthorizationCode,
+    getMicrosoftOAuthConfig,
+    getTokenFromDeviceCode,
+    isModernMicrosoftClientId,
+    refreshMsToken,
+    requestDeviceCode
+} from "../services/microsoft.service.js";
 import {env} from "../config/env.js";
 import {authLimiter} from "../middleware/rateLimit.js";
 import {badRequest} from "../utils/httpError.js";
-import {buildAuthCallbackResponse} from "../utils/authResponse.js";
+import {exchangeMicrosoftTokenBundle} from "../services/auth.service.js";
+import {
+    buildFrontendResultUrl,
+    consumeMicrosoftCallback,
+    oauthSessionStore
+} from "../services/oauthSession.service.js";
 
 const router = express.Router();
-const REDEEM_RELYING_PARTY = "https://b980a380.minecraft.playfabapi.com/";
+
+router.use((_req, res, next) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Pragma", "no-cache");
+    next();
+});
+
+function browserOAuthConfig() {
+    if (!isModernMicrosoftClientId(env.CLIENT_ID) || getMicrosoftOAuthConfig(env.CLIENT_ID).type !== "modern") {
+        throw badRequest("Browser login requires a Microsoft Entra GUID client ID in modern auth mode");
+    }
+    if (!env.MICROSOFT_OAUTH_REDIRECT_URI) {
+        throw badRequest("Microsoft OAuth redirect URI is not configured");
+    }
+    if (!env.MICROSOFT_OAUTH_CLIENT_SECRET) {
+        throw badRequest("Microsoft OAuth client secret is not configured");
+    }
+    return {
+        clientId: env.CLIENT_ID,
+        redirectUri: env.MICROSOFT_OAUTH_REDIRECT_URI,
+        clientSecret: env.MICROSOFT_OAUTH_CLIENT_SECRET
+    };
+}
 
 /**
  * @swagger
@@ -80,55 +112,12 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
 
-    const titleId = env.PLAYFAB_TITLE_ID || "20ca2";
     const tokenData = await getTokenFromDeviceCode(env.CLIENT_ID, value.device_code);
-
-    const msAccessToken = tokenData.access_token;
-    const msRefreshToken = tokenData.refresh_token;
-    const msExpiresIn = tokenData.expires_in;
-
-    const xblToken = await getXBLToken(msAccessToken);
-
-    const xboxTokenInfo = await getXSTSToken(xblToken, "http://xboxlive.com");
-    const redeemTokenInfo = await getXSTSToken(xblToken, REDEEM_RELYING_PARTY);
-    const playfabTokenInfo = await getXSTSToken(xblToken, "rp://playfabapi.com/");
-
-    const xboxUserInfo = xboxTokenInfo.DisplayClaims?.xui?.[0] || {};
-    const {xid, uhs, gtg} = xboxUserInfo;
-
-    const xboxliveToken = `XBL3.0 x=${uhs};${xboxTokenInfo.Token}`;
-    const redeemToken = `XBL3.0 x=${uhs};${redeemTokenInfo.Token}`;
-    const playfabToken = `XBL3.0 x=${uhs};${playfabTokenInfo.Token}`;
-
-    const {SessionTicket, PlayFabId} = await loginWithXbox(playfabToken, titleId);
-    const mcToken = await getMCToken(SessionTicket);
-    const entityData = await getEntityToken(SessionTicket);
-    const masterEntityData = PlayFabId ? await getEntityToken(SessionTicket, {
-        Type: "master_player_account", Id: PlayFabId
-    }) : null;
-    const jwtToken = signJwt({xuid: xid, gamertag: gtg});
-
-    res.json(buildAuthCallbackResponse({
-        jwtToken,
-        xuid: xid,
-        gamertag: gtg,
-        uhs,
-        msAccessToken,
-        msRefreshToken,
-        msExpiresIn,
-        xblToken,
-        xsts: {xbox: xboxTokenInfo, redeem: redeemTokenInfo, playfab: playfabTokenInfo},
-        xboxliveToken,
-        playfabToken,
-        redeemToken,
-        mcToken,
-        sessionTicket: SessionTicket,
-        playFabId: PlayFabId,
-        entityToken: entityData.EntityToken,
-        entityTokenExpiresOn: entityData.TokenExpiration,
-        entityTokenMaster: masterEntityData?.EntityToken,
-        entityTokenMasterExpiresOn: masterEntityData?.TokenExpiration
-    }));
+    res.json(await exchangeMicrosoftTokenBundle(
+        tokenData,
+        env.CLIENT_ID,
+        env.PLAYFAB_TITLE_ID || "20ca2"
+    ));
 }));
 
 /**
@@ -171,55 +160,54 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
 
-    const titleId = env.PLAYFAB_TITLE_ID || "20ca2";
     const tokenData = await refreshMsToken(env.CLIENT_ID, value.msRefreshToken);
+    tokenData.refresh_token = tokenData.refresh_token || value.msRefreshToken;
+    res.json(await exchangeMicrosoftTokenBundle(
+        tokenData,
+        env.CLIENT_ID,
+        env.PLAYFAB_TITLE_ID || "20ca2"
+    ));
+}));
 
-    const msAccessToken = tokenData.access_token;
-    const msRefreshToken = tokenData.refresh_token || value.msRefreshToken;
-    const msExpiresIn = tokenData.expires_in;
+router.get("/browser", authLimiter, asyncHandler(async (_req, res) => {
+    const config = browserOAuthConfig();
+    const {state, codeChallenge} = oauthSessionStore.createAuthorization();
+    const authorizationUrl = buildBrowserAuthorizationUrl(
+        config.clientId,
+        config.redirectUri,
+        state,
+        codeChallenge
+    );
+    res.redirect(302, authorizationUrl);
+}));
 
-    const xblToken = await getXBLToken(msAccessToken);
+router.get("/browser/callback", authLimiter, asyncHandler(async (req, res) => {
+    const config = browserOAuthConfig();
+    const {code, codeVerifier} = consumeMicrosoftCallback(req.query, oauthSessionStore);
+    const tokenData = await exchangeAuthorizationCode({
+        clientId: config.clientId,
+        code,
+        redirectUri: config.redirectUri,
+        codeVerifier,
+        clientSecret: config.clientSecret
+    });
+    const result = await exchangeMicrosoftTokenBundle(
+        tokenData,
+        config.clientId,
+        env.PLAYFAB_TITLE_ID || "20ca2"
+    );
+    if (!env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI) {
+        return res.json(result);
+    }
+    const resultCode = oauthSessionStore.createResult(result);
+    res.redirect(303, buildFrontendResultUrl(env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI, resultCode));
+}));
 
-    const xboxTokenInfo = await getXSTSToken(xblToken, "http://xboxlive.com");
-    const redeemTokenInfo = await getXSTSToken(xblToken, REDEEM_RELYING_PARTY);
-    const playfabTokenInfo = await getXSTSToken(xblToken, "rp://playfabapi.com/");
-
-    const xboxUserInfo = xboxTokenInfo.DisplayClaims?.xui?.[0] || {};
-    const {xid, uhs, gtg} = xboxUserInfo;
-
-    const xboxliveToken = `XBL3.0 x=${uhs};${xboxTokenInfo.Token}`;
-    const redeemToken = `XBL3.0 x=${uhs};${redeemTokenInfo.Token}`;
-    const playfabToken = `XBL3.0 x=${uhs};${playfabTokenInfo.Token}`;
-
-    const {SessionTicket, PlayFabId} = await loginWithXbox(playfabToken, titleId);
-    const mcToken = await getMCToken(SessionTicket);
-    const entityData = await getEntityToken(SessionTicket);
-    const masterEntityData = PlayFabId ? await getEntityToken(SessionTicket, {
-        Type: "master_player_account", Id: PlayFabId
-    }) : null;
-    const jwtToken = signJwt({xuid: xid, gamertag: gtg});
-
-    res.json(buildAuthCallbackResponse({
-        jwtToken,
-        xuid: xid,
-        gamertag: gtg,
-        uhs,
-        msAccessToken,
-        msRefreshToken,
-        msExpiresIn,
-        xblToken,
-        xsts: {xbox: xboxTokenInfo, redeem: redeemTokenInfo, playfab: playfabTokenInfo},
-        xboxliveToken,
-        playfabToken,
-        redeemToken,
-        mcToken,
-        sessionTicket: SessionTicket,
-        playFabId: PlayFabId,
-        entityToken: entityData.EntityToken,
-        entityTokenExpiresOn: entityData.TokenExpiration,
-        entityTokenMaster: masterEntityData?.EntityToken,
-        entityTokenMasterExpiresOn: masterEntityData?.TokenExpiration
-    }));
+router.post("/browser/token", authLimiter, asyncHandler(async (req, res) => {
+    const schema = Joi.object({code: Joi.string().required()});
+    const {value, error} = schema.validate(req.body);
+    if (error) throw badRequest(error.message);
+    res.json(oauthSessionStore.consumeResult(value.code));
 }));
 
 /**
