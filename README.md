@@ -35,7 +35,7 @@
 
 ## ✨ Highlights
 
-* **Microsoft/Xbox Auth Flow**: Device Code → Tokens (XBL, XSTS for multiple relying parties) → PlayFab login → Minecraft multiplayer token.
+* **Microsoft/Xbox Auth Flows**: Legacy and Entra Device Code plus Entra browser login → Tokens (XBL, XSTS for multiple relying parties) → PlayFab login → Minecraft multiplayer token.
 * **Comprehensive Xbox Endpoints**: Profile, Titles (TitleHub), Presence (including batch), People, Captures (clips/screenshots), Stats, Achievements.
 * **PlayFab Client Read**: Account, PlayerProfile, Catalog, TitleData, UserData/ReadOnlyData via SessionTicket/EntityToken.
 * **Minecraft Services**: Generate MCToken, fetch entitlements/balances, and access Marketplace wishlist + inbox messaging.
@@ -86,7 +86,12 @@ Validated via Joi (`src/config/env.js`).
 | `CORS_ORIGIN`      | `*`           | CORS origin(s), comma-separated (e.g., `http://localhost:5173`)          |
 | `JWT_SECRET`       | — **required**| At least 16 chars, used to sign API JWTs                                 |
 | `JWT_EXPIRES_IN`   | `1h`          | JWT expiry (e.g., `1h`, `30m`, `2d`)                                      |
-| `CLIENT_ID`        | — **required**| Microsoft/Xbox OAuth client ID used by the Device Code flow. See [Microsoft/Xbox client IDs](#microsoftxbox-client-ids). |
+| `CLIENT_ID`        | — **required**| Microsoft/Xbox OAuth client ID. Its format selects the legacy or Entra device flow. See [Microsoft/Xbox client IDs](#microsoftxbox-client-ids). |
+| `MICROSOFT_AUTH_MODE` | `auto` | OAuth flow selection: `auto`, `legacy`, or `modern` |
+| `MICROSOFT_OAUTH_REDIRECT_URI` | — | Exact HTTPS Entra Web redirect URI for `/auth/browser/callback` |
+| `MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI` | — | Optional fixed HTTPS frontend target that receives only a short-lived result code |
+| `MICROSOFT_OAUTH_CLIENT_SECRET` | — | Entra Web application secret used only by the server-side browser code exchange |
+| `MICROSOFT_OAUTH_TTL_MS` | `300000` | Lifetime of one-time OAuth states and browser result codes (60-900 seconds) |
 | `HTTP_TIMEOUT_MS`  | `15000`       | Timeout for outgoing HTTP calls (ms)                                     |
 | `LOG_LEVEL`        | `info`        | General log level                                                        |
 | `LOG_PRETTY`       | `true` (dev)  | Pretty logs (`true`/`false`), defaults to `false` in production           |
@@ -108,7 +113,13 @@ Validated via Joi (`src/config/env.js`).
 
 ### Microsoft/Xbox Client IDs
 
-`CLIENT_ID` controls which Microsoft/Xbox OAuth application is shown in the device-code consent screen and which title identity is used when Microsoft tokens are exchanged for Xbox Live/XSTS tokens.
+`CLIENT_ID` controls both the Microsoft OAuth protocol and the title identity used for Xbox Live/XSTS token exchange:
+
+* GUID client IDs such as `3a6cd51c-9323-4ee2-be08-1f0d96aba816` use the Microsoft identity platform v2 endpoints under `login.microsoftonline.com/consumers` with `XboxLive.signin XboxLive.offline_access`.
+* All other IDs keep the legacy `login.live.com` endpoints and `service::user.auth.xboxlive.com::MBI_SSL`.
+* `0000000048183522` therefore remains on the original legacy device-code flow without any configuration change.
+* `MICROSOFT_AUTH_MODE=legacy` or `MICROSOFT_AUTH_MODE=modern` overrides format detection for client IDs that do not follow the usual format. Browser login still requires an Entra GUID in modern mode.
+* When `CLIENT_ID` is changed to an Entra GUID, set `XAL_CLIENT_ID=0000000048183522` explicitly if the existing XAL/SISU title identity must remain unchanged.
 
 For this service, the most practical default is the Minecraft: Bedrock Android client ID because it is commonly used with the Xbox Live SISU/device-code flow and is also used by `go-xsapi`'s `MinecraftAndroid` example configuration.
 
@@ -131,6 +142,28 @@ CLIENT_ID=0000000048183522
 Changing `CLIENT_ID` invalidates assumptions made by previously issued Microsoft refresh tokens. After changing it, start a new `/auth/device` login instead of reusing old `msRefreshToken` values.
 
 The source project does not own or verify these Microsoft/Mojang/Xbox identifiers. They are listed as interoperability references for users who already understand the target title and platform they want to authenticate as.
+
+### Device Code vs. browser login
+
+`GET /auth/device` is available for both client-ID formats. Legacy clients receive the existing Live device-code request including `response_type=device_code`; Entra GUID clients use the v2 device endpoint without that parameter. `POST /auth/callback` and `POST /auth/refresh` keep their existing request and response contracts and automatically use the matching token endpoint and scope.
+
+`GET /auth/browser` is an additional interactive authorization-code flow. It redirects directly to Microsoft sign-in and consent, so no device code is entered. Browser login is supported only with an Entra app registration that you own and whose application ID is configured as the GUID `CLIENT_ID`. A normal legacy Minecraft/Xbox client ID does not give this service permission to register or use its own redirect URI.
+
+Configure the Entra application as follows:
+
+1. Under **Supported account types**, select an option that includes personal Microsoft accounts. For Xbox-only sign-in, **Personal Microsoft accounts only** is the narrowest choice.
+2. Under **Authentication**, add `MICROSOFT_OAUTH_REDIRECT_URI` as an exact redirect URI on the **Web** platform. Production callback URLs must use HTTPS and must match path and case exactly.
+3. Create a client secret under **Certificates & secrets** and store only its value in the server environment as `MICROSOFT_OAUTH_CLIENT_SECRET`. This server-side Web flow requires the secret. It is never sent to the browser. PKCE S256 is used in addition to the secret.
+4. Optionally set `MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI` to one fixed HTTPS frontend callback. The service redirects there with only a short-lived one-time `code`; the frontend redeems it once at `POST /auth/browser/token`. No Microsoft, Xbox, XSTS, PlayFab, Minecraft or refresh token is placed in a URL.
+
+The OAuth `state`, PKCE verifier and optional frontend result are held in process memory. They are single-use and expire after `MICROSOFT_OAUTH_TTL_MS`; deployments with multiple service instances need sticky routing or a shared transient store before enabling browser login.
+
+Microsoft references used for this implementation:
+
+* [Xbox services sign-in for title websites](https://learn.microsoft.com/en-us/xbox/gdk/docs/services/fundamentals/s2s-auth-calls/service-authentication/live-website-authentication): Entra website registration, personal Microsoft accounts, Xbox scopes, Web client secret and the downstream Xbox user-token exchange.
+* [OAuth 2.0 authorization code flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow): authorization/token parameters, state validation, PKCE S256 and confidential Web client requirements.
+* [OAuth 2.0 device authorization grant](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code): v2 device/token endpoints and device-code grant request shape.
+* [Redirect URI best practices](https://learn.microsoft.com/en-us/entra/identity-platform/reply-url): exact redirect matching, HTTPS requirements and the Web platform for server-side Node applications.
 
 ---
 
@@ -198,12 +231,23 @@ curl -X GET http://localhost:3000/auth/device
 curl -X POST http://localhost:3000/auth/callback   -H "Content-Type: application/json"   -d '{"device_code":"<DEVICE_CODE_FROM_STEP_1>"}'
 ```
 
-### 3) Who am I? → `/auth/whoami`
+### 3) Start browser login → `/auth/browser`
+```text
+Open https://api.example.com/auth/browser in a browser.
+```
+
+If `MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI` is configured, redeem the one-time frontend code:
+
+```bash
+curl -X POST https://api.example.com/auth/browser/token -H "Content-Type: application/json" -d '{"code":"<ONE_TIME_RESULT_CODE>"}'
+```
+
+### 4) Who am I? → `/auth/whoami`
 ```bash
 curl -H "Authorization: Bearer <JWT>" http://localhost:3000/auth/whoami
 ```
 
-### 4) Xbox profile (settings) → `/profile/me`
+### 5) Xbox profile (settings) → `/profile/me`
 ```bash
 curl "http://localhost:3000/profile/me?settings=GameDisplayPicRaw,Gamerscore,Gamertag"   -H "Authorization: Bearer <JWT>"   -H "x-xbl-token: XBL3.0 x=<uhs>;<xstsToken>"
 ```
@@ -256,6 +300,9 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 |-------:|----------------------|--------------------------------------------------|
 | GET    | `/auth/device`       | Request Microsoft device code                    |
 | POST   | `/auth/callback`     | Redeem device code → JWT, XBL/XSTS, PlayFab, MC |
+| GET    | `/auth/browser`      | Start Entra browser authorization-code login     |
+| GET    | `/auth/browser/callback` | Entra OAuth callback; JSON result or one-time frontend redirect |
+| POST   | `/auth/browser/token` | Redeem a short-lived browser result code        |
 | POST   | `/auth/refresh`      | Refresh tokens via Microsoft refresh_token       |
 | GET    | `/auth/whoami`       | Decoded JWT user info                            |
 | POST   | `/auth/jwt/refresh`  | Refresh your API JWT                             |
