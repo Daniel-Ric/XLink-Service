@@ -8,6 +8,11 @@ const schema = Joi.object({
     JWT_SECRET: Joi.string().min(16).required(),
     JWT_EXPIRES_IN: Joi.string().default("1h"),
     CLIENT_ID: Joi.string().required(),
+    MICROSOFT_AUTH_MODE: Joi.string().valid("auto", "legacy", "modern").default("auto"),
+    MICROSOFT_OAUTH_REDIRECT_URI: Joi.string().uri({scheme: ["https"]}).optional(),
+    MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI: Joi.string().uri({scheme: ["https"]}).optional(),
+    MICROSOFT_OAUTH_CLIENT_SECRET: Joi.string().optional(),
+    MICROSOFT_OAUTH_TTL_MS: Joi.number().integer().min(60000).max(900000).default(300000),
     HTTP_TIMEOUT_MS: Joi.number().default(15000),
     LOG_LEVEL: Joi.string().default("info"),
     LOG_PRETTY: Joi.when("NODE_ENV", {
