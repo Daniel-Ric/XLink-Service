@@ -96,7 +96,8 @@ app.use((req, res, next) => {
     const start = process.hrtime.bigint();
 
     res.on("finish", () => {
-        const url = req.url || "/";
+        const originalPath = String(req.originalUrl || "").split("?")[0];
+        const url = originalPath === "/auth/browser/callback" ? originalPath : req.url || "/";
         if (mutePaths.some(p => url === p || url.startsWith(p + "/"))) return;
         const ms = Number((process.hrtime.bigint() - start) / 1000000n);
 
@@ -160,7 +161,7 @@ if (env.SWAGGER_ENABLED) {
 
                 return a.localeCompare(b);
             }, operationsSorter: (a, b) => {
-                const pathOrder = ["/auth/device", "/auth/callback", "/auth/whoami", "/auth/jwt/refresh"];
+                const pathOrder = ["/auth/device", "/auth/callback", "/auth/browser", "/auth/browser/callback", "/auth/browser/token", "/auth/refresh", "/auth/whoami", "/auth/jwt/refresh"];
 
                 const aPath = a.get("path");
                 const bPath = b.get("path");
