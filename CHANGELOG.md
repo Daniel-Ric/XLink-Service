@@ -1,5 +1,160 @@
 # Changelog
 
+## 3.4.0 (2026-07-24)
+
+### Summary
+
+- Change type: Test coverage
+- Main change: xLink - Add Microsoft auth pipeline tests and service implementation (276f2a7)
+- Impact: Test coverage with a medium change footprint across Xbox, Minecraft, and PlayFab integrations, test coverage.
+- Bump reason: medium change footprint (2 files, 359 total line changes)
+
+### Changed Areas
+
+- Tests: 1 file: tests/microsoftAuth.test.js
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/auth.service.js
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 2
+- Line changes: +359 / -0
+
+## 3.4.1 (2026-07-24)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Implement OAuth session store and Microsoft callback helper (db4c705)
+- Impact: Repository update with a small change footprint across Xbox, Minecraft, and PlayFab integrations.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/oauthSession.service.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +97 / -0
+
+## 3.5.0 (2026-07-24)
+
+### Summary
+
+- Change type: Test coverage
+- Main change: xLink - Add browser OAuth routes and end-to-end tests (009c168)
+- Impact: Test coverage with a medium change footprint across HTTP API routes, test coverage.
+- Bump reason: medium change footprint (2 files, 241 total line changes)
+
+### Changed Areas
+
+- Tests: 1 file: tests/browserAuthRoutes.test.js
+- Xbox and Minecraft API routes: 1 file: src/routes/auth.routes.js
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 2
+- Line changes: +142 / -99
+
+## 3.5.1 (2026-07-24)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add modern Microsoft OAuth support and refactor service (d8c6b53)
+- Impact: Repository update with a small change footprint across Xbox, Minecraft, and PlayFab integrations.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/microsoft.service.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +143 / -18
+
+## 3.5.2 (2026-07-24)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Expand environment config for Entra OAuth integration (8681c62)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Deployment configuration: 1 file: production.env.example
+- Repository files: 1 file: .env
+- Runtime configuration: 1 file: src/config/env.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 3
+- Line changes: +18 / -0
+
+## 3.5.3 (2026-07-24)
+
+### Summary
+
+- Change type: Documentation
+- Main change: xLink - Expand README with Entra OAuth flows, config, and usage (eb036cd)
+- Impact: Documentation with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- README: 1 file: README.md
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +52 / -5
+
+## 3.5.4 (2026-07-24)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add browser OAuth routes to Swagger documentation (df7062a)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Shared utilities: 1 file: src/utils/swagger.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +80 / -1
+
+## 3.5.5 (2026-07-24)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Adjust browser callback and expand OAuth path sorting (36b1792)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Application bootstrap: 1 file: src/app.js
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +3 / -2
 ## 3.1.0 (2026-07-05)
 
 ### Summary
@@ -305,6 +460,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
