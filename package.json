@@ -14,7 +14,7 @@
   "private": true,
   "dependencies": {
     "axios": "^1.13.2",
-    "chalk": "^5.6.2",
+    "chalk": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
