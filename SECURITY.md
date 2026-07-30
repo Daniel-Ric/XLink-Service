@@ -12,7 +12,7 @@ The following versions receive security-related fixes:
 
 | Version                             | Security Fixes Provided |
 |-------------------------------------|-------------------------|
-| `main` branch (current development) | ✅                      |
+| `master` branch (current development) | ✅                    |
 | Tags/releases named `vX.Y.Z`        | ✅ if not marked end-of-life |
 | Forks / modified copies             | ❌                      |
 
