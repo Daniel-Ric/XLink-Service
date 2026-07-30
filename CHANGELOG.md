@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.6.2 (2026-07-30)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add repository community files (85d778b)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Repository files: 2 files: CODE_OF_CONDUCT.md, CONTRIBUTING.md
+- Security documentation: 1 file: SECURITY.md
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 3
+- Line changes: +169 / -1
 ## 3.6.1 (2026-07-30)
 
 ### Summary
@@ -497,6 +516,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
