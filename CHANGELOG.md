@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.6.0 (2026-07-30)
+
+### Summary
+
+- Change type: CI and automation
+- Main change: xLink - Standardize GitHub workflows (fc192a3)
+- Impact: CI and automation with a medium change footprint across CI and release automation.
+- Bump reason: medium change footprint (4 files, 207 total line changes)
+
+### Changed Areas
+
+- GitHub configuration: 1 file: .github/dependabot.yml
+- GitHub workflows: 3 files: .github/workflows/automated-version-tags.yml, .github/workflows/ci.yml, plus 1 more
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 4
+- Line changes: +87 / -120
 ## 3.4.0 (2026-07-24)
 
 ### Summary
@@ -460,6 +479,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
