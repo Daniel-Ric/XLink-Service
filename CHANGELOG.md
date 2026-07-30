@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.6.1 (2026-07-30)
+
+### Summary
+
+- Change type: Documentation
+- Main change: xLink - Fix README disclaimer formatting (bdd6f04)
+- Impact: Documentation with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- README: 1 file: README.md
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +1 / -1
 ## 3.6.0 (2026-07-30)
 
 ### Summary
@@ -479,6 +497,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
