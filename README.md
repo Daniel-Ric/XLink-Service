@@ -8,7 +8,7 @@
 
 > [!IMPORTANT]
 > **Project Disclaimer**  
-> XLink Service" by SpindexGFX is an independent project. It is not affiliated with, endorsed by, sponsored by, or otherwise connected to Mojang AB, Microsoft Corporation, or any of their subsidiaries or affiliates. No partnership, approval, or official relationship with Mojang AB or Microsoft is implied.  
+> "XLink Service" by SpindexGFX is an independent project. It is not affiliated with, endorsed by, sponsored by, or otherwise connected to Mojang AB, Microsoft Corporation, or any of their subsidiaries or affiliates. No partnership, approval, or official relationship with Mojang AB or Microsoft is implied.  
 > All names, logos, brands, trademarks, service marks, and registered trademarks are the property of their respective owners and are used strictly for identification and reference purposes only. This project does not claim ownership of third-party intellectual property and does not grant any license to use it.
 
 ---
