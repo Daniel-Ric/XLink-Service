@@ -237,6 +237,16 @@ test("frontend handoff is fixed, contains only a one-time code and prevents open
     );
 });
 
+test("browser results are bound to their login source", () => {
+    const store = new OAuthSessionStore();
+    const resultCode = store.createResult({jwt: "token"}, "website");
+    assert.throws(
+        () => store.consumeResult(resultCode, "direct"),
+        {message: "Browser result code does not match this login source"}
+    );
+    assert.deepEqual(store.consumeResult(resultCode, "website"), {jwt: "token"});
+});
+
 test("client browser handoffs require the private poll token and are single-use", () => {
     const store = new OAuthSessionStore();
     const handoff = store.createHandoff("client");

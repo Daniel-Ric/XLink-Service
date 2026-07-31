@@ -46,6 +46,12 @@ function browserOAuthConfig() {
     };
 }
 
+const browserSourceSchema = Joi.string().valid("direct", "website", "client");
+
+function sendClientSuccess(res) {
+    res.status(200).type("html").send("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Sign-in complete</title></head><body><main><h1>Sign-in complete</h1><p>You can close this tab and return to the application.</p></main></body></html>");
+}
+
 /**
  * @swagger
  * /auth/device:
@@ -187,7 +193,7 @@ router.post("/browser/session", authLimiter, asyncHandler(async (_req, res) => {
 
 router.get("/browser/callback", authLimiter, asyncHandler(async (req, res) => {
     const config = browserOAuthConfig();
-    const {code, codeVerifier} = consumeMicrosoftCallback(req.query, oauthSessionStore);
+    const {code, codeVerifier, context} = consumeMicrosoftCallback(req.query, oauthSessionStore);
     const tokenData = await exchangeAuthorizationCode({
         clientId: config.clientId,
         code,
@@ -200,18 +206,30 @@ router.get("/browser/callback", authLimiter, asyncHandler(async (req, res) => {
         config.clientId,
         env.PLAYFAB_TITLE_ID || "20ca2"
     );
+    if (context.source === "client") {
+        oauthSessionStore.completeHandoff(context.handoffSessionId, result);
+        return sendClientSuccess(res);
+    }
+    if (context.source === "website") {
+        const resultCode = oauthSessionStore.createResult(result, "website");
+        return res.redirect(303, buildFrontendResultUrl(env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI, resultCode));
+    }
     if (!env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI) {
         return res.json(result);
     }
-    const resultCode = oauthSessionStore.createResult(result);
+    const resultCode = oauthSessionStore.createResult(result, "direct");
     res.redirect(303, buildFrontendResultUrl(env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI, resultCode));
 }));
 
 router.post("/browser/token", authLimiter, asyncHandler(async (req, res) => {
-    const schema = Joi.object({code: Joi.string().required()});
+    const schema = Joi.object({
+        code: Joi.string().required(),
+        source: browserSourceSchema.default("direct")
+    });
     const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
-    res.json(oauthSessionStore.consumeResult(value.code));
+    res.json(oauthSessionStore.consumeResult(value.code, value.source));
+}));
 
 router.post("/browser/session/token", authLimiter, asyncHandler(async (req, res) => {
     const schema = Joi.object({

@@ -249,7 +249,10 @@ const options = {
                                 schema: {
                                     type: "object",
                                     required: ["code"],
-                                    properties: {code: {type: "string"}}
+                                    properties: {
+                                        code: {type: "string"},
+                                        source: {type: "string", enum: ["direct", "website"], default: "direct"}
+                                    }
                                 }
                             }
                         }
