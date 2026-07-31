@@ -191,6 +191,18 @@ const options = {
                     }
                 }
             },
+            "/auth/browser/session": {
+                post: {
+                    summary: "Create a client browser-login handoff",
+                    description: "Creates a short-lived browser session and a separate private polling token.",
+                    tags: ["Auth"],
+                    security: [],
+                    responses: {
+                        201: {description: "Browser session created"},
+                        400: {description: "Invalid source or browser OAuth configuration"}
+                    }
+                }
+            },
             "/auth/browser/callback": {
                 get: {
                     summary: "Complete Microsoft browser sign-in",

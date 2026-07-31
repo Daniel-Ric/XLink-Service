@@ -161,7 +161,7 @@ if (env.SWAGGER_ENABLED) {
 
                 return a.localeCompare(b);
             }, operationsSorter: (a, b) => {
-                const pathOrder = ["/auth/device", "/auth/callback", "/auth/browser", "/auth/browser/callback", "/auth/browser/token", "/auth/refresh", "/auth/whoami", "/auth/jwt/refresh"];
+                const pathOrder = ["/auth/device", "/auth/callback", "/auth/browser/session", "/auth/browser", "/auth/browser/callback", "/auth/browser/token", "/auth/browser/session/token", "/auth/refresh", "/auth/whoami", "/auth/jwt/refresh"];
 
                 const aPath = a.get("path");
                 const bPath = b.get("path");

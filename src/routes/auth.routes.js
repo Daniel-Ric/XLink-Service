@@ -169,7 +169,11 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
     ));
 }));
 
-router.get("/browser", authLimiter, asyncHandler(async (_req, res) => {
+router.post("/browser/session", authLimiter, asyncHandler(async (_req, res) => {
+    browserOAuthConfig();
+    res.status(201).json(oauthSessionStore.createHandoff("client"));
+}));
+
     const config = browserOAuthConfig();
     const {state, codeChallenge} = oauthSessionStore.createAuthorization();
     const authorizationUrl = buildBrowserAuthorizationUrl(
