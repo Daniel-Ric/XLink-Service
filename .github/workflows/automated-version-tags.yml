@@ -10,49 +10,69 @@ permissions:
   contents: write
 
 concurrency:
-  group: automated-version-tags-${{ github.ref }}
+  group: automated-version-tags-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   validate:
-    if: ${{ github.actor != 'github-actions[bot]' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip release]')) }}
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.actor != 'github-actions[bot]' &&
+          github.actor != 'dependabot[bot]' &&
+          github.event.head_commit.author.username != 'dependabot[bot]' &&
+          !contains(github.event.head_commit.message, '[skip release]') &&
+          !contains(github.event.head_commit.message, 'dependabot/')
+        )
+      }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "npm"
 
-      - name: Install
+      - name: Install from lockfile
         run: npm ci --no-audit --no-fund --loglevel=error
 
-      - name: Test
+      - name: Tests
         run: npm test
 
   release:
-    if: ${{ github.actor != 'github-actions[bot]' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip release]')) }}
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.actor != 'github-actions[bot]' &&
+          github.actor != 'dependabot[bot]' &&
+          github.event.head_commit.author.username != 'dependabot[bot]' &&
+          !contains(github.event.head_commit.message, '[skip release]') &&
+          !contains(github.event.head_commit.message, 'dependabot/')
+        )
+      }}
     needs: validate
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
 
-      - name: Create version tags and releases
+      - name: Create version tags, releases, and changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}

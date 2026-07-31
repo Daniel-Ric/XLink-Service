@@ -1,5 +1,61 @@
 # Changelog
 
+## 3.6.2 (2026-07-30)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Add repository community files (85d778b)
+- Impact: Repository update with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Repository files: 2 files: CODE_OF_CONDUCT.md, CONTRIBUTING.md
+- Security documentation: 1 file: SECURITY.md
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 3
+- Line changes: +169 / -1
+## 3.6.1 (2026-07-30)
+
+### Summary
+
+- Change type: Documentation
+- Main change: xLink - Fix README disclaimer formatting (bdd6f04)
+- Impact: Documentation with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- README: 1 file: README.md
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +1 / -1
+## 3.6.0 (2026-07-30)
+
+### Summary
+
+- Change type: CI and automation
+- Main change: xLink - Standardize GitHub workflows (fc192a3)
+- Impact: CI and automation with a medium change footprint across CI and release automation.
+- Bump reason: medium change footprint (4 files, 207 total line changes)
+
+### Changed Areas
+
+- GitHub configuration: 1 file: .github/dependabot.yml
+- GitHub workflows: 3 files: .github/workflows/automated-version-tags.yml, .github/workflows/ci.yml, plus 1 more
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 4
+- Line changes: +87 / -120
 ## 3.4.0 (2026-07-24)
 
 ### Summary
@@ -460,6 +516,9 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
+
+
 
 
 
