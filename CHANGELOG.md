@@ -1,5 +1,23 @@
 # Changelog
 
+## 4.0.0 (2026-07-31)
+
+### Summary
+
+- Change type: Repository update
+- Main change: xLink - Update .gitignore (f3bd6fa)
+- Impact: Repository update with a large change footprint across repository files.
+- Bump reason: large change footprint (1 files, 4492 total line changes)
+
+### Changed Areas
+
+- Repository files: 1 file: .gitignore
+
+### Release Metrics
+
+- Version bump: major
+- Files changed: 1
+- Line changes: +1 / -4491
 ## 3.6.2 (2026-07-30)
 
 ### Summary
@@ -516,6 +534,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
