@@ -208,6 +208,17 @@ router.post("/browser/token", authLimiter, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     res.json(oauthSessionStore.consumeResult(value.code));
+
+router.post("/browser/session/token", authLimiter, asyncHandler(async (req, res) => {
+    const schema = Joi.object({
+        sessionId: Joi.string().required(),
+        pollToken: Joi.string().required()
+    });
+    const {value, error} = schema.validate(req.body);
+    if (error) throw badRequest(error.message);
+    const result = oauthSessionStore.consumeHandoff(value.sessionId, value.pollToken, "client");
+    if (result.status === "pending") return res.status(202).json(result);
+    res.json(result.data);
 }));
 
 /**

@@ -254,6 +254,33 @@ const options = {
                     }
                 }
             },
+            "/auth/browser/session/token": {
+                post: {
+                    summary: "Poll a client browser-login handoff",
+                    description: "Returns pending until Microsoft sign-in completes, then returns and consumes the standard auth response.",
+                    tags: ["Auth"],
+                    security: [],
+                    requestBody: {
+                        required: true,
+                        content: {"application/json": {schema: {
+                            type: "object",
+                            required: ["sessionId", "pollToken"],
+                            properties: {
+                                sessionId: {type: "string"},
+                                pollToken: {type: "string"}
+                            }
+                        }}}
+                    },
+                    responses: {
+                        200: {
+                            description: "Standard auth response",
+                            content: {"application/json": {schema: {$ref: "#/components/schemas/AuthCallbackResponse"}}}
+                        },
+                        202: {description: "Sign-in is still pending"},
+                        400: {description: "Invalid, expired or reused browser session"}
+                    }
+                }
+            },
             "/debug/decode-token": {
                 post: {
                     summary: "Decode JWT, XSTS (XBL3.0), MCToken, and PlayFab sessionTicket",
