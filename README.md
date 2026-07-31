@@ -236,11 +236,13 @@ curl -X POST http://localhost:3000/auth/callback   -H "Content-Type: application
 Open https://api.example.com/auth/browser in a browser.
 ```
 
-If `MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI` is configured, redeem the one-time frontend code:
+For the website flow, open `/auth/browser?source=website` and redeem the one-time frontend code with the matching source:
 
 ```bash
-curl -X POST https://api.example.com/auth/browser/token -H "Content-Type: application/json" -d '{"code":"<ONE_TIME_RESULT_CODE>"}'
+curl -X POST https://api.example.com/auth/browser/token -H "Content-Type: application/json" -d '{"code":"<ONE_TIME_RESULT_CODE>","source":"website"}'
 ```
+
+Non-browser clients first create a handoff with `POST /auth/browser/session`, open the returned session through `/auth/browser?source=client&session=...`, and poll `POST /auth/browser/session/token` with the private `pollToken`. The polling token is never placed in the browser URL.
 
 ### 4) Who am I? → `/auth/whoami`
 ```bash
@@ -301,8 +303,10 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 | GET    | `/auth/device`       | Request Microsoft device code                    |
 | POST   | `/auth/callback`     | Redeem device code → JWT, XBL/XSTS, PlayFab, MC |
 | GET    | `/auth/browser`      | Start Entra browser authorization-code login     |
+| POST   | `/auth/browser/session` | Create a source-bound client browser handoff |
 | GET    | `/auth/browser/callback` | Entra OAuth callback; JSON result or one-time frontend redirect |
 | POST   | `/auth/browser/token` | Redeem a short-lived browser result code        |
+| POST   | `/auth/browser/session/token` | Poll and consume a client browser handoff |
 | POST   | `/auth/refresh`      | Refresh tokens via Microsoft refresh_token       |
 | GET    | `/auth/whoami`       | Decoded JWT user info                            |
 | POST   | `/auth/jwt/refresh`  | Refresh your API JWT                             |
