@@ -16,6 +16,7 @@ import {authLimiter} from "../middleware/rateLimit.js";
 import {badRequest} from "../utils/httpError.js";
 import {exchangeMicrosoftTokenBundle} from "../services/auth.service.js";
 import {
+    buildFrontendPageUrl,
     buildFrontendResultUrl,
     consumeMicrosoftCallback,
     oauthSessionStore
@@ -175,9 +176,16 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
     ));
 }));
 
-router.post("/browser/session", authLimiter, asyncHandler(async (_req, res) => {
+router.post("/browser/session", authLimiter, asyncHandler(async (req, res) => {
+    const schema = Joi.object({
+        successPath: Joi.string().pattern(/^\/(?!\/)/).max(512)
+    });
+    const {value, error} = schema.validate(req.body || {});
+    if (error) throw badRequest(error.message);
     browserOAuthConfig();
-    res.status(201).json(oauthSessionStore.createHandoff("client"));
+    res.status(201).json(oauthSessionStore.createHandoff("client", {
+        successPath: value.successPath
+    }));
 }));
 
 router.get("/browser", authLimiter, asyncHandler(async (req, res) => {
@@ -223,7 +231,13 @@ router.get("/browser/callback", authLimiter, asyncHandler(async (req, res) => {
         env.PLAYFAB_TITLE_ID || "20ca2"
     );
     if (context.source === "client") {
-        oauthSessionStore.completeHandoff(context.handoffSessionId, result);
+        const handoff = oauthSessionStore.completeHandoff(context.handoffSessionId, result);
+        if (handoff.successPath && env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI) {
+            return res.redirect(303, buildFrontendPageUrl(
+                env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI,
+                handoff.successPath
+            ));
+        }
         return sendClientSuccess(res);
     }
     if (context.source === "website") {

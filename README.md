@@ -242,7 +242,7 @@ For the website flow, open `/auth/browser?source=website` and redeem the one-tim
 curl -X POST https://api.example.com/auth/browser/token -H "Content-Type: application/json" -d '{"code":"<ONE_TIME_RESULT_CODE>","source":"website"}'
 ```
 
-Non-browser clients first create a handoff with `POST /auth/browser/session`, open the returned session through `/auth/browser?source=client&session=...`, and poll `POST /auth/browser/session/token` with the private `pollToken`. The polling token is never placed in the browser URL.
+Non-browser clients first create a handoff with `POST /auth/browser/session`, open the returned session through `/auth/browser?source=client&session=...`, and poll `POST /auth/browser/session/token` with the private `pollToken`. The polling token is never placed in the browser URL. A client may include an optional same-origin path such as `{"successPath":"/auth/client/success"}` when creating the session. xLink redirects there on completion using the configured frontend origin; without it, xLink returns its neutral completion page.
 
 ### 4) Who am I? → `/auth/whoami`
 ```bash

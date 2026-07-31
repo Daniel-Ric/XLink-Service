@@ -204,12 +204,25 @@ const options = {
             "/auth/browser/session": {
                 post: {
                     summary: "Create a client browser-login handoff",
-                    description: "Creates a short-lived browser session and a separate private polling token.",
+                    description: "Creates a short-lived browser session and a separate private polling token. Clients may request a same-origin frontend success path; without it xLink renders a neutral completion page.",
                     tags: ["Auth"],
                     security: [],
+                    requestBody: {
+                        required: false,
+                        content: {"application/json": {schema: {
+                            type: "object",
+                            properties: {
+                                successPath: {
+                                    type: "string",
+                                    example: "/auth/client/success",
+                                    description: "Optional path on the configured frontend origin"
+                                }
+                            }
+                        }}}
+                    },
                     responses: {
                         201: {description: "Browser session created"},
-                        400: {description: "Invalid source or browser OAuth configuration"}
+                        400: {description: "Invalid success path or browser OAuth configuration"}
                     }
                 }
             },

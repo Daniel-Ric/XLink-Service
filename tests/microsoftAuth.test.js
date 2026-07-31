@@ -21,6 +21,7 @@ const {
     requestDeviceCode
 } = await import("../src/services/microsoft.service.js");
 const {
+    buildFrontendPageUrl,
     buildFrontendResultUrl,
     consumeMicrosoftCallback,
     OAuthSessionStore
@@ -237,6 +238,14 @@ test("frontend handoff is fixed, contains only a one-time code and prevents open
     );
 });
 
+test("client success page stays on the configured frontend origin", () => {
+    const redirect = new URL(buildFrontendPageUrl(
+        "https://app.example.com/auth/callback?stale=value#fragment",
+        "/auth/client/success"
+    ));
+    assert.equal(redirect.href, "https://app.example.com/auth/client/success");
+});
+
 test("browser results are bound to their login source", () => {
     const store = new OAuthSessionStore();
     const resultCode = store.createResult({jwt: "token"}, "website");
@@ -249,13 +258,17 @@ test("browser results are bound to their login source", () => {
 
 test("client browser handoffs require the private poll token and are single-use", () => {
     const store = new OAuthSessionStore();
-    const handoff = store.createHandoff("client");
+    const handoff = store.createHandoff("client", {successPath: "/auth/client/success"});
+    assert.equal(store.getHandoff(handoff.sessionId, "client").successPath, "/auth/client/success");
     assert.equal(store.consumeHandoff(handoff.sessionId, handoff.pollToken, "client").status, "pending");
     assert.throws(
         () => store.consumeHandoff(handoff.sessionId, "wrong", "client"),
         {message: "Invalid browser session poll token"}
     );
-    store.completeHandoff(handoff.sessionId, {jwt: "token"});
+    assert.equal(
+        store.completeHandoff(handoff.sessionId, {jwt: "token"}).successPath,
+        "/auth/client/success"
+    );
     assert.deepEqual(store.consumeHandoff(handoff.sessionId, handoff.pollToken, "client"), {
         status: "complete",
         data: {jwt: "token"}

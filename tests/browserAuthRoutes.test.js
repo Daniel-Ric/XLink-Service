@@ -67,7 +67,9 @@ test("website browser login is source-aware", async () => {
 test("client browser sessions keep the poll token out of the login URL", async () => {
     await withServer(async baseUrl => {
         const created = await fetch(`${baseUrl}/auth/browser/session`, {
-            method: "POST"
+            method: "POST",
+            headers: {"content-type": "application/json"},
+            body: JSON.stringify({successPath: "/auth/client/success"})
         });
         assert.equal(created.status, 201);
         const session = await created.json();
@@ -88,5 +90,16 @@ test("client browser sessions keep the poll token out of the login URL", async (
         });
         assert.equal(pending.status, 202);
         assert.deepEqual(await pending.json(), {status: "pending"});
+    });
+});
+
+test("client browser sessions reject external success URLs", async () => {
+    await withServer(async baseUrl => {
+        const response = await fetch(`${baseUrl}/auth/browser/session`, {
+            method: "POST",
+            headers: {"content-type": "application/json"},
+            body: JSON.stringify({successPath: "https://evil.example/success"})
+        });
+        assert.equal(response.status, 400);
     });
 });

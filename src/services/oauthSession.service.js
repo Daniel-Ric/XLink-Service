@@ -82,11 +82,12 @@ export class OAuthSessionStore {
         return result.data;
     }
 
-    createHandoff(source) {
+    createHandoff(source, context = {}) {
         this.prune();
         const sessionId = randomValue();
         const pollToken = randomValue();
         this.handoffs.set(digest(sessionId), {
+            ...context,
             source,
             pollTokenDigest: digest(pollToken),
             status: "pending",
@@ -116,6 +117,7 @@ export class OAuthSessionStore {
         const handoff = this.getHandoff(sessionId);
         handoff.status = "complete";
         handoff.data = data;
+        return handoff;
     }
 
     consumeHandoff(sessionId, pollToken, expectedSource) {
@@ -145,6 +147,14 @@ export function consumeMicrosoftCallback(query, store) {
 export function buildFrontendResultUrl(frontendRedirectUri, resultCode) {
     const url = new URL(frontendRedirectUri);
     url.searchParams.set("code", resultCode);
+    return url.toString();
+}
+
+export function buildFrontendPageUrl(frontendRedirectUri, pathname) {
+    const url = new URL(frontendRedirectUri);
+    url.pathname = pathname;
+    url.search = "";
+    url.hash = "";
     return url.toString();
 }
 
