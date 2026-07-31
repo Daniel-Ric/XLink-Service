@@ -237,6 +237,25 @@ test("frontend handoff is fixed, contains only a one-time code and prevents open
     );
 });
 
+test("client browser handoffs require the private poll token and are single-use", () => {
+    const store = new OAuthSessionStore();
+    const handoff = store.createHandoff("client");
+    assert.equal(store.consumeHandoff(handoff.sessionId, handoff.pollToken, "client").status, "pending");
+    assert.throws(
+        () => store.consumeHandoff(handoff.sessionId, "wrong", "client"),
+        {message: "Invalid browser session poll token"}
+    );
+    store.completeHandoff(handoff.sessionId, {jwt: "token"});
+    assert.deepEqual(store.consumeHandoff(handoff.sessionId, handoff.pollToken, "client"), {
+        status: "complete",
+        data: {jwt: "token"}
+    });
+    assert.throws(
+        () => store.consumeHandoff(handoff.sessionId, handoff.pollToken, "client"),
+        {message: "Invalid or expired browser session"}
+    );
+});
+
 test("all Microsoft login methods reuse the same Xbox, XSTS, PlayFab and Minecraft bundle pipeline", async () => {
     const calls = [];
     const dependencies = {

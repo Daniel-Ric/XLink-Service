@@ -17,6 +17,7 @@ export class OAuthSessionStore {
         this.clock = clock;
         this.authorizationStates = new Map();
         this.results = new Map();
+        this.handoffs = new Map();
     }
 
     prune() {
@@ -27,14 +28,18 @@ export class OAuthSessionStore {
         for (const [key, value] of this.results) {
             if (value.expiresAt <= now) this.results.delete(key);
         }
+        for (const [key, value] of this.handoffs) {
+            if (value.expiresAt <= now) this.handoffs.delete(key);
+        }
     }
 
-    createAuthorization() {
+    createAuthorization(context = {}) {
         this.prune();
         const state = randomValue();
         const {verifier, challenge} = createPkcePair();
         this.authorizationStates.set(digest(state), {
             verifier,
+            context,
             expiresAt: this.clock() + this.ttlMs
         });
         return {state, codeChallenge: challenge};
@@ -51,25 +56,79 @@ export class OAuthSessionStore {
         return session;
     }
 
-    createResult(data) {
+    createResult(data, source = "direct") {
         this.prune();
         const code = randomValue();
         this.results.set(digest(code), {
             data,
+            source,
             expiresAt: this.clock() + this.ttlMs
         });
         return code;
     }
 
-    consumeResult(code) {
+    consumeResult(code, expectedSource) {
         if (!code) throw badRequest("Browser result code is required");
         const key = digest(code);
         const result = this.results.get(key);
-        this.results.delete(key);
         if (!result || result.expiresAt <= this.clock()) {
+            this.results.delete(key);
             throw badRequest("Invalid or expired browser result code");
         }
+        if (expectedSource && result.source !== expectedSource) {
+            throw badRequest("Browser result code does not match this login source");
+        }
+        this.results.delete(key);
         return result.data;
+    }
+
+    createHandoff(source) {
+        this.prune();
+        const sessionId = randomValue();
+        const pollToken = randomValue();
+        this.handoffs.set(digest(sessionId), {
+            source,
+            pollTokenDigest: digest(pollToken),
+            status: "pending",
+            data: null,
+            expiresAt: this.clock() + this.ttlMs
+        });
+        return {
+            sessionId,
+            pollToken,
+            expiresIn: Math.ceil(this.ttlMs / 1000)
+        };
+    }
+
+    getHandoff(sessionId, expectedSource) {
+        if (!sessionId) throw badRequest("Browser session is required");
+        const handoff = this.handoffs.get(digest(sessionId));
+        if (!handoff || handoff.expiresAt <= this.clock()) {
+            throw badRequest("Invalid or expired browser session");
+        }
+        if (expectedSource && handoff.source !== expectedSource) {
+            throw badRequest("Browser session does not match this login source");
+        }
+        return handoff;
+    }
+
+    completeHandoff(sessionId, data) {
+        const handoff = this.getHandoff(sessionId);
+        handoff.status = "complete";
+        handoff.data = data;
+    }
+
+    consumeHandoff(sessionId, pollToken, expectedSource) {
+        const key = digest(sessionId);
+        const handoff = this.getHandoff(sessionId, expectedSource);
+        const actual = Buffer.from(digest(pollToken));
+        const expected = Buffer.from(handoff.pollTokenDigest);
+        if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
+            throw badRequest("Invalid browser session poll token");
+        }
+        if (handoff.status !== "complete") return {status: "pending"};
+        this.handoffs.delete(key);
+        return {status: "complete", data: handoff.data};
     }
 }
 
@@ -80,7 +139,7 @@ export function consumeMicrosoftCallback(query, store) {
         throw badRequest(reason);
     }
     if (!query?.code) throw badRequest("Missing Microsoft authorization code");
-    return {code: query.code, codeVerifier: session.verifier};
+    return {code: query.code, codeVerifier: session.verifier, context: session.context};
 }
 
 export function buildFrontendResultUrl(frontendRedirectUri, resultCode) {
