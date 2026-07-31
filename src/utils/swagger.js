@@ -179,9 +179,19 @@ const options = {
             "/auth/browser": {
                 get: {
                     summary: "Start Microsoft browser sign-in",
-                    description: "Redirects to Microsoft Entra sign-in and consent using authorization code flow with PKCE.",
+                    description: "Redirects to Microsoft Entra sign-in and consent using authorization code flow with PKCE. The source is bound to the server-side OAuth state.",
                     tags: ["Auth"],
                     security: [],
+                    parameters: [{
+                        in: "query",
+                        name: "source",
+                        schema: {type: "string", enum: ["direct", "website", "client"], default: "direct"}
+                    }, {
+                        in: "query",
+                        name: "session",
+                        schema: {type: "string"},
+                        description: "Required for non-browser clients; returned by POST /auth/browser/session"
+                    }],
                     responses: {
                         302: {description: "Redirect to Microsoft sign-in"},
                         400: {

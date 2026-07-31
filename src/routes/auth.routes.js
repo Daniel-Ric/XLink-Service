@@ -180,8 +180,24 @@ router.post("/browser/session", authLimiter, asyncHandler(async (_req, res) => {
     res.status(201).json(oauthSessionStore.createHandoff("client"));
 }));
 
+router.get("/browser", authLimiter, asyncHandler(async (req, res) => {
+    const schema = Joi.object({
+        source: browserSourceSchema.default("direct"),
+        session: Joi.string().when("source", {is: "client", then: Joi.required(), otherwise: Joi.forbidden()})
+    });
+    const {value, error} = schema.validate(req.query);
+    if (error) throw badRequest(error.message);
     const config = browserOAuthConfig();
-    const {state, codeChallenge} = oauthSessionStore.createAuthorization();
+    if (value.source === "website" && !env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI) {
+        throw badRequest("Website OAuth redirect URI is not configured");
+    }
+    if (value.source === "client") {
+        oauthSessionStore.getHandoff(value.session, "client");
+    }
+    const {state, codeChallenge} = oauthSessionStore.createAuthorization({
+        source: value.source,
+        handoffSessionId: value.session
+    });
     const authorizationUrl = buildBrowserAuthorizationUrl(
         config.clientId,
         config.redirectUri,
