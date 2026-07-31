@@ -1,5 +1,27 @@
 # Changelog
 
+## 4.1.0 (2026-07-31)
+
+### Summary
+
+- Change type: Test coverage
+- Main change: xLink - Add support for optional successPath in browser sessions (0e876a2)
+- Impact: Test coverage with a medium change footprint across repository files, HTTP API routes, Xbox, Minecraft, and PlayFab integrations.
+- Bump reason: medium change footprint (6 files, 83 total line changes)
+
+### Changed Areas
+
+- README: 1 file: README.md
+- Shared utilities: 1 file: src/utils/swagger.js
+- Tests: 2 files: tests/browserAuthRoutes.test.js, tests/microsoftAuth.test.js
+- Xbox and Minecraft API routes: 1 file: src/routes/auth.routes.js
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/oauthSession.service.js
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 6
+- Line changes: +73 / -10
 ## 4.0.0 (2026-07-31)
 
 ### Summary
@@ -534,6 +556,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
