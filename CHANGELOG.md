@@ -1,5 +1,23 @@
 # Changelog
 
+## 4.1.1 (2026-08-09)
+
+### Summary
+
+- Change type: Maintenance
+- Main change: xLink - Fix missing CI test script (6e235ef)
+- Impact: Maintenance with a small change footprint across project dependencies.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- Dependencies: 1 file: package.json
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +3 / -0
 ## 4.1.0 (2026-07-31)
 
 ### Summary
@@ -556,6 +574,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
