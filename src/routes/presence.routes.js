@@ -138,7 +138,7 @@ router.delete("/title", jwtMiddleware, asyncHandler(async (req, res) => {
  */
 router.post("/batch", jwtMiddleware, asyncHandler(async (req, res) => {
     const schema = Joi.object({
-        xuids: Joi.array().items(Joi.string()).min(1).required(),
+        xuids: Joi.array().items(Joi.string().pattern(/^\d+$/).max(20)).min(1).max(1100).unique().required(),
         level: Joi.string().valid("user", "device", "title", "all").default("all"),
         onlineOnly: Joi.boolean().default(false),
         locale: Joi.string().optional()

@@ -1,5 +1,6 @@
 import express from "express";
 import Joi from "joi";
+import crypto from "node:crypto";
 
 import {jwtMiddleware} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
@@ -9,6 +10,12 @@ import {getMCWishlistPage, updateMCWishlist} from "../services/minecraft.service
 const router = express.Router();
 
 const versionCache = new Map();
+const VERSION_CACHE_TTL_MS = 10 * 60 * 1000;
+const VERSION_CACHE_MAX_ENTRIES = 5000;
+
+function cacheKey(mcToken) {
+    return crypto.createHash("sha256").update(mcToken).digest("base64url");
+}
 
 /**
  * @swagger
@@ -18,8 +25,13 @@ const versionCache = new Map();
  */
 
 function getCachedVersions(mcToken) {
-    const v = versionCache.get(mcToken);
+    const key = cacheKey(mcToken);
+    const v = versionCache.get(key);
     if (!v) return null;
+    if (v.expiresAt <= Date.now()) {
+        versionCache.delete(key);
+        return null;
+    }
     return {
         listVersion: v.listVersion,
         inventoryVersion: v.inventoryVersion
@@ -27,15 +39,20 @@ function getCachedVersions(mcToken) {
 }
 
 function setCachedVersions(mcToken, listVersion, inventoryVersion) {
-    const current = versionCache.get(mcToken) || {};
-    versionCache.set(mcToken, {
+    const key = cacheKey(mcToken);
+    const current = versionCache.get(key) || {};
+    if (!versionCache.has(key) && versionCache.size >= VERSION_CACHE_MAX_ENTRIES) {
+        versionCache.delete(versionCache.keys().next().value);
+    }
+    versionCache.set(key, {
         listVersion: listVersion || current.listVersion,
-        inventoryVersion: inventoryVersion || current.inventoryVersion
+        inventoryVersion: inventoryVersion || current.inventoryVersion,
+        expiresAt: Date.now() + VERSION_CACHE_TTL_MS
     });
 }
 
 function clearCachedVersions(mcToken) {
-    versionCache.delete(mcToken);
+    versionCache.delete(cacheKey(mcToken));
 }
 
 function stringifyDetails(value) {

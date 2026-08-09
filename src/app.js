@@ -35,6 +35,7 @@ import mpsdRoutes from "./routes/mpsd.routes.js";
 import debugRoutes from "./routes/debug.routes.js";
 
 import {errorHandler, notFoundHandler} from "./middleware/error.js";
+import {forbidden} from "./utils/httpError.js";
 import {cleanupMpsdSessions} from "./services/mpsd.service.js";
 import {cleanupRtaConnections} from "./services/rta.service.js";
 
@@ -90,7 +91,10 @@ function timestamp() {
 }
 
 app.use((req, res, next) => {
-    const id = req.headers["x-correlation-id"] || req.headers["x-request-id"] || crypto.randomUUID();
+    const suppliedId = req.headers["x-correlation-id"] || req.headers["x-request-id"];
+    const id = typeof suppliedId === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(suppliedId)
+        ? suppliedId
+        : crypto.randomUUID();
     req.id = id;
     res.setHeader("X-Request-Id", id);
     const start = process.hrtime.bigint();
@@ -117,7 +121,7 @@ const corsOptions = {
     origin: (origin, cb) => {
         if (!origin) return cb(null, true);
         if (allowlist.includes("*") || allowlist.includes(origin)) return cb(null, true);
-        cb(new Error("CORS not allowed"));
+        cb(forbidden("CORS origin is not allowed"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

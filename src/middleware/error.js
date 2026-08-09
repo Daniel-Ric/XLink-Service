@@ -8,7 +8,6 @@ export function errorHandler(err, req, res, next) {
     const status = err instanceof HttpError ? err.status : 500;
     const code = err.code || (err instanceof HttpError ? `HTTP_${status}` : "INTERNAL");
     const body = {error: {code, message: err.message || "Internal Server Error"}};
-    if (err.details) body.error.details = err.details;
-    if (process.env.NODE_ENV !== "production" && err.stack) body.error.stack = err.stack;
+    if (err.exposeDetails && err.details) body.error.details = err.details;
     res.status(status).json(body);
 }

@@ -35,3 +35,7 @@ export function tooManyRequests(msg = "Too Many Requests", details) {
 export function internal(msg = "Internal Server Error", details) {
     return new HttpError(500, msg, details, "INTERNAL");
 }
+
+export function badGateway(msg = "Bad Gateway", details) {
+    return new HttpError(502, msg, details, "BAD_GATEWAY");
+}

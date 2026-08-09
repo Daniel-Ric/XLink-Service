@@ -12,7 +12,7 @@ function sessionKey(ref) {
     return `${ref.scid}/${ref.templateName}/${ref.name}`.toLowerCase();
 }
 
-function rememberSession(ref, data = {}) {
+export function rememberMpsdSession(ref, data = {}, ownerId) {
     if (!ref?.scid || !ref?.templateName || !ref?.name) return null;
     const key = sessionKey(ref);
     const now = Date.now();
@@ -20,6 +20,7 @@ function rememberSession(ref, data = {}) {
         id: key,
         ref,
         data,
+        ownerId,
         createdAt: sessions.get(key)?.createdAt || now,
         touchedAt: now,
         expiresAt: now + ttlMs
@@ -122,9 +123,12 @@ export function cleanupMpsdSessions(now = Date.now()) {
     return removed;
 }
 
-export function listMpsdSessions() {
+export function listMpsdSessions(ownerId) {
     cleanupMpsdSessions();
-    return Array.from(sessions.values()).sort((a, b) => b.touchedAt - a.touchedAt);
+    if (!ownerId) return [];
+    return Array.from(sessions.values())
+        .filter(record => record.ownerId === ownerId)
+        .sort((a, b) => b.touchedAt - a.touchedAt);
 }
 
 export async function getSession(ref, authContext) {
@@ -134,7 +138,7 @@ export async function getSession(ref, authContext) {
         contractVersion: CONTRACT_VERSION,
         authContext
     });
-    rememberSession(ref, response.data);
+    rememberMpsdSession(ref, response.data, authContext.xuid);
     return response;
 }
 
@@ -177,7 +181,7 @@ export async function publishSession(ref, config, authContext = {}) {
         authContext,
         validateStatus: s => s === 201
     });
-    rememberSession(fullRef, response.data);
+    rememberMpsdSession(fullRef, response.data, authContext.xuid);
     if (config.writeActivity !== false) {
         await writeActivity(fullRef, authContext);
     }
@@ -206,7 +210,7 @@ export async function joinSession(handleId, config, authContext = {}) {
         validateStatus: s => s === 200
     });
     const ref = parseContentLocation(response.headers?.["content-location"]);
-    if (ref) rememberSession(ref, response.data);
+    if (ref) rememberMpsdSession(ref, response.data, authContext.xuid);
     return {...response, ref};
 }
 
@@ -270,7 +274,7 @@ export async function setSessionCustomProperties(ref, customProperties, authCont
         authContext,
         validateStatus: s => s === 200 || s === 204
     });
-    rememberSession(ref, response.data);
+    rememberMpsdSession(ref, response.data, authContext.xuid);
     return response;
 }
 
@@ -293,7 +297,7 @@ export async function setMemberCustomProperties(ref, label, customProperties, au
         authContext,
         validateStatus: s => s === 200 || s === 204
     });
-    rememberSession(ref, response.data);
+    rememberMpsdSession(ref, response.data, authContext.xuid);
     return response;
 }
 

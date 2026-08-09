@@ -3,6 +3,7 @@ import {badRequest, internal, notFound} from "../utils/httpError.js";
 import {env} from "../config/env.js";
 import {resolveNsal} from "./xsapiNsal.service.js";
 import {signXboxRequest} from "./xsapiCrypto.service.js";
+import WebSocket from "ws";
 
 const CONNECT_HTTP_URL = "https://rta.xboxlive.com/connect";
 const CONNECT_WS_URL = "wss://rta.xboxlive.com/connect";
@@ -14,6 +15,9 @@ const TYPE_RESYNC = 4;
 const STATUS_OK = 0;
 const ttlMs = Number(env.XSAPI_SESSION_TTL_MS || 10 * 60 * 1000);
 const connections = new Map();
+const MAX_CONNECTIONS_GLOBAL = 100;
+const MAX_CONNECTIONS_PER_OWNER = 5;
+const MAX_SUBSCRIPTIONS_PER_CONNECTION = 100;
 
 function normalizeMessage(data) {
     if (typeof data === "string") return data;
@@ -27,9 +31,11 @@ function makeError(status, payload) {
     return new Error(typeof message === "string" ? message : JSON.stringify(message));
 }
 
-class RtaConnection {
-    constructor(id, authContext = {}) {
+export class RtaConnection {
+    constructor(id, ownerId, authContext = {}, WebSocketImpl = WebSocket) {
         this.id = id;
+        this.ownerId = ownerId;
+        this.WebSocketImpl = WebSocketImpl;
         this.authContext = authContext;
         this.createdAt = Date.now();
         this.touchedAt = this.createdAt;
@@ -51,7 +57,8 @@ class RtaConnection {
     }
 
     async connect() {
-        if (typeof WebSocket !== "function") {
+        const WebSocketClient = this.WebSocketImpl;
+        if (typeof WebSocketClient !== "function") {
             throw internal("RTA requires a runtime with WebSocket support");
         }
         if (!this.authContext.xboxliveToken) throw badRequest("Missing x-xbl-token header");
@@ -77,7 +84,7 @@ class RtaConnection {
 
         this.state = "connecting";
         await new Promise((resolve, reject) => {
-            const ws = new WebSocket(CONNECT_WS_URL, SUBPROTOCOL, {headers});
+            const ws = new WebSocketClient(CONNECT_WS_URL, SUBPROTOCOL, {headers});
             this.ws = ws;
             const timeout = setTimeout(() => {
                 reject(new Error("RTA connect timeout"));
@@ -163,7 +170,7 @@ class RtaConnection {
     }
 
     call(type, payload = []) {
-        if (this.state !== "open" || this.ws?.readyState !== WebSocket.OPEN) {
+        if (this.state !== "open" || this.ws?.readyState !== this.WebSocketImpl.OPEN) {
             throw badRequest("RTA connection is not open");
         }
         this.touch();
@@ -182,6 +189,9 @@ class RtaConnection {
 
     async subscribe(resourceUri) {
         if (!resourceUri) throw badRequest("resourceUri is required");
+        if (this.subscriptions.size >= MAX_SUBSCRIPTIONS_PER_CONNECTION) {
+            throw badRequest("RTA subscription limit reached");
+        }
         const payload = await this.call(TYPE_SUBSCRIBE, [resourceUri]);
         const subscriptionId = payload[0];
         const custom = payload[1];
@@ -234,10 +244,16 @@ export function cleanupRtaConnections(now = Date.now()) {
     return removed;
 }
 
-export async function createRtaConnection(authContext) {
+export async function createRtaConnection(authContext, ownerId, WebSocketImpl = WebSocket) {
     cleanupRtaConnections();
+    if (!ownerId) throw badRequest("Authenticated user has no XUID");
+    if (connections.size >= MAX_CONNECTIONS_GLOBAL) throw badRequest("RTA connection limit reached");
+    const ownerConnections = Array.from(connections.values()).filter(connection => connection.ownerId === ownerId);
+    if (ownerConnections.length >= MAX_CONNECTIONS_PER_OWNER) {
+        throw badRequest("RTA connection limit reached for this user");
+    }
     const id = crypto.randomUUID();
-    const connection = new RtaConnection(id, authContext);
+    const connection = new RtaConnection(id, ownerId, authContext, WebSocketImpl);
     connections.set(id, connection);
     try {
         await connection.connect();
@@ -248,21 +264,24 @@ export async function createRtaConnection(authContext) {
     }
 }
 
-export function getRtaConnection(id) {
+export function getRtaConnection(id, ownerId) {
     cleanupRtaConnections();
     const connection = connections.get(id);
-    if (!connection) throw notFound("RTA connection not found");
+    if (!connection || !ownerId || connection.ownerId !== ownerId) throw notFound("RTA connection not found");
     connection.touch();
     return connection;
 }
 
-export function listRtaConnections() {
+export function listRtaConnections(ownerId) {
     cleanupRtaConnections();
-    return Array.from(connections.values()).map(connection => connection.snapshot());
+    if (!ownerId) return [];
+    return Array.from(connections.values())
+        .filter(connection => connection.ownerId === ownerId)
+        .map(connection => connection.snapshot());
 }
 
-export function closeRtaConnection(id) {
-    const connection = getRtaConnection(id);
+export function closeRtaConnection(id, ownerId) {
+    const connection = getRtaConnection(id, ownerId);
     connection.close();
     connections.delete(id);
     return {ok: true};

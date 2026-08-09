@@ -58,7 +58,7 @@ router.post("/session", jwtMiddleware, asyncHandler(async (req, res) => {
         msAccessToken: Joi.string().required(),
         proofKeyJwk: Joi.object().optional(),
         deviceToken: Joi.object().optional(),
-        xstsRelyingParties: Joi.array().items(Joi.string()).default([]),
+        xstsRelyingParties: Joi.array().items(Joi.string().uri({scheme: ["http", "https"]}).max(512)).max(16).unique().default([]),
         deviceType: Joi.string().optional(),
         deviceVersion: Joi.string().optional(),
         userAgent: Joi.string().optional(),
@@ -83,7 +83,7 @@ router.post("/xsts", jwtMiddleware, asyncHandler(async (req, res) => {
         deviceToken: Joi.object().optional(),
         titleToken: Joi.object().optional(),
         userToken: Joi.object().optional(),
-        optionalDisplayClaims: Joi.array().items(Joi.string()).optional(),
+        optionalDisplayClaims: Joi.array().items(Joi.string().max(128)).max(32).unique().optional(),
         deviceType: Joi.string().optional(),
         deviceVersion: Joi.string().optional(),
         userAgent: Joi.string().optional(),
@@ -102,7 +102,7 @@ router.post("/nsal/resolve", jwtMiddleware, asyncHandler(async (req, res) => {
         url: Joi.string().uri().required(),
         proofKeyJwk: Joi.object().optional(),
         xboxliveToken: Joi.string().optional(),
-        titleIds: Joi.array().items(Joi.string()).optional(),
+        titleIds: Joi.array().items(Joi.string().max(64)).max(16).unique().optional(),
         titleData: Joi.alternatives().try(Joi.object(), Joi.array()).optional()
     });
     const {value, error} = schema.validate(req.body || {});
@@ -155,6 +155,9 @@ router.post("/request", jwtMiddleware, asyncHandler(async (req, res) => {
     });
     const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
+    const forbiddenHeaders = new Set(["authorization", "signature", "host", "content-length", "transfer-encoding"]);
+    const suppliedForbiddenHeader = Object.keys(value.headers || {}).find(name => forbiddenHeaders.has(name.toLowerCase()));
+    if (suppliedForbiddenHeader) throw badRequest(`Header ${suppliedForbiddenHeader} must be supplied through the authenticated XSAPI context`);
     const context = readXsapiContext(req);
     const result = await xsapiRequest({
         method: value.method,

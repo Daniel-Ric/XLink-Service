@@ -5,7 +5,7 @@ import {asyncHandler} from "../utils/async.js";
 import {getProfileSettings, getTitleHub, getXboxStats} from "../services/xbox.service.js";
 import {getEntityToken, getPlayFabInventory} from "../services/playfab.service.js";
 import {getMCInventory, getMCToken} from "../services/minecraft.service.js";
-import {badRequest} from "../utils/httpError.js";
+import {badGateway, badRequest} from "../utils/httpError.js";
 import jwtLib from "jsonwebtoken";
 
 const router = express.Router();
@@ -169,8 +169,12 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
             entityData = await getEntityToken(value.sessionTicket);
         }
 
+        if (!entityData?.EntityToken || !entityData?.Entity?.Id || !entityData?.Entity?.Type) {
+            throw badGateway("PlayFab returned an incomplete entity response");
+        }
         const pfInv = await getPlayFabInventory(entityData.EntityToken, entityData.Entity.Id, entityData.Entity.Type, "default", 50);
-        const pfItemsRaw = pfInv.Items || [];
+        if (!Array.isArray(pfInv?.Items)) throw badGateway("PlayFab returned an incomplete inventory response");
+        const pfItemsRaw = pfInv.Items;
         const pfItems = value.includeReceipt ? pfItemsRaw : pfItemsRaw.map(it => {
             const {Receipt, receipt, ...rest} = it;
             return rest;
@@ -197,23 +201,18 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
             .slice(0, 5);
 
         if (!mcToken) {
-            try {
-                mcToken = await getMCToken(value.sessionTicket);
-            } catch {
-            }
+            mcToken = await getMCToken(value.sessionTicket);
         }
     }
 
     if (mcToken) {
-        try {
-            mcInventory = await getMCInventory(mcToken, value.includeReceipt);
-            if (!value.includeReceipt && Array.isArray(mcInventory)) {
-                mcInventory = mcInventory.map(e => {
-                    const {Receipt, receipt, ...rest} = e;
-                    return rest;
-                });
-            }
-        } catch {
+        mcInventory = await getMCInventory(mcToken, value.includeReceipt);
+        if (!Array.isArray(mcInventory)) throw badGateway("Minecraft returned an incomplete inventory response");
+        if (!value.includeReceipt) {
+            mcInventory = mcInventory.map(e => {
+                const {Receipt, receipt, ...rest} = e;
+                return rest;
+            });
         }
     }
 
@@ -222,7 +221,12 @@ router.post("/overview", jwtMiddleware, asyncHandler(async (req, res) => {
         profile,
         stats: {aggregated, raw: statsRaw},
         playfab,
-        minecraft: {mcToken: !!mcToken, entitlementsCount: mcInventory?.length || 0, entitlements: mcInventory || []},
+        minecraft: {
+            requested: Boolean(mcToken || value.sessionTicket),
+            mcToken: Boolean(mcToken),
+            entitlementsCount: mcInventory?.length || 0,
+            entitlements: mcInventory || []
+        },
         topCreators
     });
 }));

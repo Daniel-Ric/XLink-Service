@@ -61,7 +61,8 @@ export async function xsapiRequest({
     contractVersion,
     titleIds,
     sign = true,
-    validateStatus
+    validateStatus,
+    httpClient = http
 }) {
     if (!url) throw badRequest("url is required");
     const upperMethod = String(method).toUpperCase();
@@ -99,11 +100,12 @@ export async function xsapiRequest({
     }
 
     try {
-        const response = await http.request({
+        const response = await httpClient.request({
             method: upperMethod,
             url,
             data,
             headers: requestHeaders,
+            maxRedirects: 0,
             validateStatus: validateStatus || (s => s >= 200 && s < 300)
         });
         return {

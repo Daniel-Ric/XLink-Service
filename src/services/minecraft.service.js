@@ -135,7 +135,10 @@ export async function getMCInventory(mcToken, includeReceipt = false) {
     try {
         const url = `${ENTITLEMENTS_BASE}/player/inventory?includeReceipt=${includeReceipt ? "true" : "false"}`;
         const {data} = await http.get(url, {headers: {Authorization: mcToken, Accept: "application/json"}});
-        const entitlements = data?.result?.inventory?.entitlements || [];
+        const entitlements = data?.result?.inventory?.entitlements;
+        if (!Array.isArray(entitlements)) {
+            throw internal("Failed to get MC inventory: invalid success response");
+        }
         return entitlements;
     } catch (err) {
         const status = err.response?.status;

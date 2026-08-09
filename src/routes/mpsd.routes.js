@@ -39,8 +39,8 @@ const refSchema = {
     name: Joi.string().min(1).required()
 };
 
-router.get("/sessions", jwtMiddleware, asyncHandler(async (_req, res) => {
-    res.json({sessions: listMpsdSessions()});
+router.get("/sessions", jwtMiddleware, asyncHandler(async (req, res) => {
+    res.json({sessions: listMpsdSessions(req.user.xuid)});
 }));
 
 router.post("/activities", jwtMiddleware, asyncHandler(async (req, res) => {
