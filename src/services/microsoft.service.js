@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import {env} from "../config/env.js";
-import {badRequest, internal} from "../utils/httpError.js";
+import {badRequest, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
@@ -153,6 +153,12 @@ export async function refreshMsToken(clientId, refreshToken, httpClient = http) 
         const {data} = await httpClient.post(request.url, request.body.toString(), formOptions());
         return data;
     } catch (err) {
+        const upstreamCode = err.response?.data?.error;
+        if (upstreamCode === "invalid_grant" || upstreamCode === "invalid_token") {
+            const failure = unauthorized("Microsoft refresh token is invalid or expired");
+            failure.code = "MICROSOFT_REFRESH_TOKEN_INVALID";
+            throw failure;
+        }
         throw internal("Failed to refresh ms token", err.response?.data || err.message);
     }
 }

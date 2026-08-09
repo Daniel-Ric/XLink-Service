@@ -1,7 +1,7 @@
 import express from "express";
 import Joi from "joi";
 import {asyncHandler} from "../utils/async.js";
-import {jwtMiddleware, signJwt} from "../utils/jwt.js";
+import {jwtMiddleware, signJwt, verifyJwt} from "../utils/jwt.js";
 import {
     buildBrowserAuthorizationUrl,
     exchangeAuthorizationCode,
@@ -13,7 +13,7 @@ import {
 } from "../services/microsoft.service.js";
 import {env} from "../config/env.js";
 import {authLimiter} from "../middleware/rateLimit.js";
-import {badRequest} from "../utils/httpError.js";
+import {badRequest, unauthorized} from "../utils/httpError.js";
 import {exchangeMicrosoftTokenBundle} from "../services/auth.service.js";
 import {
     buildFrontendPageUrl,
@@ -183,8 +183,12 @@ router.post("/browser/session", authLimiter, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body || {});
     if (error) throw badRequest(error.message);
     browserOAuthConfig();
+    const bearer = String(req.headers.authorization || "").match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+    const authenticatedUser = bearer ? verifyJwt(bearer) : null;
+    if (req.headers.authorization && !authenticatedUser) throw unauthorized("Invalid or expired JWT");
     res.status(201).json(oauthSessionStore.createHandoff("client", {
-        successPath: value.successPath
+        successPath: value.successPath,
+        expectedXuid: authenticatedUser?.xuid || null
     }));
 }));
 
@@ -307,8 +311,8 @@ router.get("/whoami", jwtMiddleware, asyncHandler(async (req, res) => {
  *         description: New JWT issued successfully
  */
 router.post("/jwt/refresh", jwtMiddleware, asyncHandler(async (req, res) => {
-    const {xuid, gamertag} = req.user;
-    const jwt = signJwt({xuid, gamertag});
+    const {xuid, gamertag, uhs, tokenBindings} = req.user;
+    const jwt = signJwt({xuid, gamertag, uhs, tokenBindings});
     res.json({jwt, expiresIn: env.JWT_EXPIRES_IN || "1h"});
 }));
 

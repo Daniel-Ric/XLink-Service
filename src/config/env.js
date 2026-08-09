@@ -7,6 +7,8 @@ const schema = Joi.object({
     CORS_ORIGIN: Joi.string().default("*"),
     JWT_SECRET: Joi.string().min(16).required(),
     JWT_EXPIRES_IN: Joi.string().default("1h"),
+    JWT_ISSUER: Joi.string().default("xlink-service"),
+    JWT_AUDIENCE: Joi.string().default("xlink-api"),
     CLIENT_ID: Joi.string().required(),
     MICROSOFT_AUTH_MODE: Joi.string().valid("auto", "legacy", "modern").default("auto"),
     MICROSOFT_OAUTH_REDIRECT_URI: Joi.string().uri({scheme: ["https"]}).optional(),

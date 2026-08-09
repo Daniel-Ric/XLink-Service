@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import {env} from "../config/env.js";
-import {badRequest} from "../utils/httpError.js";
+import {badRequest, forbidden, tooManyRequests} from "../utils/httpError.js";
 import {createPkcePair} from "./microsoft.service.js";
 
 function digest(value) {
@@ -12,12 +12,17 @@ function randomValue() {
 }
 
 export class OAuthSessionStore {
-    constructor(ttlMs = 300000, clock = () => Date.now()) {
+    constructor(ttlMs = 300000, clock = () => Date.now(), maxEntries = 1000) {
         this.ttlMs = ttlMs;
         this.clock = clock;
+        this.maxEntries = maxEntries;
         this.authorizationStates = new Map();
         this.results = new Map();
         this.handoffs = new Map();
+    }
+
+    assertCapacity(map, label) {
+        if (map.size >= this.maxEntries) throw tooManyRequests(`${label} capacity reached`);
     }
 
     prune() {
@@ -35,6 +40,7 @@ export class OAuthSessionStore {
 
     createAuthorization(context = {}) {
         this.prune();
+        this.assertCapacity(this.authorizationStates, "OAuth authorization state");
         const state = randomValue();
         const {verifier, challenge} = createPkcePair();
         this.authorizationStates.set(digest(state), {
@@ -58,6 +64,7 @@ export class OAuthSessionStore {
 
     createResult(data, source = "direct") {
         this.prune();
+        this.assertCapacity(this.results, "OAuth result");
         const code = randomValue();
         this.results.set(digest(code), {
             data,
@@ -84,6 +91,7 @@ export class OAuthSessionStore {
 
     createHandoff(source, context = {}) {
         this.prune();
+        this.assertCapacity(this.handoffs, "OAuth browser session");
         const sessionId = randomValue();
         const pollToken = randomValue();
         this.handoffs.set(digest(sessionId), {
@@ -115,6 +123,10 @@ export class OAuthSessionStore {
 
     completeHandoff(sessionId, data) {
         const handoff = this.getHandoff(sessionId);
+        if (handoff.expectedXuid && data?.xuid !== handoff.expectedXuid) {
+            this.handoffs.delete(digest(sessionId));
+            throw forbidden("Microsoft account does not match the authenticated browser session user");
+        }
         handoff.status = "complete";
         handoff.data = data;
         return handoff;
