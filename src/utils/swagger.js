@@ -1,5 +1,6 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import {env} from "../config/env.js";
+import {addMissingOpenApiOperations} from "./openapiCompleteness.js";
 
 const serverUrl = env.SWAGGER_SERVER_URL || `http://localhost:${env.PORT}`;
 
@@ -204,9 +205,9 @@ const options = {
             "/auth/browser/session": {
                 post: {
                     summary: "Create a client browser-login handoff",
-                    description: "Creates a short-lived browser session and a separate private polling token. Clients may request a same-origin frontend success path; without it xLink renders a neutral completion page.",
+                    description: "Creates a short-lived browser session and a separate private polling token. An optional valid Bearer token binds re-authentication to the same Xbox account; first-time clients may omit it.",
                     tags: ["Auth"],
-                    security: [],
+                    security: [{BearerAuth: []}, {}],
                     requestBody: {
                         required: false,
                         content: {"application/json": {schema: {
@@ -378,4 +379,20 @@ const options = {
     }, apis: ["./src/routes/*.js"]
 };
 
-export const swaggerSpec = swaggerJSDoc(options);
+function normalizeCombinedSecurity(spec) {
+    for (const pathItem of Object.values(spec.paths || {})) {
+        for (const operation of Object.values(pathItem || {})) {
+            if (!operation || typeof operation !== "object" || !operation.responses) continue;
+            const requiredHeaders = new Set((operation.parameters || [])
+                .filter(parameter => parameter?.in === "header" && parameter.required)
+                .map(parameter => String(parameter.name).toLowerCase()));
+            const requirement = {BearerAuth: []};
+            if (requiredHeaders.has("x-xbl-token")) requirement.XBLToken = [];
+            if (requiredHeaders.has("x-mc-token")) requirement.MCToken = [];
+            if (Object.keys(requirement).length > 1) operation.security = [requirement];
+        }
+    }
+    return spec;
+}
+
+export const swaggerSpec = normalizeCombinedSecurity(addMissingOpenApiOperations(swaggerJSDoc(options)));

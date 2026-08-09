@@ -86,6 +86,8 @@ Validated via Joi (`src/config/env.js`).
 | `CORS_ORIGIN`      | `*`           | CORS origin(s), comma-separated (e.g., `http://localhost:5173`)          |
 | `JWT_SECRET`       | — **required**| At least 16 chars, used to sign API JWTs                                 |
 | `JWT_EXPIRES_IN`   | `1h`          | JWT expiry (e.g., `1h`, `30m`, `2d`)                                      |
+| `JWT_ISSUER`       | `xlink-service` | Required issuer claim for API JWTs                                      |
+| `JWT_AUDIENCE`     | `xlink-api`   | Required audience claim for API JWTs                                      |
 | `CLIENT_ID`        | — **required**| Microsoft/Xbox OAuth client ID. Its format selects the legacy or Entra device flow. See [Microsoft/Xbox client IDs](#microsoftxbox-client-ids). |
 | `MICROSOFT_AUTH_MODE` | `auto` | OAuth flow selection: `auto`, `legacy`, or `modern` |
 | `MICROSOFT_OAUTH_REDIRECT_URI` | — | Exact HTTPS Entra Web redirect URI for `/auth/browser/callback` |
@@ -156,7 +158,11 @@ Configure the Entra application as follows:
 3. Create a client secret under **Certificates & secrets** and store only its value in the server environment as `MICROSOFT_OAUTH_CLIENT_SECRET`. This server-side Web flow requires the secret. It is never sent to the browser. PKCE S256 is used in addition to the secret.
 4. Optionally set `MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI` to one fixed HTTPS frontend callback. The service redirects there with only a short-lived one-time `code`; the frontend redeems it once at `POST /auth/browser/token`. No Microsoft, Xbox, XSTS, PlayFab, Minecraft or refresh token is placed in a URL.
 
-The OAuth `state`, PKCE verifier and optional frontend result are held in process memory. They are single-use and expire after `MICROSOFT_OAUTH_TTL_MS`; deployments with multiple service instances need sticky routing or a shared transient store before enabling browser login.
+The OAuth `state`, PKCE verifier and optional frontend result are held in process memory. They are single-use, capacity-bounded and expire after `MICROSOFT_OAUTH_TTL_MS`; deployments with multiple service instances need sticky routing or a shared transient store before enabling browser login.
+
+Client handoff sessions created by `POST /auth/browser/session` use a private, one-time polling token. First-time clients may create a session without a JWT. During re-authentication, clients should include their valid XLink bearer JWT; the Microsoft account completing the browser flow must then have the same XUID, and mismatched logins are discarded.
+
+API JWTs contain non-reversible fingerprints of Xbox, redeem and PlayFab credentials issued with them. Protected routes reject those supplied upstream credentials when they are not bound to the current API JWT. Minecraft tokens are refreshed independently, so their issuing endpoint is protected through the bound PlayFab session ticket instead of pinning a short-lived Minecraft token into the JWT. Existing JWTs issued before this contract change must be replaced by completing or refreshing the Microsoft authentication flow.
 
 Microsoft references used for this implementation:
 

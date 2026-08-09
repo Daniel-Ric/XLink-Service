@@ -29,12 +29,6 @@ Run the service locally:
 node src/server.js
 ```
 
-Run tests:
-
-```bash
-npm test
-```
-
 ## Repository Structure
 
 - `src/server.js`: service bootstrap
@@ -44,14 +38,13 @@ npm test
 - `src/middleware`: authentication, validation, rate limiting, and error handling
 - `src/config`: environment and runtime configuration
 - `src/utils`: shared HTTP, token, cache, and logging helpers
-- `tests`: Node-based test suite
 
 ## Contribution Guidelines
 
 - Keep pull requests focused and avoid unrelated refactors.
 - Preserve current API contracts unless a change is explicitly documented.
 - Update Swagger/OpenAPI documentation when routes or schemas change.
-- Add tests for authentication, token exchange, validation, and error paths.
+- Add focused verification for authentication, token exchange, validation, and error paths when changing them.
 - Treat Microsoft, Xbox, XSTS, PlayFab, and Minecraft tokens as secrets.
 - Never commit client secrets, refresh tokens, access tokens, private environment values, or captured user data.
 
@@ -64,13 +57,13 @@ npm test
 - Do not log authorization headers or token payloads.
 - Document new configuration variables in `README.md` and the environment example.
 
-## Testing Expectations
+## Verification Expectations
 
 At minimum:
 
-- run `npm test`
+- start the service locally and verify `/healthz` and `/readyz`
 - verify relevant documented request flows
-- add regression coverage for fixes where practical
+- add regression coverage in the change when practical
 
 Changes to authentication flows should also be tested for expired, reused, malformed, and mismatched state or token inputs.
 

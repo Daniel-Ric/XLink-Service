@@ -4,11 +4,21 @@
     "_postman_id": "f6f0a9ad-8b9a-4a2f-8b9f-ult-000000000001",
     "description": "A comprehensive Postman collection for the local REST API in your project. Includes ALL routes, extensive variables, examples, workflows, pre-request scripts, tests, dynamic helpers, and Postman Visualizer examples.\n\nAssumptions:\n- Server runs at http://localhost:3000\n- JWT secret is configured and you'll obtain a JWT via /auth/callback.\n- Xbox Live / PlayFab / Minecraft tokens are returned by /auth/callback.\n\nTips:\n- Use the folders in order (Health → Auth → Lookup → Profile → Titles → Captures → People → Presence → Achievements → Stats → Inventory → PlayFab → Minecraft → Debug → Workflows → Negative Tests → Utilities & Visualizers).\n- Collection-level auth uses Bearer {{jwt}}. Many routes also require header x-xbl-token ({{x_xbl_token}}) and some require x-mc-token ({{x_mc_token}}).\n- Tests save important values (jwt, x_xbl_token, x_mc_token, x_playfab_token, x_redeem_token, sessionTicket, playFabId, xuid) into collection variables automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": { "major": 2, "minor": 4, "patch": 0 }
+    "version": {
+      "major": 2,
+      "minor": 5,
+      "patch": 0
+    }
   },
   "auth": {
     "type": "bearer",
-    "bearer": [{ "key": "token", "value": "{{jwt}}", "type": "string" }]
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt}}",
+        "type": "string"
+      }
+    ]
   },
   "event": [
     {
@@ -51,22 +61,138 @@
     }
   ],
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
-    { "key": "jwt", "value": "", "type": "string", "description": "Bearer JWT for protected endpoints" },
-    { "key": "x_xbl_token", "value": "", "type": "string", "description": "Format: XBL3.0 x={uhs};{xstsToken}" },
-    { "key": "x_mc_token", "value": "", "type": "string", "description": "Format: MCToken eyJ..." },
-    { "key": "x_playfab_token", "value": "", "type": "string", "description": "Format: XBL3.0 x={uhs};{xstsToken} (PlayFab relying party)" },
-    { "key": "x_redeem_token", "value": "", "type": "string", "description": "Format: XBL3.0 x={uhs};{xstsToken} (Minecraft redeem relying party)" },
-    { "key": "sessionTicket", "value": "", "type": "string", "description": "PlayFab SessionTicket" },
-    { "key": "playFabId", "value": "", "type": "string" },
-    { "key": "accept_language", "value": "en-US,en;q=0.9", "type": "string" },
-    { "key": "sample_gamertag", "value": "Major Nelson", "type": "string" },
-    { "key": "sample_xuid", "value": "", "type": "string" },
-    { "key": "titleId", "value": "", "type": "string", "description": "Optional titleId filter" },
-    { "key": "device_code", "value": "", "type": "string" },
-    { "key": "user_code", "value": "", "type": "string" },
-    { "key": "verification_url", "value": "", "type": "string" },
-    { "key": "nowISO", "value": "", "type": "string" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt",
+      "value": "",
+      "type": "string",
+      "description": "Bearer JWT for protected endpoints"
+    },
+    {
+      "key": "x_xbl_token",
+      "value": "",
+      "type": "string",
+      "description": "Format: XBL3.0 x={uhs};{xstsToken}"
+    },
+    {
+      "key": "x_mc_token",
+      "value": "",
+      "type": "string",
+      "description": "Format: MCToken eyJ..."
+    },
+    {
+      "key": "x_playfab_token",
+      "value": "",
+      "type": "string",
+      "description": "Format: XBL3.0 x={uhs};{xstsToken} (PlayFab relying party)"
+    },
+    {
+      "key": "x_redeem_token",
+      "value": "",
+      "type": "string",
+      "description": "Format: XBL3.0 x={uhs};{xstsToken} (Minecraft redeem relying party)"
+    },
+    {
+      "key": "sessionTicket",
+      "value": "",
+      "type": "string",
+      "description": "PlayFab SessionTicket"
+    },
+    {
+      "key": "playFabId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accept_language",
+      "value": "en-US,en;q=0.9",
+      "type": "string"
+    },
+    {
+      "key": "sample_gamertag",
+      "value": "Major Nelson",
+      "type": "string"
+    },
+    {
+      "key": "sample_xuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "titleId",
+      "value": "",
+      "type": "string",
+      "description": "Optional titleId filter"
+    },
+    {
+      "key": "device_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "verification_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nowISO",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rta_connection_id",
+      "value": "00000000-0000-0000-0000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "mpsd_scid",
+      "value": "00000000-0000-0000-0000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "mpsd_template",
+      "value": "default",
+      "type": "string"
+    },
+    {
+      "key": "mpsd_session",
+      "value": "synthetic-session",
+      "type": "string"
+    },
+    {
+      "key": "mpsd_member",
+      "value": "me",
+      "type": "string"
+    },
+    {
+      "key": "oauth_session_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "oauth_poll_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "oauth_result_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ms_refresh_token",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
     {
@@ -75,9 +201,19 @@
         {
           "name": "GET /openapi.json",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/openapi.json", "host": ["{{baseUrl}}"], "path": ["openapi.json"] },
+            "url": {
+              "raw": "{{baseUrl}}/openapi.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "openapi.json"
+              ]
+            },
             "description": "Returns the generated OpenAPI schema."
           },
           "event": [
@@ -95,9 +231,19 @@
         {
           "name": "GET /api-docs (Swagger UI)",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api-docs", "host": ["{{baseUrl}}"], "path": ["api-docs"] },
+            "url": {
+              "raw": "{{baseUrl}}/api-docs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api-docs"
+              ]
+            },
             "description": "Opens Swagger UI (HTML)."
           }
         }
@@ -108,27 +254,45 @@
       "item": [
         {
           "name": "GET /healthz",
-          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/healthz" },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/healthz"
+          },
           "event": [
             {
               "listen": "test",
-              "script": { "type":"text/javascript", "exec":[
-                "const j = pm.response.json();",
-                "pm.test('ok === true', ()=> pm.expect(j.ok).to.eql(true));"
-              ]}
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('ok === true', ()=> pm.expect(j.ok).to.eql(true));"
+                ]
+              }
             }
           ]
         },
         {
           "name": "GET /readyz",
-          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/readyz" },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/readyz"
+          },
           "event": [
             {
               "listen": "test",
-              "script": { "type":"text/javascript", "exec":[
-                "const j = pm.response.json();",
-                "pm.test('ready === true', ()=> pm.expect(j.ready).to.eql(true));"
-              ]}
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('ready === true', ()=> pm.expect(j.ready).to.eql(true));"
+                ]
+              }
             }
           ]
         }
@@ -140,7 +304,9 @@
         {
           "name": "GET /auth/device – Request Device Code",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "url": "{{baseUrl}}/auth/device"
           },
@@ -148,8 +314,8 @@
             {
               "listen": "test",
               "script": {
-                "type":"text/javascript",
-                "exec":[
+                "type": "text/javascript",
+                "exec": [
                   "const j = pm.response.json();",
                   "pm.test('device_code exists', ()=> pm.expect(j.device_code).to.be.a('string'));",
                   "pm.collectionVariables.set('device_code', j.device_code);",
@@ -169,37 +335,66 @@
           "name": "POST /auth/callback – Exchange device_code for tokens",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"device_code\": \"{{device_code}}\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_code\": \"{{device_code}}\"\n}"
+            },
             "url": "{{baseUrl}}/auth/callback",
             "description": "Finishes device flow and returns JWT + Xbox/PlayFab/Minecraft tokens."
           },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "pm.test('has jwt', ()=> pm.expect(j.jwt).to.be.a('string'));",
-              "pm.collectionVariables.set('jwt', j.jwt);",
-              "pm.collectionVariables.set('x_xbl_token', j.xboxliveToken || '');",
-              "pm.collectionVariables.set('x_playfab_token', j.playfabToken || '');",
-              "pm.collectionVariables.set('x_redeem_token', j.redeemToken || '');",
-              "pm.collectionVariables.set('x_mc_token', j.mcToken || '');",
-              "pm.collectionVariables.set('sessionTicket', j.sessionTicket || '');",
-              "pm.collectionVariables.set('playFabId', j.playFabId || '');",
-              "pm.collectionVariables.set('sample_xuid', j.xuid || '');",
-              "pm.test('has gamertag', ()=> pm.expect(j.gamertag).to.be.a('string'));"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('has jwt', ()=> pm.expect(j.jwt).to.be.a('string'));",
+                  "pm.collectionVariables.set('jwt', j.jwt);",
+                  "pm.collectionVariables.set('x_xbl_token', j.xboxliveToken || '');",
+                  "pm.collectionVariables.set('x_playfab_token', j.playfabToken || '');",
+                  "pm.collectionVariables.set('x_redeem_token', j.redeemToken || '');",
+                  "pm.collectionVariables.set('x_mc_token', j.mcToken || '');",
+                  "pm.collectionVariables.set('sessionTicket', j.sessionTicket || '');",
+                  "pm.collectionVariables.set('playFabId', j.playFabId || '');",
+                  "pm.collectionVariables.set('sample_xuid', j.xuid || '');",
+                  "pm.test('has gamertag', ()=> pm.expect(j.gamertag).to.be.a('string'));"
+                ]
+              }
+            }
           ]
         },
-        { "name": "GET /auth/whoami – Decode current JWT", "request": { "method":"GET", "url":"{{baseUrl}}/auth/whoami" } },
+        {
+          "name": "GET /auth/whoami – Decode current JWT",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/whoami"
+          }
+        },
         {
           "name": "POST /auth/jwt/refresh – Refresh JWT",
-          "request": { "method":"POST", "url":"{{baseUrl}}/auth/jwt/refresh" },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "pm.test('new jwt set', ()=> pm.expect(j.jwt).to.be.a('string'));",
-              "pm.collectionVariables.set('jwt', j.jwt);"
-            ]}}
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/jwt/refresh"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('new jwt set', ()=> pm.expect(j.jwt).to.be.a('string'));",
+                  "pm.collectionVariables.set('jwt', j.jwt);"
+                ]
+              }
+            }
           ]
         }
       ]
@@ -211,31 +406,69 @@
           "name": "GET /lookup/xuid?gamertag={{sample_gamertag}}",
           "request": {
             "method": "GET",
-            "header": [{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/lookup/xuid?gamertag={{sample_gamertag}}",
-              "host": ["{{baseUrl}}"], "path": ["lookup","xuid"],
-              "query": [{ "key":"gamertag", "value":"{{sample_gamertag}}" }]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lookup",
+                "xuid"
+              ],
+              "query": [
+                {
+                  "key": "gamertag",
+                  "value": "{{sample_gamertag}}"
+                }
+              ]
             },
             "description": "Resolve XUID by Gamertag"
           },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "if (j.xuid) pm.collectionVariables.set('sample_xuid', j.xuid);",
-              "pm.test('xuid returned or 404', ()=> pm.expect([200,404]).to.include(pm.response.code));"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.xuid) pm.collectionVariables.set('sample_xuid', j.xuid);",
+                  "pm.test('xuid returned or 404', ()=> pm.expect([200,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
           ]
         },
         {
           "name": "GET /lookup/gamertag?xuid={{sample_xuid}}",
           "request": {
             "method": "GET",
-            "header": [{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/lookup/gamertag?xuid={{sample_xuid}}",
-              "host": ["{{baseUrl}}"], "path": ["lookup","gamertag"],
-              "query": [{ "key":"xuid", "value":"{{sample_xuid}}" }]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lookup",
+                "gamertag"
+              ],
+              "query": [
+                {
+                  "key": "xuid",
+                  "value": "{{sample_xuid}}"
+                }
+              ]
             },
             "description": "Resolve Gamertag by XUID"
           }
@@ -248,47 +481,87 @@
         {
           "name": "GET /profile/me",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
-            "url":{
-              "raw":"{{baseUrl}}/profile/me?settings=GameDisplayPicRaw,Gamerscore,Gamertag",
-              "host":["{{baseUrl}}"], "path":["profile","me"],
-              "query":[{ "key":"settings", "value":"GameDisplayPicRaw,Gamerscore,Gamertag" }]
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile/me?settings=GameDisplayPicRaw,Gamerscore,Gamertag",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "settings",
+                  "value": "GameDisplayPicRaw,Gamerscore,Gamertag"
+                }
+              ]
             },
-            "description":"Profile settings of the logged-in user."
+            "description": "Profile settings of the logged-in user."
           }
         },
         {
           "name": "GET /profile/titles",
           "request": {
-            "method":"GET",
-            "header":[
-              { "key":"x-xbl-token", "value":"{{x_xbl_token}}" },
-              { "key":"Accept-Language", "value":"{{accept_language}}" }
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}"
+              }
             ],
             "url": "{{baseUrl}}/profile/titles",
-            "description":"User TitleHub overview"
+            "description": "User TitleHub overview"
           }
         },
         {
           "name": "POST /profile/overview (profile + stats + optional inventories)",
           "request": {
-            "method":"POST",
-            "header":[
-              { "key":"Content-Type", "value":"application/json" },
-              { "key":"x-xbl-token", "value":"{{x_xbl_token}}" },
-              { "key":"x-mc-token", "value":"{{x_mc_token}}" }
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}"
+              }
             ],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"includeReceipt\": false\n}" },
-            "url":"{{baseUrl}}/profile/overview",
-            "description":"Combined view with aggregated Xbox stats and, if provided, PlayFab + Minecraft entitlements."
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"includeReceipt\": false\n}"
+            },
+            "url": "{{baseUrl}}/profile/overview",
+            "description": "Combined view with aggregated Xbox stats and, if provided, PlayFab + Minecraft entitlements."
           },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "pm.test('has user.xuid', ()=> pm.expect(j.user && j.user.xuid).to.be.ok);",
-              "pm.test('has stats.aggregated', ()=> pm.expect(j.stats && j.stats.aggregated).to.be.ok);"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('has user.xuid', ()=> pm.expect(j.user && j.user.xuid).to.be.ok);",
+                  "pm.test('has stats.aggregated', ()=> pm.expect(j.stats && j.stats.aggregated).to.be.ok);"
+                ]
+              }
+            }
           ]
         }
       ]
@@ -299,25 +572,52 @@
         {
           "name": "GET /titles/recent?limit=20",
           "request": {
-            "method":"GET",
-            "header":[
-              { "key":"x-xbl-token", "value":"{{x_xbl_token}}" },
-              { "key":"Accept-Language", "value":"{{accept_language}}" }
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}"
+              }
             ],
-            "url": { "raw":"{{baseUrl}}/titles/recent?limit=20", "host":["{{baseUrl}}"], "path":["titles","recent"], "query":[{ "key":"limit", "value":"20" }] },
+            "url": {
+              "raw": "{{baseUrl}}/titles/recent?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "titles",
+                "recent"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
             "description": "Recently played titles (sorted)."
           },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "pm.test('items array exists', ()=> pm.expect(j.items).to.be.an('array'));",
-              "// Visualizer: quick table",
-              "const template = `<table border='1' cellpadding='6' style='border-collapse:collapse;font-family:Inter,system-ui'>",
-              "<tr><th>TitleId</th><th>Name</th><th>Last Played</th></tr>",
-              "{{#each items}}<tr><td>{{this.titleId}}</td><td>{{this.name}}</td><td>{{this.titleHistory.lastTimePlayed}}</td></tr>{{/each}}",
-              "</table>`;",
-              "pm.visualizer.set(template, j);"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('items array exists', ()=> pm.expect(j.items).to.be.an('array'));",
+                  "// Visualizer: quick table",
+                  "const template = `<table border='1' cellpadding='6' style='border-collapse:collapse;font-family:Inter,system-ui'>",
+                  "<tr><th>TitleId</th><th>Name</th><th>Last Played</th></tr>",
+                  "{{#each items}}<tr><td>{{this.titleId}}</td><td>{{this.name}}</td><td>{{this.titleHistory.lastTimePlayed}}</td></tr>{{/each}}",
+                  "</table>`;",
+                  "pm.visualizer.set(template, j);"
+                ]
+              }
+            }
           ]
         }
       ]
@@ -328,37 +628,89 @@
         {
           "name": "GET /captures/clips",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
-            "url":{
-              "raw":"{{baseUrl}}/captures/clips?max=24",
-              "host":["{{baseUrl}}"], "path":["captures","clips"],
-              "query":[
-                { "key":"titleId", "value":"{{titleId}}", "disabled": true },
-                { "key":"max", "value":"24" },
-                { "key":"since", "value":"{{nowISO}}", "disabled": true },
-                { "key":"continuationToken", "value":"", "disabled": true }
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/captures/clips?max=24",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "captures",
+                "clips"
+              ],
+              "query": [
+                {
+                  "key": "titleId",
+                  "value": "{{titleId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "max",
+                  "value": "24"
+                },
+                {
+                  "key": "since",
+                  "value": "{{nowISO}}",
+                  "disabled": true
+                },
+                {
+                  "key": "continuationToken",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             },
-            "description":"Game clips. Optionally filter by titleId, since, continuationToken."
+            "description": "Game clips. Optionally filter by titleId, since, continuationToken."
           }
         },
         {
           "name": "GET /captures/screenshots",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
-            "url":{
-              "raw":"{{baseUrl}}/captures/screenshots?max=24",
-              "host":["{{baseUrl}}"], "path":["captures","screenshots"],
-              "query":[
-                { "key":"titleId", "value":"{{titleId}}", "disabled": true },
-                { "key":"max", "value":"24" },
-                { "key":"since", "value":"{{nowISO}}", "disabled": true },
-                { "key":"continuationToken", "value":"", "disabled": true }
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/captures/screenshots?max=24",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "captures",
+                "screenshots"
+              ],
+              "query": [
+                {
+                  "key": "titleId",
+                  "value": "{{titleId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "max",
+                  "value": "24"
+                },
+                {
+                  "key": "since",
+                  "value": "{{nowISO}}",
+                  "disabled": true
+                },
+                {
+                  "key": "continuationToken",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             },
-            "description":"Screenshots. Optional filters analogous to clips."
+            "description": "Screenshots. Optional filters analogous to clips."
           }
         }
       ]
@@ -369,28 +721,43 @@
         {
           "name": "GET /people/friends (mutual)",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
-            "url":"{{baseUrl}}/people/friends?maxItems=200",
-            "description":"Mutual friends."
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/people/friends?maxItems=200",
+            "description": "Mutual friends."
           }
         },
         {
           "name": "GET /people/followers",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
-            "url":"{{baseUrl}}/people/followers?maxItems=200",
-            "description":"Followers (they follow you)."
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/people/followers?maxItems=200",
+            "description": "Followers (they follow you)."
           }
         },
         {
           "name": "GET /people/friends/presence?limit=50",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
-            "url":"{{baseUrl}}/people/friends/presence?limit=50",
-            "description":"Presence for up to first N mutual friends."
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/people/friends/presence?limit=50",
+            "description": "Presence for up to first N mutual friends."
           }
         }
       ]
@@ -398,18 +765,39 @@
     {
       "name": "8) Presence",
       "item": [
-        { "name": "GET /presence/me", "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/presence/me" } },
+        {
+          "name": "GET /presence/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/presence/me"
+          }
+        },
         {
           "name": "POST /presence/batch",
           "request": {
-            "method":"POST",
-            "header":[
-              { "key":"Content-Type", "value":"application/json" },
-              { "key":"x-xbl-token", "value":"{{x_xbl_token}}" }
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
             ],
-            "body": { "mode":"raw", "raw":"{\n  \"xuids\": [\"{{sample_xuid}}\"]\n}" },
-            "url":"{{baseUrl}}/presence/batch",
-            "description":"Batch presence by XUID array."
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xuids\": [\"{{sample_xuid}}\"]\n}"
+            },
+            "url": "{{baseUrl}}/presence/batch",
+            "description": "Batch presence by XUID array."
           }
         }
       ]
@@ -420,23 +808,45 @@
         {
           "name": "GET /achievements/me",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/achievements/me",
-              "host": ["{{baseUrl}}"], "path":["achievements","me"],
-              "query":[{ "key":"titleId", "value":"{{titleId}}", "disabled": true }]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "achievements",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "titleId",
+                  "value": "{{titleId}}",
+                  "disabled": true
+                }
+              ]
             },
-            "description":"Achievements for current user; optionally filter by titleId."
+            "description": "Achievements for current user; optionally filter by titleId."
           }
         },
         {
           "name": "GET /achievements/summary?titleId={{titleId}}",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }],
-            "url":"{{baseUrl}}/achievements/summary?titleId={{titleId}}",
-            "description":"Summary (earned/total) for a given title."
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/achievements/summary?titleId={{titleId}}",
+            "description": "Summary (earned/total) for a given title."
           }
         }
       ]
@@ -446,21 +856,36 @@
       "item": [
         {
           "name": "GET /stats/xbox/me",
-          "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/stats/xbox/me" },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "pm.test('aggregated exists', ()=> pm.expect(j.aggregated).to.be.ok);",
-              "const tpl = `<div style='font-family:Inter,system-ui'>",
-              "<h3>Aggregated Xbox Stats</h3>",
-              "<ul>",
-              "<li>MinutesPlayed: {{aggregated.MinutesPlayed}}</li>",
-              "<li>BlockBrokenTotal: {{aggregated.BlockBrokenTotal}}</li>",
-              "<li>MobKilled.IsMonster.1: {{aggregated.[MobKilled.IsMonster.1]}}</li>",
-              "<li>DistanceTravelled: {{aggregated.DistanceTravelled}}</li>",
-              "</ul></div>`;",
-              "pm.visualizer.set(tpl, j);"
-            ]}}
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/stats/xbox/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('aggregated exists', ()=> pm.expect(j.aggregated).to.be.ok);",
+                  "const tpl = `<div style='font-family:Inter,system-ui'>",
+                  "<h3>Aggregated Xbox Stats</h3>",
+                  "<ul>",
+                  "<li>MinutesPlayed: {{aggregated.MinutesPlayed}}</li>",
+                  "<li>BlockBrokenTotal: {{aggregated.BlockBrokenTotal}}</li>",
+                  "<li>MobKilled.IsMonster.1: {{aggregated.[MobKilled.IsMonster.1]}}</li>",
+                  "<li>DistanceTravelled: {{aggregated.DistanceTravelled}}</li>",
+                  "</ul></div>`;",
+                  "pm.visualizer.set(tpl, j);"
+                ]
+              }
+            }
           ]
         }
       ]
@@ -471,46 +896,87 @@
         {
           "name": "POST /inventory/playfab (GetInventoryItems)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"collectionId\": \"default\",\n  \"count\": 50\n}" },
-            "url":"{{baseUrl}}/inventory/playfab",
-            "description":"PlayFab inventory via session ticket; optional master_player_account via playFabId."
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"collectionId\": \"default\",\n  \"count\": 50\n}"
+            },
+            "url": "{{baseUrl}}/inventory/playfab",
+            "description": "PlayFab inventory via session ticket; optional master_player_account via playFabId."
           }
         },
         {
           "name": "GET /inventory/minecraft (Entitlements)",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-mc-token", "value":"{{x_mc_token}}" }],
-            "url":"{{baseUrl}}/inventory/minecraft?includeReceipt=false",
-            "description":"Minecraft entitlements; toggle includeReceipt=true to include receipts."
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/inventory/minecraft?includeReceipt=false",
+            "description": "Minecraft entitlements; toggle includeReceipt=true to include receipts."
           }
         },
         {
           "name": "GET /inventory/minecraft/creators/top?limit=5",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-mc-token", "value":"{{x_mc_token}}" }],
-            "url":"{{baseUrl}}/inventory/minecraft/creators/top?limit=5",
-            "description":"Top creators by entitlement count."
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/inventory/minecraft/creators/top?limit=5",
+            "description": "Top creators by entitlement count."
           }
         },
         {
           "name": "GET /inventory/minecraft/search",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-mc-token", "value":"{{x_mc_token}}" }],
-            "url":{
-              "raw":"{{baseUrl}}/inventory/minecraft/search?limit=50",
-              "host":["{{baseUrl}}"], "path":["inventory","minecraft","search"],
-              "query":[
-                { "key":"productId", "value":"", "disabled": true },
-                { "key":"q", "value":"", "disabled": true },
-                { "key":"limit", "value":"50" }
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory/minecraft/search?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inventory",
+                "minecraft",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "productId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
               ]
             },
-            "description":"Search entitlements by productId or free-text q (case-insensitive)."
+            "description": "Search entitlements by productId or free-text q (case-insensitive)."
           }
         }
       ]
@@ -521,55 +987,103 @@
         {
           "name": "POST /playfab/account (GetAccountInfo)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}" },
-            "url":"{{baseUrl}}/playfab/account"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}"
+            },
+            "url": "{{baseUrl}}/playfab/account"
           }
         },
         {
           "name": "POST /playfab/profile (GetPlayerProfile)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\"\n}" },
-            "url":"{{baseUrl}}/playfab/profile"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/playfab/profile"
           }
         },
         {
           "name": "POST /playfab/catalog (GetCatalogItems)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"catalogVersion\": \"\"\n}" },
-            "url":"{{baseUrl}}/playfab/catalog"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"catalogVersion\": \"\"\n}"
+            },
+            "url": "{{baseUrl}}/playfab/catalog"
           }
         },
         {
           "name": "POST /playfab/titledata (GetTitleData)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"keys\": [\"SomeKey\"]\n}" },
-            "url":"{{baseUrl}}/playfab/titledata"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"keys\": [\"SomeKey\"]\n}"
+            },
+            "url": "{{baseUrl}}/playfab/titledata"
           }
         },
         {
           "name": "POST /playfab/userdata (GetUserData)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"keys\": []\n}" },
-            "url":"{{baseUrl}}/playfab/userdata"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"keys\": []\n}"
+            },
+            "url": "{{baseUrl}}/playfab/userdata"
           }
         },
         {
           "name": "POST /playfab/userdata/readonly (GetUserReadOnlyData)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"keys\": []\n}" },
-            "url":"{{baseUrl}}/playfab/userdata/readonly"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"keys\": []\n}"
+            },
+            "url": "{{baseUrl}}/playfab/userdata/readonly"
           }
         }
       ]
@@ -580,18 +1094,32 @@
         {
           "name": "POST /minecraft/token (MCToken from SessionTicket)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}" },
-            "url":"{{baseUrl}}/minecraft/token",
-            "description":"Produces a new Minecraft multiplayer token from PlayFab SessionTicket."
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}"
+            },
+            "url": "{{baseUrl}}/minecraft/token",
+            "description": "Produces a new Minecraft multiplayer token from PlayFab SessionTicket."
           },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "if (j.mcToken) pm.collectionVariables.set('x_mc_token', j.mcToken);",
-              "pm.test('mcToken present', ()=> pm.expect(j.mcToken).to.be.a('string'));"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.mcToken) pm.collectionVariables.set('x_mc_token', j.mcToken);",
+                  "pm.test('mcToken present', ()=> pm.expect(j.mcToken).to.be.a('string'));"
+                ]
+              }
+            }
           ]
         }
       ]
@@ -602,133 +1130,193 @@
         {
           "name": "POST /debug/decode-token – single (JWT/XSTS/MC/SessionTicket)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{jwt}}\"\n}" },
-            "url":"{{baseUrl}}/debug/decode-token",
-            "description":"Decodes a single token; strips common prefixes like Bearer, XBL3.0, MCToken."
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwt}}\"\n}"
+            },
+            "url": "{{baseUrl}}/debug/decode-token",
+            "description": "Decodes a single token; strips common prefixes like Bearer, XBL3.0, MCToken."
           },
-          "event":[
-            { "listen":"test", "script": { "type": "text/javascript", "exec": [
-              "const j = pm.response.json();",
-              "pm.test('ok or informative', ()=> pm.expect(j).to.have.property('ok'));",
-              "const fmt = v => (v === null || v === undefined) ? '—' : v;",
-              "pm.visualizer.set(`",
-              "<div style='font-family:Inter,system-ui'>",
-              "<h3>Decoded Token</h3>",
-              "<pre>{{json}}</pre>",
-              "</div>`, { json: JSON.stringify({",
-              "  ok: j.ok,",
-              "  header: j.header,",
-              "  payload: j.payload,",
-              "  meta: {",
-              "    prefix: fmt(j.meta && j.meta.prefix),",
-              "    uhs: fmt(j.meta && j.meta.uhs),",
-              "    hasExp: j.meta && j.meta.hasExp,",
-              "    secondsRemaining: fmt(j.meta && j.meta.secondsRemaining),",
-              "    rawLength: j.meta && j.meta.rawLength,",
-              "    kind: j.meta && j.meta.kind",
-              "  }",
-              "}, null, 2) });"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('ok or informative', ()=> pm.expect(j).to.have.property('ok'));",
+                  "const fmt = v => (v === null || v === undefined) ? '—' : v;",
+                  "pm.visualizer.set(`",
+                  "<div style='font-family:Inter,system-ui'>",
+                  "<h3>Decoded Token</h3>",
+                  "<pre>{{json}}</pre>",
+                  "</div>`, { json: JSON.stringify({",
+                  "  ok: j.ok,",
+                  "  header: j.header,",
+                  "  payload: j.payload,",
+                  "  meta: {",
+                  "    prefix: fmt(j.meta && j.meta.prefix),",
+                  "    uhs: fmt(j.meta && j.meta.uhs),",
+                  "    hasExp: j.meta && j.meta.hasExp,",
+                  "    secondsRemaining: fmt(j.meta && j.meta.secondsRemaining),",
+                  "    rawLength: j.meta && j.meta.rawLength,",
+                  "    kind: j.meta && j.meta.kind",
+                  "  }",
+                  "}, null, 2) });"
+                ]
+              }
+            }
           ]
         },
         {
           "name": "POST /debug/decode-token – XSTS example",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{x_xbl_token}}\"\n}" },
-            "url":"{{baseUrl}}/debug/decode-token"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{x_xbl_token}}\"\n}"
+            },
+            "url": "{{baseUrl}}/debug/decode-token"
           }
         },
         {
           "name": "POST /debug/decode-token – Minecraft example",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{x_mc_token}}\"\n}" },
-            "url":"{{baseUrl}}/debug/decode-token"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{x_mc_token}}\"\n}"
+            },
+            "url": "{{baseUrl}}/debug/decode-token"
           }
         },
         {
           "name": "POST /debug/decode-token – SessionTicket example (opaque)",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
-            "body": { "mode":"raw", "raw":"{\n  \"token\": \"{{sessionTicket}}\"\n}" },
-            "url":"{{baseUrl}}/debug/decode-token"
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{sessionTicket}}\"\n}"
+            },
+            "url": "{{baseUrl}}/debug/decode-token"
           }
         },
         {
           "name": "POST /debug/decode-token – batch",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
-              "mode":"raw",
-              "raw":"{\n  \"tokens\": {\n    \"jwt\": \"{{jwt}}\",\n    \"xbl\": \"{{x_xbl_token}}\",\n    \"playfab\": \"{{x_playfab_token}}\",\n    \"redeem\": \"{{x_redeem_token}}\",\n    \"mc\": \"{{x_mc_token}}\",\n    \"sessionTicket\": \"{{sessionTicket}}\"\n  }\n}"
+              "mode": "raw",
+              "raw": "{\n  \"tokens\": {\n    \"jwt\": \"{{jwt}}\",\n    \"xbl\": \"{{x_xbl_token}}\",\n    \"playfab\": \"{{x_playfab_token}}\",\n    \"redeem\": \"{{x_redeem_token}}\",\n    \"mc\": \"{{x_mc_token}}\",\n    \"sessionTicket\": \"{{sessionTicket}}\"\n  }\n}"
             },
-            "url":"{{baseUrl}}/debug/decode-token",
-            "description":"Decode multiple tokens in one request."
+            "url": "{{baseUrl}}/debug/decode-token",
+            "description": "Decode multiple tokens in one request."
           },
-          "event":[
-            { "listen":"test", "script": { "type": "text/javascript", "exec": [
-              "const j = pm.response.json();",
-              "pm.test('batch ok', ()=> pm.expect(j.ok).to.eql(true));",
-              "const cleaned = {};",
-              "const fmt = v => (v === null || v === undefined) ? '—' : v;",
-              "Object.entries(j.decoded || {}).forEach(([k,v]) => {",
-              "  cleaned[k] = {",
-              "    ok: v.ok,",
-              "    header: v.header,",
-              "    payload: v.payload,",
-              "    meta: {",
-              "      prefix: fmt(v.meta && v.meta.prefix),",
-              "      uhs: fmt(v.meta && v.meta.uhs),",
-              "      hasExp: v.meta && v.meta.hasExp,",
-              "      secondsRemaining: fmt(v.meta && v.meta.secondsRemaining),",
-              "      rawLength: v.meta && v.meta.rawLength,",
-              "      kind: v.meta && v.meta.kind",
-              "    }",
-              "  };",
-              "});",
-              "pm.visualizer.set(`",
-              "<div style='font-family:Inter,system-ui'><h3>Batch Decode</h3><pre>{{json}}</pre></div>` , { json: JSON.stringify(cleaned, null, 2) });"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('batch ok', ()=> pm.expect(j.ok).to.eql(true));",
+                  "const cleaned = {};",
+                  "const fmt = v => (v === null || v === undefined) ? '—' : v;",
+                  "Object.entries(j.decoded || {}).forEach(([k,v]) => {",
+                  "  cleaned[k] = {",
+                  "    ok: v.ok,",
+                  "    header: v.header,",
+                  "    payload: v.payload,",
+                  "    meta: {",
+                  "      prefix: fmt(v.meta && v.meta.prefix),",
+                  "      uhs: fmt(v.meta && v.meta.uhs),",
+                  "      hasExp: v.meta && v.meta.hasExp,",
+                  "      secondsRemaining: fmt(v.meta && v.meta.secondsRemaining),",
+                  "      rawLength: v.meta && v.meta.rawLength,",
+                  "      kind: v.meta && v.meta.kind",
+                  "    }",
+                  "  };",
+                  "});",
+                  "pm.visualizer.set(`",
+                  "<div style='font-family:Inter,system-ui'><h3>Batch Decode</h3><pre>{{json}}</pre></div>` , { json: JSON.stringify(cleaned, null, 2) });"
+                ]
+              }
+            }
           ]
         },
         {
           "name": "POST /debug/decode-callback – full bundle",
           "request": {
-            "method":"POST",
-            "header":[{ "key":"Content-Type", "value":"application/json" }],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
-              "mode":"raw",
-              "raw":"{\n  \"jwt\": \"{{jwt}}\",\n  \"xuid\": \"{{sample_xuid}}\",\n  \"gamertag\": \"{{sample_gamertag}}\",\n  \"xboxliveToken\": \"{{x_xbl_token}}\",\n  \"playfabToken\": \"{{x_playfab_token}}\",\n  \"redeemToken\": \"{{x_redeem_token}}\",\n  \"mcToken\": \"{{x_mc_token}}\",\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\"\n}"
+              "mode": "raw",
+              "raw": "{\n  \"jwt\": \"{{jwt}}\",\n  \"xuid\": \"{{sample_xuid}}\",\n  \"gamertag\": \"{{sample_gamertag}}\",\n  \"xboxliveToken\": \"{{x_xbl_token}}\",\n  \"playfabToken\": \"{{x_playfab_token}}\",\n  \"redeemToken\": \"{{x_redeem_token}}\",\n  \"mcToken\": \"{{x_mc_token}}\",\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\"\n}"
             },
-            "url":"{{baseUrl}}/debug/decode-callback",
-            "description":"Decode full auth callback bundle"
+            "url": "{{baseUrl}}/debug/decode-callback",
+            "description": "Decode full auth callback bundle"
           },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "pm.test('has user object', ()=> pm.expect(j.user).to.be.an('object'));",
-              "const fmt = v => (v === null || v === undefined) ? '—' : v;",
-              "pm.visualizer.set(`<!doctype html><html><body style='font-family:Inter,system-ui'>",
-              "<h3>User</h3>",
-              "<pre>{{user}}</pre>",
-              "<h3>Decoded</h3>",
-              "<pre>{{decoded}}</pre>",
-              "</body></html>` , {",
-              "  user: JSON.stringify({",
-              "    xuid: fmt(j.user && j.user.xuid),",
-              "    gamertag: fmt(j.user && j.user.gamertag),",
-              "    playFabId: fmt(j.user && j.user.playFabId)",
-              "  }, null, 2),",
-              "  decoded: JSON.stringify(j.decoded || {}, null, 2)",
-              "});"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('has user object', ()=> pm.expect(j.user).to.be.an('object'));",
+                  "const fmt = v => (v === null || v === undefined) ? '—' : v;",
+                  "pm.visualizer.set(`<!doctype html><html><body style='font-family:Inter,system-ui'>",
+                  "<h3>User</h3>",
+                  "<pre>{{user}}</pre>",
+                  "<h3>Decoded</h3>",
+                  "<pre>{{decoded}}</pre>",
+                  "</body></html>` , {",
+                  "  user: JSON.stringify({",
+                  "    xuid: fmt(j.user && j.user.xuid),",
+                  "    gamertag: fmt(j.user && j.user.gamertag),",
+                  "    playFabId: fmt(j.user && j.user.playFabId)",
+                  "  }, null, 2),",
+                  "  decoded: JSON.stringify(j.decoded || {}, null, 2)",
+                  "});"
+                ]
+              }
+            }
           ]
         }
       ]
@@ -739,26 +1327,141 @@
         {
           "name": "Workflow: Login → Tokens → WhoAmI",
           "item": [
-            { "name": "1) GET /auth/device", "request": { "auth": { "type":"noauth" }, "method":"GET", "url":"{{baseUrl}}/auth/device" } },
-            { "name": "2) POST /auth/callback", "request": { "method":"POST", "header":[{ "key":"Content-Type", "value":"application/json"}], "body":{"mode":"raw","raw":"{\n  \"device_code\": \"{{device_code}}\"\n}"}, "url":"{{baseUrl}}/auth/callback" } },
-            { "name": "3) GET /auth/whoami", "request": { "method":"GET", "url":"{{baseUrl}}/auth/whoami" } }
+            {
+              "name": "1) GET /auth/device",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "url": "{{baseUrl}}/auth/device"
+              }
+            },
+            {
+              "name": "2) POST /auth/callback",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"device_code\": \"{{device_code}}\"\n}"
+                },
+                "url": "{{baseUrl}}/auth/callback"
+              }
+            },
+            {
+              "name": "3) GET /auth/whoami",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/auth/whoami"
+              }
+            }
           ],
           "description": "End-to-end device flow login."
         },
         {
           "name": "Workflow: Profile + Titles + Stats quick view",
           "item": [
-            { "name": "GET /profile/me", "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/profile/me?settings=GameDisplayPicRaw,Gamerscore,Gamertag" } },
-            { "name": "GET /titles/recent", "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" },{ "key":"Accept-Language", "value":"{{accept_language}}" }], "url":"{{baseUrl}}/titles/recent?limit=20" } },
-            { "name": "GET /stats/xbox/me", "request": { "method":"GET", "header":[{ "key":"x-xbl-token", "value":"{{x_xbl_token}}" }], "url":"{{baseUrl}}/stats/xbox/me" } }
+            {
+              "name": "GET /profile/me",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-xbl-token",
+                    "value": "{{x_xbl_token}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/profile/me?settings=GameDisplayPicRaw,Gamerscore,Gamertag"
+              }
+            },
+            {
+              "name": "GET /titles/recent",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-xbl-token",
+                    "value": "{{x_xbl_token}}"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "{{accept_language}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/titles/recent?limit=20"
+              }
+            },
+            {
+              "name": "GET /stats/xbox/me",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-xbl-token",
+                    "value": "{{x_xbl_token}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/stats/xbox/me"
+              }
+            }
           ]
         },
         {
           "name": "Workflow: PlayFab & Minecraft Inventory",
           "item": [
-            { "name":"POST /inventory/playfab", "request": { "method":"POST", "header":[{ "key":"Content-Type", "value":"application/json"}], "body":{"mode":"raw","raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"collectionId\": \"default\",\n  \"count\": 50\n}"}, "url":"{{baseUrl}}/inventory/playfab" } },
-            { "name":"POST /minecraft/token (optional)", "request": { "method":"POST", "header":[{ "key":"Content-Type", "value":"application/json"}], "body":{"mode":"raw","raw":"{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}"}, "url":"{{baseUrl}}/minecraft/token" } },
-            { "name":"GET /inventory/minecraft", "request": { "method":"GET", "header":[{ "key":"x-mc-token", "value":"{{x_mc_token}}" }], "url":"{{baseUrl}}/inventory/minecraft?includeReceipt=false" } }
+            {
+              "name": "POST /inventory/playfab",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\",\n  \"playFabId\": \"{{playFabId}}\",\n  \"collectionId\": \"default\",\n  \"count\": 50\n}"
+                },
+                "url": "{{baseUrl}}/inventory/playfab"
+              }
+            },
+            {
+              "name": "POST /minecraft/token (optional)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sessionTicket\": \"{{sessionTicket}}\"\n}"
+                },
+                "url": "{{baseUrl}}/minecraft/token"
+              }
+            },
+            {
+              "name": "GET /inventory/minecraft",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-mc-token",
+                    "value": "{{x_mc_token}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/inventory/minecraft?includeReceipt=false"
+              }
+            }
           ]
         }
       ]
@@ -769,7 +1472,9 @@
         {
           "name": "Missing Authorization header (expect 401/403) → GET /auth/whoami",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "url": "{{baseUrl}}/auth/whoami",
             "description": "Expect 401 (missing bearer) or 403 depending on middleware."
@@ -787,10 +1492,20 @@
         {
           "name": "Invalid device_code (expect 400/500) → POST /auth/callback",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key":"Content-Type","value":"application/json"}],
-            "body": { "mode":"raw", "raw":"{\n  \"device_code\": \"totally-invalid\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_code\": \"totally-invalid\"\n}"
+            },
             "url": "{{baseUrl}}/auth/callback"
           }
         },
@@ -798,7 +1513,12 @@
           "name": "Titles recent with extreme limit (expect clamp) → GET /titles/recent?limit=999",
           "request": {
             "method": "GET",
-            "header": [{ "key":"x-xbl-token","value":"{{x_xbl_token}}" }],
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
             "url": "{{baseUrl}}/titles/recent?limit=999"
           }
         }
@@ -809,12 +1529,18 @@
       "item": [
         {
           "name": "Utility: Show stored variables",
-          "request": { "auth": { "type":"noauth" }, "method":"GET", "url":"{{baseUrl}}/healthz" },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/healthz"
+          },
           "event": [
             {
               "listen": "test",
               "script": {
-                "type":"text/javascript",
+                "type": "text/javascript",
                 "exec": [
                   "const data = {",
                   "  baseUrl: pm.collectionVariables.get('baseUrl'),",
@@ -844,23 +1570,2637 @@
         {
           "name": "Visualizer: Recent Titles chart-like table",
           "request": {
-            "method":"GET",
-            "header":[{ "key":"x-xbl-token","value":"{{x_xbl_token}}" }],
-            "url":"{{baseUrl}}/titles/recent?limit=20"
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/titles/recent?limit=20"
           },
-          "event":[
-            { "listen":"test", "script": { "type":"text/javascript", "exec":[
-              "const j = pm.response.json();",
-              "const tpl = `<!doctype html><html><body style='font-family:Inter,system-ui'>",
-              "<h2>Recent Titles</h2>",
-              "<table border='1' cellpadding='6' style='border-collapse:collapse'>",
-              "<thead><tr><th>#</th><th>Title</th><th>TitleId</th><th>Last Played</th></tr></thead>",
-              "<tbody>",
-              "{{#each items}}<tr><td>{{@index}}</td><td>{{this.name}}</td><td>{{this.titleId}}</td><td>{{this.titleHistory.lastTimePlayed}}</td></tr>{{/each}}",
-              "</tbody></table>",
-              "</body></html>`;",
-              "pm.visualizer.set(tpl, j);"
-            ]}}
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const tpl = `<!doctype html><html><body style='font-family:Inter,system-ui'>",
+                  "<h2>Recent Titles</h2>",
+                  "<table border='1' cellpadding='6' style='border-collapse:collapse'>",
+                  "<thead><tr><th>#</th><th>Title</th><th>TitleId</th><th>Last Played</th></tr></thead>",
+                  "<tbody>",
+                  "{{#each items}}<tr><td>{{@index}}</td><td>{{this.name}}</td><td>{{this.titleId}}</td><td>{{this.titleHistory.lastTimePlayed}}</td></tr>{{/each}}",
+                  "</tbody></table>",
+                  "</body></html>`;",
+                  "pm.visualizer.set(tpl, j);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "18) Additional API Operations",
+      "description": "Additional maintained requests for mounted endpoints. Values are synthetic placeholders.",
+      "item": [
+        {
+          "name": "GET /auth/browser",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/browser",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "browser"
+              ]
+            },
+            "description": "Generated coverage request for GET /auth/browser. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/browser/callback",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/browser/callback",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "browser",
+                "callback"
+              ]
+            },
+            "description": "Generated coverage request for GET /auth/browser/callback. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/browser/session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"successPath\": \"/auth/client/success\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/browser/session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "browser",
+                "session"
+              ]
+            },
+            "description": "Generated coverage request for POST /auth/browser/session. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/browser/session/token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"{{oauth_session_id}}\",\n  \"pollToken\": \"{{oauth_poll_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/browser/session/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "browser",
+                "session",
+                "token"
+              ]
+            },
+            "description": "Generated coverage request for POST /auth/browser/session/token. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/browser/token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{oauth_result_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/browser/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "browser",
+                "token"
+              ]
+            },
+            "description": "Generated coverage request for POST /auth/browser/token. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/refresh",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"msRefreshToken\": \"{{ms_refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Generated coverage request for POST /auth/refresh. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /inventory/minecraft/balances",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory/minecraft/balances",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inventory",
+                "minecraft",
+                "balances"
+              ]
+            },
+            "description": "Generated coverage request for GET /inventory/minecraft/balances. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /inventory/minecraft/capes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/minecraft/capes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inventory",
+                "minecraft",
+                "capes"
+              ]
+            },
+            "description": "Generated coverage request for POST /inventory/minecraft/capes. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /inventory/playfab/test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/playfab/test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inventory",
+                "playfab",
+                "test"
+              ]
+            },
+            "description": "Generated coverage request for POST /inventory/playfab/test. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /messaging/inbox/event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messaging/inbox/event",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messaging",
+                "inbox",
+                "event"
+              ]
+            },
+            "description": "Generated coverage request for POST /messaging/inbox/event. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /messaging/inbox/start",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messaging/inbox/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messaging",
+                "inbox",
+                "start"
+              ]
+            },
+            "description": "Generated coverage request for POST /messaging/inbox/start. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /messaging/session/start",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messaging/session/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messaging",
+                "session",
+                "start"
+              ]
+            },
+            "description": "Generated coverage request for POST /messaging/session/start. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /minecraft/token/refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/minecraft/token/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "minecraft",
+                "token",
+                "refresh"
+              ]
+            },
+            "description": "Generated coverage request for POST /minecraft/token/refresh. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /mpsd/activities",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scid\": \"{{mpsd_scid}}\",\n  \"xuids\": [\n    \"{{sample_xuid}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/activities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "activities"
+              ]
+            },
+            "description": "Generated coverage request for POST /mpsd/activities. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /mpsd/join",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"handleId\": \"00000000-0000-0000-0000-000000000001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "join"
+              ]
+            },
+            "description": "Generated coverage request for POST /mpsd/join. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /mpsd/sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "sessions"
+              ]
+            },
+            "description": "Generated coverage request for GET /mpsd/sessions. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /mpsd/sessions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scid\": \"{{mpsd_scid}}\",\n  \"templateName\": \"{{mpsd_template}}\",\n  \"name\": \"{{mpsd_session}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "sessions"
+              ]
+            },
+            "description": "Generated coverage request for POST /mpsd/sessions. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /mpsd/sessions/:param/:param/:param",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/sessions/{{mpsd_scid}}/{{mpsd_template}}/{{mpsd_session}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "sessions",
+                "{{mpsd_scid}}",
+                "{{mpsd_template}}",
+                "{{mpsd_session}}"
+              ]
+            },
+            "description": "Generated coverage request for DELETE /mpsd/sessions/:param/:param/:param. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /mpsd/sessions/:param/:param/:param",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/sessions/{{mpsd_scid}}/{{mpsd_template}}/{{mpsd_session}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "sessions",
+                "{{mpsd_scid}}",
+                "{{mpsd_template}}",
+                "{{mpsd_session}}"
+              ]
+            },
+            "description": "Generated coverage request for GET /mpsd/sessions/:param/:param/:param. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /mpsd/sessions/:param/:param/:param/activity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/sessions/{{mpsd_scid}}/{{mpsd_template}}/{{mpsd_session}}/activity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "sessions",
+                "{{mpsd_scid}}",
+                "{{mpsd_template}}",
+                "{{mpsd_session}}",
+                "activity"
+              ]
+            },
+            "description": "Generated coverage request for POST /mpsd/sessions/:param/:param/:param/activity. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /mpsd/sessions/:param/:param/:param/invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xuid\": \"{{sample_xuid}}\",\n  \"titleId\": \"{{titleId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/sessions/{{mpsd_scid}}/{{mpsd_template}}/{{mpsd_session}}/invite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "sessions",
+                "{{mpsd_scid}}",
+                "{{mpsd_template}}",
+                "{{mpsd_session}}",
+                "invite"
+              ]
+            },
+            "description": "Generated coverage request for POST /mpsd/sessions/:param/:param/:param/invite. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /mpsd/sessions/:param/:param/:param/members/:param/properties",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customProperties\": {\n    \"audit\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/sessions/{{mpsd_scid}}/{{mpsd_template}}/{{mpsd_session}}/members/{{mpsd_member}}/properties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "sessions",
+                "{{mpsd_scid}}",
+                "{{mpsd_template}}",
+                "{{mpsd_session}}",
+                "members",
+                "{{mpsd_member}}",
+                "properties"
+              ]
+            },
+            "description": "Generated coverage request for PATCH /mpsd/sessions/:param/:param/:param/members/:param/properties. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /mpsd/sessions/:param/:param/:param/properties",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customProperties\": {\n    \"audit\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mpsd/sessions/{{mpsd_scid}}/{{mpsd_template}}/{{mpsd_session}}/properties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mpsd",
+                "sessions",
+                "{{mpsd_scid}}",
+                "{{mpsd_template}}",
+                "{{mpsd_session}}",
+                "properties"
+              ]
+            },
+            "description": "Generated coverage request for PATCH /mpsd/sessions/:param/:param/:param/properties. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /people/:param/follow",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people/{{sample_xuid}}/follow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "{{sample_xuid}}",
+                "follow"
+              ]
+            },
+            "description": "Generated coverage request for DELETE /people/:param/follow. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /people/:param/follow",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/people/{{sample_xuid}}/follow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "{{sample_xuid}}",
+                "follow"
+              ]
+            },
+            "description": "Generated coverage request for PUT /people/:param/follow. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /people/:param/friend",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people/{{sample_xuid}}/friend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "{{sample_xuid}}",
+                "friend"
+              ]
+            },
+            "description": "Generated coverage request for DELETE /people/:param/friend. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /people/:param/friend",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/people/{{sample_xuid}}/friend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "{{sample_xuid}}",
+                "friend"
+              ]
+            },
+            "description": "Generated coverage request for PUT /people/:param/friend. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /people/batch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xuids\": [\n    \"{{sample_xuid}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/people/batch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "batch"
+              ]
+            },
+            "description": "Generated coverage request for POST /people/batch. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people/following",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people/following",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "following"
+              ]
+            },
+            "description": "Generated coverage request for GET /people/following. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people/recommendations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people/recommendations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "recommendations"
+              ]
+            },
+            "description": "Generated coverage request for GET /people/recommendations. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people/requests/incoming",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people/requests/incoming",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "requests",
+                "incoming"
+              ]
+            },
+            "description": "Generated coverage request for GET /people/requests/incoming. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people/requests/outgoing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people/requests/outgoing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "requests",
+                "outgoing"
+              ]
+            },
+            "description": "Generated coverage request for GET /people/requests/outgoing. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people/search",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "search"
+              ]
+            },
+            "description": "Generated coverage request for GET /people/search. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people/xuid/:param",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people/xuid/{{sample_xuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people",
+                "xuid",
+                "{{sample_xuid}}"
+              ]
+            },
+            "description": "Generated coverage request for GET /people/xuid/:param. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /presence/title",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/presence/title",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "presence",
+                "title"
+              ]
+            },
+            "description": "Generated coverage request for DELETE /presence/title. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /presence/title",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"state\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/presence/title",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "presence",
+                "title"
+              ]
+            },
+            "description": "Generated coverage request for POST /presence/title. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /presence/xuid/:param",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/presence/xuid/{{sample_xuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "presence",
+                "xuid",
+                "{{sample_xuid}}"
+              ]
+            },
+            "description": "Generated coverage request for GET /presence/xuid/:param. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /redeem/lookup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-redeem-token",
+                "value": "{{x_redeem_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SYNTHETIC-CODE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/redeem/lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "redeem",
+                "lookup"
+              ]
+            },
+            "description": "Generated coverage request for POST /redeem/lookup. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /redeem/redeem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-redeem-token",
+                "value": "{{x_redeem_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SYNTHETIC-CODE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/redeem/redeem",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "redeem",
+                "redeem"
+              ]
+            },
+            "description": "Generated coverage request for POST /redeem/redeem. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rta"
+              ]
+            },
+            "description": "Generated coverage request for GET /rta. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /rta/:param",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rta/{{rta_connection_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rta",
+                "{{rta_connection_id}}"
+              ]
+            },
+            "description": "Generated coverage request for DELETE /rta/:param. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rta/:param",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rta/{{rta_connection_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rta",
+                "{{rta_connection_id}}"
+              ]
+            },
+            "description": "Generated coverage request for GET /rta/:param. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rta/:param/events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rta/{{rta_connection_id}}/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rta",
+                "{{rta_connection_id}}",
+                "events"
+              ]
+            },
+            "description": "Generated coverage request for GET /rta/:param/events. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /rta/:param/subscribe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceUri\": \"https://userpresence.xboxlive.com/users/xuid({{sample_xuid}})\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rta/{{rta_connection_id}}/subscribe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rta",
+                "{{rta_connection_id}}",
+                "subscribe"
+              ]
+            },
+            "description": "Generated coverage request for POST /rta/:param/subscribe. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /rta/:param/unsubscribe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subscriptionId\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rta/{{rta_connection_id}}/unsubscribe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rta",
+                "{{rta_connection_id}}",
+                "unsubscribe"
+              ]
+            },
+            "description": "Generated coverage request for POST /rta/:param/unsubscribe. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /rta/connect",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rta/connect",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rta",
+                "connect"
+              ]
+            },
+            "description": "Generated coverage request for POST /rta/connect. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /wishlist/item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wishlist/item",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist",
+                "item"
+              ]
+            },
+            "description": "Generated coverage request for POST /wishlist/item. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /wishlist/list",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-mc-token",
+                "value": "{{x_mc_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wishlist/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist",
+                "list"
+              ]
+            },
+            "description": "Generated coverage request for POST /wishlist/list. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /xsapi/device-token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xsapi/device-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "xsapi",
+                "device-token"
+              ]
+            },
+            "description": "Generated coverage request for POST /xsapi/device-token. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /xsapi/nsal/resolve",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://profile.xboxlive.com/users/me/profile/settings\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xsapi/nsal/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "xsapi",
+                "nsal",
+                "resolve"
+              ]
+            },
+            "description": "Generated coverage request for POST /xsapi/nsal/resolve. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /xsapi/proof-key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xsapi/proof-key",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "xsapi",
+                "proof-key"
+              ]
+            },
+            "description": "Generated coverage request for POST /xsapi/proof-key. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /xsapi/request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"url\": \"https://profile.xboxlive.com/users/me/profile/settings\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xsapi/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "xsapi",
+                "request"
+              ]
+            },
+            "description": "Generated coverage request for POST /xsapi/request. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /xsapi/session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"msAccessToken\": \"<REDACTED>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xsapi/session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "xsapi",
+                "session"
+              ]
+            },
+            "description": "Generated coverage request for POST /xsapi/session. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /xsapi/signature",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"url\": \"https://profile.xboxlive.com/users/me/profile/settings\",\n  \"proofKeyJwk\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xsapi/signature",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "xsapi",
+                "signature"
+              ]
+            },
+            "description": "Generated coverage request for POST /xsapi/signature. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /xsapi/xsts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-xbl-token",
+                "value": "{{x_xbl_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proofKeyJwk\": {},\n  \"relyingParty\": \"http://xboxlive.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xsapi/xsts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "xsapi",
+                "xsts"
+              ]
+            },
+            "description": "Generated coverage request for POST /xsapi/xsts. Review the endpoint-specific variables before execution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns a documented API response', function () { pm.expect(pm.response.code).to.not.equal(404); });",
+                  "pm.test('Has request correlation id', function () { pm.expect(pm.response.headers.get('X-Request-Id')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
           ]
         }
       ]
