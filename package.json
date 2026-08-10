@@ -19,7 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.1.0",
-    "express-rate-limit": "^8.6.1",
+    "express-rate-limit": "^8.6.2",
     "helmet": "^8.3.0",
     "inquirer": "^14.0.2",
     "joi": "^18.2.3",
