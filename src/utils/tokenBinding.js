@@ -12,6 +12,13 @@ export function buildTokenBindings(tokens = {}) {
         .filter(([, fingerprint]) => fingerprint));
 }
 
+export function mergeTokenBindings(existing = {}, rotatedTokens = {}) {
+    return {
+        ...(existing && typeof existing === "object" ? existing : {}),
+        ...buildTokenBindings(rotatedTokens)
+    };
+}
+
 export function assertTokenBinding(user, kind, value) {
     if (!value) return;
     const expected = user?.tokenBindings?.[kind];
