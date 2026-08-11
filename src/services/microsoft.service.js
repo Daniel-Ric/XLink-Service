@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import {env} from "../config/env.js";
-import {badRequest, internal, unauthorized} from "../utils/httpError.js";
+import {badGateway, badRequest, internal, unauthorized} from "../utils/httpError.js";
 import {createHttp} from "../utils/http.js";
+import {log} from "../utils/logger.js";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
 
@@ -60,16 +61,31 @@ export function buildDeviceTokenRequest(clientId, deviceCode) {
     };
 }
 
-export function buildRefreshTokenRequest(clientId, refreshToken) {
+export function getRefreshClientSecretForFlow(
+    microsoftAuthFlow,
+    configuredSecret = env.MICROSOFT_OAUTH_CLIENT_SECRET
+) {
+    return microsoftAuthFlow === "device" ? null : configuredSecret;
+}
+
+export function buildRefreshTokenRequest(
+    clientId,
+    refreshToken,
+    clientSecret = env.MICROSOFT_OAUTH_CLIENT_SECRET
+) {
     const config = getMicrosoftOAuthConfig(clientId);
+    const body = new URLSearchParams({
+        client_id: clientId,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        scope: config.scope
+    });
+    if (config.type === "modern" && clientSecret) {
+        body.set("client_secret", clientSecret);
+    }
     return {
         url: config.tokenUrl,
-        body: new URLSearchParams({
-            client_id: clientId,
-            grant_type: "refresh_token",
-            refresh_token: refreshToken,
-            scope: config.scope
-        })
+        body
     };
 }
 
@@ -116,7 +132,10 @@ export function buildAuthorizationCodeTokenRequest(clientId, code, redirectUri, 
 }
 
 function formOptions() {
-    return {headers: {"content-type": "application/x-www-form-urlencoded"}};
+    return {
+        headers: {"content-type": "application/x-www-form-urlencoded"},
+        maxRedirects: 0
+    };
 }
 
 export async function requestDeviceCode(clientId, httpClient = http) {
@@ -146,20 +165,37 @@ export async function getTokenFromDeviceCode(clientId, deviceCode, httpClient = 
     }
 }
 
-export async function refreshMsToken(clientId, refreshToken, httpClient = http) {
+export async function refreshMsToken(
+    clientId,
+    refreshToken,
+    httpClient = http,
+    clientSecret = env.MICROSOFT_OAUTH_CLIENT_SECRET
+) {
     if (!refreshToken) throw badRequest("refresh_token is required");
     try {
-        const request = buildRefreshTokenRequest(clientId, refreshToken);
+        const request = buildRefreshTokenRequest(clientId, refreshToken, clientSecret);
         const {data} = await httpClient.post(request.url, request.body.toString(), formOptions());
         return data;
     } catch (err) {
-        const upstreamCode = err.response?.data?.error;
+        const upstream = err.response?.data;
+        const upstreamCode = upstream?.error;
+        log.warn("Microsoft token refresh failed", {
+            error: upstreamCode || "transport_error",
+            errorCodes: Array.isArray(upstream?.error_codes) ? upstream.error_codes : undefined,
+            traceId: upstream?.trace_id,
+            correlationId: upstream?.correlation_id
+        });
         if (upstreamCode === "invalid_grant" || upstreamCode === "invalid_token") {
             const failure = unauthorized("Microsoft refresh token is invalid or expired");
             failure.code = "MICROSOFT_REFRESH_TOKEN_INVALID";
             throw failure;
         }
-        throw internal("Failed to refresh ms token", err.response?.data || err.message);
+        if (upstreamCode === "invalid_client" || upstreamCode === "unauthorized_client") {
+            const failure = badGateway("Microsoft OAuth client authentication failed");
+            failure.code = "MICROSOFT_CLIENT_AUTH_FAILED";
+            throw failure;
+        }
+        throw internal("Failed to refresh ms token", upstream || err.message);
     }
 }
 
