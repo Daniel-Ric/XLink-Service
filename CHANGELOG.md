@@ -1,5 +1,94 @@
 # Changelog
 
+## 4.2.0 (2026-08-11)
+
+### Summary
+
+- Change type: Test coverage
+- Main change: xLink - Fix Microsoft OAuth refresh flow handling (d44ac20)
+- Impact: Test coverage with a medium change footprint across HTTP API routes, Xbox, Minecraft, and PlayFab integrations, repository files.
+- Bump reason: medium change footprint (6 files, 292 total line changes)
+
+### Changed Areas
+
+- Shared utilities: 1 file: src/utils/swagger.js
+- Tests: 2 files: tests/healthReadiness.test.js, tests/microsoftRefresh.test.js
+- Xbox and Minecraft API routes: 2 files: src/routes/auth.routes.js, src/routes/health.routes.js
+- Xbox, Microsoft, and PlayFab service integrations: 1 file: src/services/microsoft.service.js
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 6
+- Line changes: +265 / -27
+
+## 4.3.0 (2026-08-11)
+
+### Summary
+
+- Change type: Test coverage
+- Main change: xLink - Rotate bound Minecraft session credentials (b08a75a)
+- Impact: Test coverage with a medium change footprint across HTTP API routes, Xbox, Minecraft, and PlayFab integrations, repository files.
+- Bump reason: medium change footprint (7 files, 323 total line changes)
+
+### Changed Areas
+
+- Shared utilities: 2 files: src/utils/http.js, src/utils/tokenBinding.js
+- Tests: 2 files: tests/minecraftTokenRefresh.test.js, tests/tokenBinding.test.js
+- Xbox and Minecraft API routes: 1 file: src/routes/minecraft.routes.js
+- Xbox, Microsoft, and PlayFab service integrations: 2 files: src/services/minecraft.service.js, src/services/playfab.service.js
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 7
+- Line changes: +303 / -20
+
+## 4.3.1 (2026-08-11)
+
+### Summary
+
+- Change type: Documentation
+- Main change: xLink - Document authentication refresh contracts (c7fed7d)
+- Impact: Documentation with a small change footprint across repository files.
+- Bump reason: patch-level repository update
+
+### Changed Areas
+
+- README: 1 file: README.md
+
+### Release Metrics
+
+- Version bump: patch
+- Files changed: 1
+- Line changes: +5 / -3
+
+## 4.4.0 (2026-08-11)
+
+### Summary
+
+- Change type: Test coverage
+- Main change: Merge (d1818cc)
+- Impact: Test coverage with a medium change footprint across repository files, HTTP API routes, Xbox, Minecraft, and PlayFab integrations.
+- Bump reason: medium change footprint (14 files, 623 total line changes)
+
+### Changed Areas
+
+- README: 1 file: README.md
+- Shared utilities: 3 files: src/utils/http.js, src/utils/swagger.js, plus 1 more
+- Tests: 4 files: tests/healthReadiness.test.js, tests/microsoftRefresh.test.js, plus 2 more
+- Xbox and Minecraft API routes: 3 files: src/routes/auth.routes.js, src/routes/health.routes.js, plus 1 more
+- Xbox, Microsoft, and PlayFab service integrations: 3 files: src/services/microsoft.service.js, src/services/minecraft.service.js, plus 1 more
+
+### Notable Changes
+
+- Harden OAuth and Minecraft session refresh
+
+### Release Metrics
+
+- Version bump: minor
+- Files changed: 14
+- Line changes: +573 / -50
 ## 4.1.1 (2026-08-09)
 
 ### Summary
@@ -574,6 +663,7 @@
 - Version bump: patch
 - Files changed: 1
 - Line changes: +9 / -1
+
 
 
 
