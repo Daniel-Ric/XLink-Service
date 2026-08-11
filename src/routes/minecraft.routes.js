@@ -1,12 +1,19 @@
 import express from "express";
 import Joi from "joi";
-import {jwtMiddleware} from "../utils/jwt.js";
+import {jwtMiddleware, signJwt} from "../utils/jwt.js";
 import {asyncHandler} from "../utils/async.js";
 import {getMCToken} from "../services/minecraft.service.js";
 import {loginWithXbox} from "../services/playfab.service.js";
-import {badRequest} from "../utils/httpError.js";
+import {badGateway, badRequest} from "../utils/httpError.js";
+import {mergeTokenBindings} from "../utils/tokenBinding.js";
+import {env} from "../config/env.js";
 
 const router = express.Router();
+
+function preventTokenCaching(res) {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Pragma", "no-cache");
+}
 
 /**
  * @swagger
@@ -40,6 +47,7 @@ router.post("/token", jwtMiddleware, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
     const mcToken = await getMCToken(value.sessionTicket);
+    preventTokenCaching(res);
     res.json({mcToken});
 }));
 
@@ -51,8 +59,8 @@ router.post("/token", jwtMiddleware, asyncHandler(async (req, res) => {
  *     description: >
  *       Uses an existing PlayFab XSTS token (playfabToken, XBL3.0 …) to obtain a fresh
  *       PlayFab SessionTicket and a new Minecraft multiplayer token (MCToken …).
- *       This is useful when the previous SessionTicket has expired but the Xbox / PlayFab
- *       login is still valid.
+ *       It also returns a replacement API JWT bound to the rotated SessionTicket. Clients
+ *       must persist the JWT, SessionTicket and Minecraft token together.
  *     tags: [Minecraft]
  *     security:
  *       - BearerAuth: []
@@ -71,7 +79,26 @@ router.post("/token", jwtMiddleware, asyncHandler(async (req, res) => {
  *                   returned by /auth/callback.
  *     responses:
  *       200:
- *         description: New PlayFab SessionTicket and Minecraft multiplayer token
+ *         description: New PlayFab SessionTicket, Minecraft token, and replacement API JWT
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [jwt, expiresIn, sessionTicket, playFabId, mcToken]
+ *               properties:
+ *                 jwt:
+ *                   type: string
+ *                   description: Replacement API JWT bound to the returned SessionTicket and Minecraft token
+ *                 expiresIn:
+ *                   type: string
+ *                 sessionTicket:
+ *                   type: string
+ *                 playFabId:
+ *                   type: string
+ *                 mcToken:
+ *                   type: string
+ *       502:
+ *         description: PlayFab or Minecraft returned an invalid success response
  */
 router.post("/token/refresh", jwtMiddleware, asyncHandler(async (req, res) => {
     const schema = Joi.object({
@@ -81,11 +108,29 @@ router.post("/token/refresh", jwtMiddleware, asyncHandler(async (req, res) => {
     const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
 
-    const {SessionTicket, PlayFabId} = await loginWithXbox(value.playfabToken);
+    const {SessionTicket, PlayFabId} = (await loginWithXbox(value.playfabToken)) || {};
+    if (typeof SessionTicket !== "string" || !SessionTicket.trim()
+        || typeof PlayFabId !== "string" || !PlayFabId.trim()) {
+        throw badGateway("PlayFab returned an invalid login response");
+    }
     const mcToken = await getMCToken(SessionTicket);
+    if (typeof mcToken !== "string" || !mcToken.trim()) {
+        throw badGateway("Minecraft returned an invalid token response");
+    }
+    const {xuid, gamertag, uhs} = req.user;
+    const tokenBindings = mergeTokenBindings(req.user.tokenBindings, {
+        sessionTicket: SessionTicket,
+        minecraft: mcToken
+    });
+    const jwt = signJwt({xuid, gamertag, uhs, tokenBindings});
 
+    preventTokenCaching(res);
     res.json({
-        sessionTicket: SessionTicket, playFabId: PlayFabId, mcToken
+        jwt,
+        expiresIn: env.JWT_EXPIRES_IN || "1h",
+        sessionTicket: SessionTicket,
+        playFabId: PlayFabId,
+        mcToken
     });
 }));
 

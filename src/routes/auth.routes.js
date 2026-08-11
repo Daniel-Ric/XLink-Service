@@ -6,6 +6,7 @@ import {
     buildBrowserAuthorizationUrl,
     exchangeAuthorizationCode,
     getMicrosoftOAuthConfig,
+    getRefreshClientSecretForFlow,
     getTokenFromDeviceCode,
     isModernMicrosoftClientId,
     refreshMsToken,
@@ -120,11 +121,12 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
     if (error) throw badRequest(error.message);
 
     const tokenData = await getTokenFromDeviceCode(env.CLIENT_ID, value.device_code);
-    res.json(await exchangeMicrosoftTokenBundle(
+    const result = await exchangeMicrosoftTokenBundle(
         tokenData,
         env.CLIENT_ID,
         env.PLAYFAB_TITLE_ID || "20ca2"
-    ));
+    );
+    res.json({...result, microsoftAuthFlow: "device"});
 }));
 
 /**
@@ -148,6 +150,11 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
  *               msRefreshToken:
  *                 type: string
  *                 description: Microsoft OAuth refresh_token from a previous /auth/callback
+ *               microsoftAuthFlow:
+ *                 type: string
+ *                 enum: [browser, device]
+ *                 default: browser
+ *                 description: Originating OAuth client flow; device refreshes are public-client requests
  *     responses:
  *       200:
  *         description: Tokens successfully refreshed
@@ -156,24 +163,41 @@ router.post("/callback", authLimiter, asyncHandler(async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/AuthCallbackResponse'
  *       400:
- *         description: Invalid refresh token
+ *         description: Malformed request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Microsoft refresh token is expired, revoked, or otherwise invalid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       502:
+ *         description: Microsoft confidential-client authentication is misconfigured or rejected
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
-    const schema = Joi.object({msRefreshToken: Joi.string().required()});
+    const schema = Joi.object({
+        msRefreshToken: Joi.string().required(),
+        microsoftAuthFlow: Joi.string().valid("browser", "device").default("browser")
+    });
     const {value, error} = schema.validate(req.body);
     if (error) throw badRequest(error.message);
 
-    const tokenData = await refreshMsToken(env.CLIENT_ID, value.msRefreshToken);
+    const clientSecret = getRefreshClientSecretForFlow(value.microsoftAuthFlow);
+    const tokenData = await refreshMsToken(env.CLIENT_ID, value.msRefreshToken, undefined, clientSecret);
     tokenData.refresh_token = tokenData.refresh_token || value.msRefreshToken;
-    res.json(await exchangeMicrosoftTokenBundle(
+    const result = await exchangeMicrosoftTokenBundle(
         tokenData,
         env.CLIENT_ID,
         env.PLAYFAB_TITLE_ID || "20ca2"
-    ));
+    );
+    res.json({...result, microsoftAuthFlow: value.microsoftAuthFlow});
 }));
 
 router.post("/browser/session", authLimiter, asyncHandler(async (req, res) => {
@@ -229,11 +253,14 @@ router.get("/browser/callback", authLimiter, asyncHandler(async (req, res) => {
         codeVerifier,
         clientSecret: config.clientSecret
     });
-    const result = await exchangeMicrosoftTokenBundle(
-        tokenData,
-        config.clientId,
-        env.PLAYFAB_TITLE_ID || "20ca2"
-    );
+    const result = {
+        ...(await exchangeMicrosoftTokenBundle(
+            tokenData,
+            config.clientId,
+            env.PLAYFAB_TITLE_ID || "20ca2"
+        )),
+        microsoftAuthFlow: "browser"
+    };
     if (context.source === "client") {
         const handoff = oauthSessionStore.completeHandoff(context.handoffSessionId, result);
         if (handoff.successPath && env.MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI) {

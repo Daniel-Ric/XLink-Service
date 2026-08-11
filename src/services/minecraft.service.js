@@ -2,8 +2,8 @@ import {randomUUID} from "crypto";
 import jwtLib from "jsonwebtoken";
 
 import {env} from "../config/env.js";
-import {HttpError, badRequest, conflict, forbidden, internal, unauthorized} from "../utils/httpError.js";
-import {createHttp} from "../utils/http.js";
+import {HttpError, badGateway, badRequest, conflict, forbidden, internal, unauthorized} from "../utils/httpError.js";
+import {createHttp, UPSTREAM_INVALID_SUCCESS} from "../utils/http.js";
 
 const AUTH_BASE = "https://authorization.franchise.minecraft-services.net/api/v1.0/session/start";
 const ENTITLEMENTS_BASE = "https://entitlements.mktpl.minecraft-services.net/api/v1.0";
@@ -103,18 +103,22 @@ export async function getMCToken(sessionTicket) {
                 "user-agent": "MCPE/UWP"
             }
         });
-        if (res.data?.result?.authorizationHeader) {
-            return res.data.result.authorizationHeader;
+        const authorizationHeader = res.data?.result?.authorizationHeader;
+        if (typeof authorizationHeader === "string" && authorizationHeader.trim()) {
+            return authorizationHeader;
         }
 
         const isString = typeof res.data === "string";
-        throw internal("Failed to get Minecraft token", {
-            status: 500,
+        throw badGateway("Failed to get Minecraft token", {
+            status: 502,
             json: !isString ? res.data : undefined,
             htmlSnippet: isString ? res.data.slice(0, 800) : undefined
         });
     } catch (err) {
         if (err instanceof HttpError) throw err;
+        if (err.code === UPSTREAM_INVALID_SUCCESS) {
+            throw badGateway("Failed to get Minecraft token", err.message);
+        }
         const status = err.response?.status;
         const detail = err.details || err.response?.data || err.message || err;
         if (status === 401) {

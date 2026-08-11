@@ -76,6 +76,7 @@ const options = {
                         uhs: {type: "string"},
                         msAccessToken: {type: "string"},
                         msRefreshToken: {type: "string"},
+                        microsoftAuthFlow: {type: "string", enum: ["browser", "device"]},
                         msExpiresIn: {type: "integer"},
                         xblToken: {type: "string"},
                         xsts: {

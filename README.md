@@ -92,7 +92,7 @@ Validated via Joi (`src/config/env.js`).
 | `MICROSOFT_AUTH_MODE` | `auto` | OAuth flow selection: `auto`, `legacy`, or `modern` |
 | `MICROSOFT_OAUTH_REDIRECT_URI` | — | Exact HTTPS Entra Web redirect URI for `/auth/browser/callback` |
 | `MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI` | — | Optional fixed HTTPS frontend target that receives only a short-lived result code |
-| `MICROSOFT_OAUTH_CLIENT_SECRET` | — | Entra Web application secret used only by the server-side browser code exchange |
+| `MICROSOFT_OAUTH_CLIENT_SECRET` | — | Entra Web application secret used by the server-side browser code exchange and modern refresh grant |
 | `MICROSOFT_OAUTH_TTL_MS` | `300000` | Lifetime of one-time OAuth states and browser result codes (60-900 seconds) |
 | `HTTP_TIMEOUT_MS`  | `15000`       | Timeout for outgoing HTTP calls (ms)                                     |
 | `LOG_LEVEL`        | `info`        | General log level                                                        |
@@ -155,10 +155,12 @@ Configure the Entra application as follows:
 
 1. Under **Supported account types**, select an option that includes personal Microsoft accounts. For Xbox-only sign-in, **Personal Microsoft accounts only** is the narrowest choice.
 2. Under **Authentication**, add `MICROSOFT_OAUTH_REDIRECT_URI` as an exact redirect URI on the **Web** platform. Production callback URLs must use HTTPS and must match path and case exactly.
-3. Create a client secret under **Certificates & secrets** and store only its value in the server environment as `MICROSOFT_OAUTH_CLIENT_SECRET`. This server-side Web flow requires the secret. It is never sent to the browser. PKCE S256 is used in addition to the secret.
+3. Create a client secret under **Certificates & secrets** and store only its value in the server environment as `MICROSOFT_OAUTH_CLIENT_SECRET`. The server-side Web code exchange and its later refresh grants require this secret. It is never sent to the browser. PKCE S256 is used in addition to the secret.
 4. Optionally set `MICROSOFT_OAUTH_FRONTEND_REDIRECT_URI` to one fixed HTTPS frontend callback. The service redirects there with only a short-lived one-time `code`; the frontend redeems it once at `POST /auth/browser/token`. No Microsoft, Xbox, XSTS, PlayFab, Minecraft or refresh token is placed in a URL.
 
 The OAuth `state`, PKCE verifier and optional frontend result are held in process memory. They are single-use, capacity-bounded and expire after `MICROSOFT_OAUTH_TTL_MS`; deployments with multiple service instances need sticky routing or a shared transient store before enabling browser login.
+
+Authentication responses include `microsoftAuthFlow` (`browser` or `device`). Clients must persist it and return it with `msRefreshToken` to `POST /auth/refresh`, so confidential browser refreshes use the client secret while device-code refreshes remain public-client requests. For backwards compatibility, a missing value is treated as `browser`.
 
 Client handoff sessions created by `POST /auth/browser/session` use a private, one-time polling token. First-time clients may create a session without a JWT. During re-authentication, clients should include their valid XLink bearer JWT; the Microsoft account completing the browser flow must then have the same XUID, and mismatched logins are discarded.
 
@@ -369,7 +371,7 @@ curl -X POST http://localhost:3000/debug/decode-token   -H "Authorization: Beare
 | POST   | `/messaging/session/start`         | Alias of inbox start                                  | `x-mc-token` |
 | POST   | `/messaging/inbox/event`           | Mark seen/delete message events                       | `x-mc-token` |
 | POST   | `/minecraft/token`                 | Create Minecraft multiplayer token from SessionTicket | —            |
-| POST   | `/minecraft/token/refresh`         | Refresh PlayFab SessionTicket + Minecraft token       | —            |
+| POST   | `/minecraft/token/refresh`         | Rotate SessionTicket + Minecraft token + bound API JWT | —            |
 
 ### PlayFab
 | Method | Endpoint                    | Description                                      |

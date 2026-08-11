@@ -1,6 +1,6 @@
 import {env} from "../config/env.js";
-import {badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
-import {createHttp} from "../utils/http.js";
+import {badGateway, badRequest, forbidden, internal, unauthorized} from "../utils/httpError.js";
+import {createHttp, UPSTREAM_INVALID_SUCCESS} from "../utils/http.js";
 
 const http = createHttp(env.HTTP_TIMEOUT_MS);
 
@@ -21,6 +21,9 @@ export async function loginWithXbox(xstsToken, titleId = env.PLAYFAB_TITLE_ID) {
         }, {headers: {"Content-Type": "application/json", Accept: "application/json"}});
         return data.data;
     } catch (err) {
+        if (err.code === UPSTREAM_INVALID_SUCCESS) {
+            throw badGateway("PlayFab returned an invalid login response", err.message);
+        }
         const status = err.response?.status;
         const detail = err.response?.data || err.message;
         if (status === 401) {
