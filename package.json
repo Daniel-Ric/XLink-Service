@@ -13,7 +13,7 @@
   },
   "private": true,
   "dependencies": {
-    "axios": "^1.19.0",
+    "axios": "^1.20.0",
     "chalk": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
@@ -21,7 +21,7 @@
     "express": "^5.1.0",
     "express-rate-limit": "^8.6.2",
     "helmet": "^8.3.0",
-    "inquirer": "^14.1.0",
+    "inquirer": "^14.2.0",
     "joi": "^18.2.5",
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.5.2",
