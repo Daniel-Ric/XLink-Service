@@ -14,19 +14,19 @@
   "private": true,
   "dependencies": {
     "axios": "^1.20.0",
-    "chalk": "^6.0.0",
+    "chalk": "^6.0.1",
     "compression": "^1.8.2",
     "cors": "^2.8.5",
-    "dotenv": "^18.0.3",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.7.0",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
     "helmet": "^8.3.0",
-    "inquirer": "^14.2.2",
-    "joi": "^18.2.9",
+    "inquirer": "^14.2.4",
+    "joi": "^18.3.0",
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.5.3",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
-    "ws": "^8.21.3"
+    "ws": "^8.22.0"
   }
 }
